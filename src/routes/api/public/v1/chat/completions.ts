@@ -3,7 +3,7 @@
  *
  * ⚠️ GATEWAY EXPERIMENTAL compatível com a OpenAI Chat Completions API.
  * Autenticação: `Authorization: Bearer <CLAUDE_CODE_GATEWAY_TOKEN>` ou
- * `x-api-key`. A LOVABLE_API_KEY é lida apenas no backend e nunca exposta.
+ * `x-api-key`. Usa o Pool de Chaves (Round-Robin + Failover 429).
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -26,6 +26,7 @@ import {
   toInternalRequest,
   type OpenAIChatRequest,
 } from "@/lib/openai-compat.server";
+import { fetchGatewayWithFailover } from "@/lib/key-pool.server";
 
 export const Route = createFileRoute("/api/public/v1/chat/completions")({
   server: {
@@ -74,9 +75,6 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           return openaiError(400, `Modelo não permitido: ${String(body.model)}.`, "model_not_found");
         }
 
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) return openaiError(500, "Serviço de IA indisponível.", "api_error");
-
         const internal = toInternalRequest(body, model);
         const isOpenAI = model.startsWith("openai/");
         const url = isOpenAI
@@ -86,26 +84,19 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           ? toResponsesRequest(internal, model)
           : toChatCompletions(internal, model);
 
-        let upstream: Response;
-        try {
-          upstream = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Lovable-API-Key": apiKey,
-              "X-Lovable-AIG-SDK": "fetch",
-            },
-            body: JSON.stringify(payload),
-          });
-        } catch {
+        const { upstream, networkError } = await fetchGatewayWithFailover(url, payload, 3);
+        if (networkError) {
           console.error("[openai-compat] upstream unreachable", { model, stream: !!body.stream });
           return openaiError(502, "Não foi possível contatar o serviço de IA.", "api_error");
+        }
+        if (!upstream) {
+          return openaiError(500, "Serviço de IA indisponível.", "api_error");
         }
 
         if (!upstream.ok) {
           console.error("[openai-compat] upstream error", { model, status: upstream.status });
           if (upstream.status === 429)
-            return openaiError(429, "Limite de requisições do provedor atingido.", "rate_limit_exceeded");
+            return openaiError(429, "Limite de requisições do provedor atingido em todas as chaves do pool.", "rate_limit_exceeded");
           if (upstream.status === 402) return openaiError(402, "Créditos de IA esgotados.", "insufficient_quota");
           return openaiError(502, "O serviço de IA retornou um erro.", "api_error");
         }

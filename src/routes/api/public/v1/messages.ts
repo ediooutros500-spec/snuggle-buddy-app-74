@@ -3,13 +3,11 @@
  *
  * ⚠️ GATEWAY EXPERIMENTAL compatível com Claude Code (formato Anthropic
  * Messages API). Não é a API oficial da Anthropic: as chamadas são traduzidas
- * para o Lovable AI Gateway.
+ * para o Lovable AI Gateway usando o Pool de Chaves (Round-Robin + Failover 429).
  *
  * Autenticação: `Authorization: Bearer <token>` ou `x-api-key: <token>`,
  * validados contra a secret CLAUDE_CODE_GATEWAY_TOKEN. O AI_CHAT_TEST_TOKEN
  * nunca é aceito neste endpoint.
- *
- * A LOVABLE_API_KEY é lida apenas dentro do handler e nunca é exposta ou logada.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -30,6 +28,7 @@ import {
   toResponsesRequest,
   type MessagesRequest,
 } from "@/lib/claude-compat.server";
+import { fetchGatewayWithFailover } from "@/lib/key-pool.server";
 
 export const Route = createFileRoute("/api/public/v1/messages")({
   server: {
@@ -90,38 +89,25 @@ export const Route = createFileRoute("/api/public/v1/messages")({
           return anthropicError(400, "invalid_request_error", `Modelo não permitido: ${String(body.model)}.`);
         }
 
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) {
-          return anthropicError(500, "api_error", "Serviço de IA indisponível.");
-        }
-
         const isOpenAI = model.startsWith("openai/");
         const url = isOpenAI
           ? "https://ai.gateway.lovable.dev/v1/responses"
           : "https://ai.gateway.lovable.dev/v1/chat/completions";
         const payload = isOpenAI ? toResponsesRequest(body, model) : toChatCompletions(body, model);
 
-        let upstream: Response;
-        try {
-          upstream = await fetch(url, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Lovable-API-Key": apiKey,
-              "X-Lovable-AIG-SDK": "fetch",
-            },
-            body: JSON.stringify(payload),
-          });
-        } catch {
-          // log sem tokens nem headers
+        const { upstream, networkError } = await fetchGatewayWithFailover(url, payload, 3);
+        if (networkError) {
           console.error("[claude-compat] upstream unreachable", { model, stream: !!body.stream });
           return anthropicError(502, "api_error", "Não foi possível contatar o serviço de IA.");
+        }
+        if (!upstream) {
+          return anthropicError(500, "api_error", "Serviço de IA indisponível.");
         }
 
         if (!upstream.ok) {
           console.error("[claude-compat] upstream error", { model, status: upstream.status });
           if (upstream.status === 429)
-            return anthropicError(429, "rate_limit_error", "Limite de requisições do provedor atingido.");
+            return anthropicError(429, "rate_limit_error", "Limite de requisições do provedor atingido em todas as chaves do pool.");
           if (upstream.status === 402)
             return anthropicError(402, "billing_error", "Créditos de IA esgotados.");
           return anthropicError(502, "api_error", "O serviço de IA retornou um erro.");

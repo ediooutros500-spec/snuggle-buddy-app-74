@@ -16,6 +16,7 @@ import { Route as ApiPublicV1DiagnosticsRouteImport } from './routes/api/public/
 import { Route as ApiPublicV1MessagesRouteImport } from './routes/api/public/v1/messages'
 import { Route as ApiPublicV1ModelsRouteImport } from './routes/api/public/v1/models'
 import { Route as ApiPublicV1ChatCompletionsRouteImport } from './routes/api/public/v1/chat/completions'
+import { Route as ApiPublicV1WorkersRegisterRouteImport } from './routes/api/public/v1/workers/register'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -53,6 +54,12 @@ const ApiPublicV1ChatCompletionsRoute =
     path: '/api/public/v1/chat/completions',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1WorkersRegisterRoute =
+  ApiPublicV1WorkersRegisterRouteImport.update({
+    id: '/api/public/v1/workers/register',
+    path: '/api/public/v1/workers/register',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByFullPath {
   '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
   '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
+  '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -71,6 +79,7 @@ export interface FileRoutesByTo {
   '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
   '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
+  '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -81,6 +90,7 @@ export interface FileRoutesById {
   '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
   '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
+  '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -92,6 +102,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/messages'
     | '/api/public/v1/models'
     | '/api/public/v1/chat/completions'
+    | '/api/public/v1/workers/register'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -101,6 +112,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/messages'
     | '/api/public/v1/models'
     | '/api/public/v1/chat/completions'
+    | '/api/public/v1/workers/register'
   id:
     | '__root__'
     | '/'
@@ -110,6 +122,7 @@ export interface FileRouteTypes {
     | '/api/public/v1/messages'
     | '/api/public/v1/models'
     | '/api/public/v1/chat/completions'
+    | '/api/public/v1/workers/register'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -120,6 +133,7 @@ export interface RootRouteChildren {
   ApiPublicV1MessagesRoute: typeof ApiPublicV1MessagesRoute
   ApiPublicV1ModelsRoute: typeof ApiPublicV1ModelsRoute
   ApiPublicV1ChatCompletionsRoute: typeof ApiPublicV1ChatCompletionsRoute
+  ApiPublicV1WorkersRegisterRoute: typeof ApiPublicV1WorkersRegisterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -173,6 +187,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ChatCompletionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/workers/register': {
+      id: '/api/public/v1/workers/register'
+      path: '/api/public/v1/workers/register'
+      fullPath: '/api/public/v1/workers/register'
+      preLoaderRoute: typeof ApiPublicV1WorkersRegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -184,6 +205,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicV1MessagesRoute: ApiPublicV1MessagesRoute,
   ApiPublicV1ModelsRoute: ApiPublicV1ModelsRoute,
   ApiPublicV1ChatCompletionsRoute: ApiPublicV1ChatCompletionsRoute,
+  ApiPublicV1WorkersRegisterRoute: ApiPublicV1WorkersRegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
