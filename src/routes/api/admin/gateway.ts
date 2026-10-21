@@ -4,11 +4,7 @@ import { safeEqual } from "@/lib/claude-compat.server";
 
 const headers = { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS", "Access-Control-Allow-Headers": "authorization, content-type" };
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers });
-function authorized(request: Request) {
-  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? "";
-  const expected = process.env["CLAUDE_CODE_GATEWAY_TOKEN"] ?? "";
-  return Boolean(token && expected && safeEqual(token, expected));
-}
+function authorized(request: Request) { const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "").trim() ?? ""; const expected = process.env["CLAUDE_CODE_GATEWAY_TOKEN"] ?? ""; return Boolean(token && expected && safeEqual(token, expected)); }
 function makeKey() { return `gw_${crypto.randomUUID().replace(/-/g, "")}`; }
 
 export const Route = createFileRoute("/api/admin/gateway")({ server: { handlers: {
@@ -38,11 +34,12 @@ export const Route = createFileRoute("/api/admin/gateway")({ server: { handlers:
     if (!authorized(request)) return json({ error: "Unauthorized" }, 401);
     const pool = getPoolAdmin(); if (!pool) return json({ error: "Pool unavailable" }, 503);
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
-    if (!body || typeof body.id !== "string") return json({ error: "id is required" }, 400);
+    if (!body) return json({ error: "Invalid body" }, 400);
     if (body.action === "settings") {
       const patch = { default_model: body.default_model, disabled_models: Array.isArray(body.disabled_models) ? body.disabled_models : [], global_rate_limit_rpm: Number(body.global_rate_limit_rpm) || 120, cooldown_minutes: Number(body.cooldown_minutes) || 15 };
       const { error } = await pool.from("gateway_settings").update(patch).eq("id", 1); return error ? json({ error: "Failed to update settings" }, 400) : json({ ok: true });
     }
+    if (typeof body.id !== "string") return json({ error: "id is required" }, 400);
     const patch: Record<string, unknown> = {};
     for (const key of ["name", "status", "allowed_models", "rate_limit_rpm", "quota_limit_requests", "notes"]) if (key in body) patch[key] = body[key];
     const { error } = await pool.from("gateway_clients").update(patch).eq("id", body.id); return error ? json({ error: "Failed to update client" }, 400) : json({ ok: true });
