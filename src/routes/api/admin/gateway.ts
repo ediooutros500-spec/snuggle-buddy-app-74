@@ -36,7 +36,7 @@ export const Route = createFileRoute("/api/admin/gateway")({ server: { handlers:
     const body = await request.json().catch(() => null) as Record<string, unknown> | null;
     if (!body) return json({ error: "Invalid body" }, 400);
     if (body.action === "settings") {
-      const patch = { default_model: body.default_model, disabled_models: Array.isArray(body.disabled_models) ? body.disabled_models : [], global_rate_limit_rpm: Number(body.global_rate_limit_rpm) || 120, cooldown_minutes: Number(body.cooldown_minutes) || 15 };
+      const patch = { default_model: body["default_model"], disabled_models: Array.isArray(body["disabled_models"]) ? body["disabled_models"] : [], global_rate_limit_rpm: Number(body["global_rate_limit_rpm"]) || 120, cooldown_minutes: Number(body["cooldown_minutes"]) || 15 };
       const { error } = await pool.from("gateway_settings").update(patch).eq("id", 1); return error ? json({ error: "Failed to update settings" }, 400) : json({ ok: true });
     }
     if (typeof body.id !== "string") return json({ error: "id is required" }, 400);

@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 
 export const Route = createFileRoute("/")({ head: () => ({ meta: [{ title: "Gateway Admin Console" }, { name: "description", content: "Gestão de clientes, modelos, limites e observabilidade do gateway." }] }), component: Admin });
 type Client = { id:string; name:string; client_key:string; status:string; allowed_models:string[]|null; rate_limit_rpm:number; quota_limit_requests:number|null; total_requests:number; total_input_tokens:number; total_output_tokens:number; last_used_at:string|null };
-type Log = { id:string; client_name:string|null; endpoint:string; requested_model:string|null; status_code:number; latency_ms:number; created_at:string };
+type Log = { id:string; client_name:string|null; endpoint:string; requested_model:string|null; resolved_model:string|null; status_code:number; latency_ms:number; created_at:string };
 const models = ["google/gemini-3.6-flash","google/gemini-2.5-pro","openai/gpt-5.6-sol","openai/gpt-5.5-pro"];
 function Admin() {
  const [token,setToken]=useState(""); const [data,setData]=useState<{clients:Client[];settings:any;logs:Log[]}>({clients:[],settings:{},logs:[]}); const [name,setName]=useState(""); const [busy,setBusy]=useState(false); const [error,setError]=useState("");
