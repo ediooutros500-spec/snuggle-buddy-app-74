@@ -39,9 +39,9 @@ export const Route = createFileRoute("/api/admin/gateway")({ server: { handlers:
       const patch = { default_model: body["default_model"], disabled_models: Array.isArray(body["disabled_models"]) ? body["disabled_models"] : [], global_rate_limit_rpm: Number(body["global_rate_limit_rpm"]) || 120, cooldown_minutes: Number(body["cooldown_minutes"]) || 15 };
       const { error } = await pool.from("gateway_settings").update(patch).eq("id", 1); return error ? json({ error: "Failed to update settings" }, 400) : json({ ok: true });
     }
-    if (typeof body.id !== "string") return json({ error: "id is required" }, 400);
+    if (typeof body["id"] !== "string") return json({ error: "id is required" }, 400);
     const patch: Record<string, unknown> = {};
     for (const key of ["name", "status", "allowed_models", "rate_limit_rpm", "quota_limit_requests", "notes"]) if (key in body) patch[key] = body[key];
-    const { error } = await pool.from("gateway_clients").update(patch).eq("id", body.id); return error ? json({ error: "Failed to update client" }, 400) : json({ ok: true });
+    const { error } = await pool.from("gateway_clients").update(patch).eq("id", body["id"]); return error ? json({ error: "Failed to update client" }, 400) : json({ ok: true });
   },
 } } });
