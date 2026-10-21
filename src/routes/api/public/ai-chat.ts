@@ -1,36 +1,15 @@
 /**
  * POST /api/public/ai-chat
  *
- * Endpoint de chat de IA (Lovable AI Gateway).
- *
- * ─────────────────────────────────────────────────────────────────────────────
- * ⚠️  DEV ONLY — MODO DE TESTE COM BYPASS DE AUTENTICAÇÃO
- * ─────────────────────────────────────────────────────────────────────────────
- * Este arquivo contém um bypass de autenticação para testes externos, marcado
- * abaixo com o comentário "DEV ONLY — REMOVE BEFORE PRODUCTION".
- *
- * Como remover antes de produção:
- *   1. Apague o bloco marcado "DEV ONLY — REMOVE BEFORE PRODUCTION" (a função
- *      `isDevTestRequest` e a sua chamada dentro do handler).
- *   2. Apague a secret `AI_CHAT_TEST_TOKEN` no backend.
- *   3. Opcional: mova esta rota de `api/public/` para uma rota autenticada
- *      (ou para um `createServerFn` com `requireSupabaseAuth`).
- * ─────────────────────────────────────────────────────────────────────────────
- *
- * A LOVABLE_API_KEY é lida SOMENTE dentro do handler e nunca é retornada,
- * logada ou exposta ao cliente.
+ * Endpoint de chat de IA integrado ao Pool de Chaves (Round-Robin + Failover).
  */
 import { createFileRoute } from "@tanstack/react-router";
 import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { fetchGatewayWithFailover } from "@/lib/key-pool.server";
 
 const DEFAULT_MODEL = "google/gemini-3.6-flash";
 
-/**
- * Allowlist configurável no backend.
- * - `google/*`  → POST /v1/chat/completions (formato `messages`)
- * - `openai/*`  → POST /v1/responses (Responses API, sempre em streaming)
- */
 const ALLOWED_MODELS = [
   "google/gemini-3.6-flash",
   "google/gemini-3.5-flash",
@@ -44,7 +23,6 @@ const ALLOWED_MODELS = [
   "openai/gpt-5.5",
   "openai/gpt-5.5-pro",
 ] as const;
-
 
 const MAX_MESSAGES = 40;
 const MAX_MESSAGE_CHARS = 8_000;
@@ -68,10 +46,9 @@ const BodySchema = z.object({
 const jsonError = (status: number, code: string, message: string) =>
   new Response(JSON.stringify({ error: { code, message } }), {
     status,
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
   });
 
-/** Comparação em tempo constante (evita timing attacks). */
 function safeEqual(a: string, b: string) {
   if (a.length !== b.length) return false;
   let diff = 0;
@@ -79,22 +56,13 @@ function safeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-// ───────── DEV ONLY — REMOVE BEFORE PRODUCTION (início) ─────────
-/**
- * Permite chamadas externas sem sessão quando o header
- * `x-ai-chat-test-token` for exatamente igual à secret AI_CHAT_TEST_TOKEN.
- * Se o header estiver ausente ou incorreto, a autenticação normal continua
- * valendo (ver `hasValidSession` no handler).
- */
 function isDevTestRequest(request: Request): boolean {
   const provided = request.headers.get("x-ai-chat-test-token");
   const expected = process.env["AI_CHAT_TEST_TOKEN"];
   if (!provided || !expected) return false;
   return safeEqual(provided, expected);
 }
-// ───────── DEV ONLY — REMOVE BEFORE PRODUCTION (fim) ─────────
 
-/** Autenticação normal: bearer token de sessão do backend. */
 async function hasValidSession(request: Request): Promise<boolean> {
   const authHeader = request.headers.get("authorization") ?? "";
   const token = authHeader.toLowerCase().startsWith("bearer ")
@@ -139,7 +107,6 @@ export const Route = createFileRoute("/api/public/ai-chat")({
         }),
 
       POST: async ({ request }) => {
-        // DEV ONLY — REMOVE BEFORE PRODUCTION: bypass por token de teste.
         const devTest = isDevTestRequest(request);
 
         if (!devTest && !(await hasValidSession(request))) {
@@ -179,11 +146,6 @@ export const Route = createFileRoute("/api/public/ai-chat")({
           );
         }
 
-        const apiKey = process.env["LOVABLE_API_KEY"];
-        if (!apiKey) {
-          return jsonError(500, "server_misconfigured", "Serviço de IA indisponível.");
-        }
-
         const selectedModel = model ?? DEFAULT_MODEL;
         const isOpenAI = selectedModel.startsWith("openai/");
 
@@ -191,53 +153,43 @@ export const Route = createFileRoute("/api/public/ai-chat")({
           ? [{ role: "system" as const, content: system }, ...messages]
           : messages;
 
-        let upstream: Response;
-        try {
-          upstream = isOpenAI
-            ? // ── openai/* → Responses API (sempre streaming no upstream) ──
-              await fetch("https://ai.gateway.lovable.dev/v1/responses", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Lovable-API-Key": apiKey,
-                  "X-Lovable-AIG-SDK": "fetch",
-                },
-                body: JSON.stringify({
-                  model: selectedModel,
-                  ...(system ? { instructions: system } : {}),
-                  input: messages.map((m) => ({
-                    role: m.role,
-                    content: [
-                      {
-                        type: m.role === "assistant" ? "output_text" : "input_text",
-                        text: m.content,
-                      },
-                    ],
-                  })),
-                  stream: true,
-                  store: false,
-                }),
-              })
-            : // ── google/* (e demais) → Chat Completions ──
-              await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  "Lovable-API-Key": apiKey,
-                },
-                body: JSON.stringify({
-                  model: selectedModel,
-                  messages: finalMessages,
-                  stream: stream ?? false,
-                }),
-              });
-        } catch {
+        const url = isOpenAI
+          ? "https://ai.gateway.lovable.dev/v1/responses"
+          : "https://ai.gateway.lovable.dev/v1/chat/completions";
+
+        const payload = isOpenAI
+          ? {
+              model: selectedModel,
+              ...(system ? { instructions: system } : {}),
+              input: messages.map((m) => ({
+                role: m.role,
+                content: [
+                  {
+                    type: m.role === "assistant" ? "output_text" : "input_text",
+                    text: m.content,
+                  },
+                ],
+              })),
+              stream: true,
+              store: false,
+            }
+          : {
+              model: selectedModel,
+              messages: finalMessages,
+              stream: stream ?? false,
+            };
+
+        const { upstream, networkError } = await fetchGatewayWithFailover(url, payload, 4);
+        if (networkError) {
           return jsonError(502, "upstream_unreachable", "Não foi possível contatar o serviço de IA.");
+        }
+        if (!upstream) {
+          return jsonError(500, "server_misconfigured", "Serviço de IA indisponível.");
         }
 
         if (!upstream.ok) {
           if (upstream.status === 429) {
-            return jsonError(429, "rate_limited", "Limite de requisições atingido. Tente novamente em instantes.");
+            return jsonError(429, "rate_limited", "Limite de requisições atingido em todas as chaves do pool.");
           }
           if (upstream.status === 402) {
             return jsonError(402, "payment_required", "Créditos de IA esgotados.");
@@ -256,8 +208,8 @@ export const Route = createFileRoute("/api/public/ai-chat")({
           });
         }
 
-        const jsonOk = (payload: Record<string, unknown>) =>
-          new Response(JSON.stringify(payload), {
+        const jsonOk = (bodyPayload: Record<string, unknown>) =>
+          new Response(JSON.stringify(bodyPayload), {
             status: 200,
             headers: {
               "Content-Type": "application/json",
@@ -266,18 +218,17 @@ export const Route = createFileRoute("/api/public/ai-chat")({
           });
 
         if (isOpenAI) {
-          // Consome o SSE da Responses API e devolve o texto final normalizado.
-          const raw = await upstream.text();
+          const rawText = await upstream.text();
           let content = "";
           let usage: unknown;
 
-          for (const block of raw.split("\n\n")) {
+          for (const block of rawText.split("\n\n")) {
             const line = block.split("\n").find((l) => l.startsWith("data:"));
             if (!line) continue;
-            const payload = line.slice(5).trim();
-            if (!payload || payload === "[DONE]") continue;
+            const dataStr = line.slice(5).trim();
+            if (!dataStr || dataStr === "[DONE]") continue;
             try {
-              const evt = JSON.parse(payload) as {
+              const evt = JSON.parse(dataStr) as {
                 type?: string;
                 delta?: string;
                 response?: { output_text?: string; usage?: unknown };

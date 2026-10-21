@@ -4,9 +4,6 @@
  * ⚠️ GATEWAY EXPERIMENTAL — não é a API oficial da Anthropic. Este projeto
  * traduz requisições no formato Anthropic para o Lovable AI Gateway
  * (`google/*` via /v1/chat/completions, `openai/*` via /v1/responses).
- *
- * A LOVABLE_API_KEY é lida SOMENTE dentro dos handlers e nunca é retornada,
- * logada ou exposta. Nenhum log inclui tokens ou headers de autenticação.
  */
 
 export const EXPERIMENTAL_NOTICE =
@@ -30,33 +27,54 @@ export const ALLOWED_MODELS = [
   "openai/gpt-5.5-pro",
 ] as const;
 
-/** Nomes estilo Claude Code mapeados para modelos reais do gateway. */
+/** Nomes estilo Claude Code e OpenAI mapeados para modelos reais do gateway. */
 export const MODEL_ALIASES: Record<string, string> = {
   "claude-3-5-haiku": "google/gemini-3.6-flash",
   "claude-3-5-haiku-latest": "google/gemini-3.6-flash",
+  "claude-3-5-haiku-20241022": "google/gemini-3.6-flash",
+  "claude-haiku-4-5": "google/gemini-3.6-flash",
+  "claude-haiku-4-5-20251001": "google/gemini-3.6-flash",
   "claude-3-5-sonnet": "openai/gpt-5.6-terra",
   "claude-3-5-sonnet-latest": "openai/gpt-5.6-terra",
+  "claude-3-5-sonnet-20241022": "openai/gpt-5.6-terra",
+  "claude-3-7-sonnet-latest": "openai/gpt-5.6-sol",
+  "claude-3-7-sonnet-20250219": "openai/gpt-5.6-sol",
   "claude-sonnet-4": "openai/gpt-5.6-sol",
   "claude-sonnet-4-latest": "openai/gpt-5.6-sol",
+  "claude-sonnet-4-20250514": "openai/gpt-5.6-sol",
+  "claude-sonnet-4-5": "openai/gpt-5.6-sol",
+  "claude-sonnet-4-5-20250929": "openai/gpt-5.6-sol",
   "claude-opus-4": "openai/gpt-5.5",
   "claude-opus-4-latest": "openai/gpt-5.5",
+  "claude-opus-4-20250514": "openai/gpt-5.5",
+  "claude-opus-4-1": "openai/gpt-5.5-pro",
+  "gpt-4o": "openai/gpt-5.6-sol",
+  "gpt-4o-mini": "google/gemini-3.6-flash",
+  "gpt-4.1": "openai/gpt-5.6-sol",
+  "gpt-4.1-mini": "google/gemini-3.6-flash",
+  "o3-mini": "openai/gpt-5.5",
 };
 
 export function resolveModel(model?: string): string | null {
   if (!model) return DEFAULT_MODEL;
-  const alias = MODEL_ALIASES[model];
-  const candidate = alias ?? model;
+  const trimmed = model.trim();
+  const alias = MODEL_ALIASES[trimmed];
+  const candidate = alias ?? trimmed;
   if ((ALLOWED_MODELS as readonly string[]).includes(candidate)) return candidate;
-  // Qualquer alias Claude desconhecido cai no modelo padrão (sem permitir modelos arbitrários).
-  if (/^claude[-.]/i.test(model)) return DEFAULT_MODEL;
+  if (/^claude[-.]/i.test(trimmed)) {
+    if (/haiku/i.test(trimmed)) return "google/gemini-3.6-flash";
+    if (/opus/i.test(trimmed)) return "openai/gpt-5.5";
+    return "openai/gpt-5.6-sol";
+  }
+  if (/^(gpt-|o1|o3|o4|gemini-)/i.test(trimmed)) return DEFAULT_MODEL;
   return null;
 }
 
 /* ───────────────────────────── limites de payload ───────────────────────── */
 
-export const MAX_MESSAGES = 100;
-export const MAX_BODY_BYTES = 400_000; // ~400 KB
-export const MAX_TOTAL_CHARS = 300_000;
+export const MAX_MESSAGES = 200;
+export const MAX_BODY_BYTES = 2_000_000; // ~2 MB para sessões longas do Claude Code
+export const MAX_TOTAL_CHARS = 1_500_000;
 
 /* ─────────────────────────────── autenticação ───────────────────────────── */
 
@@ -76,8 +94,6 @@ export function extractToken(request: Request): string {
 
 /**
  * Valida o token contra a secret CLAUDE_CODE_GATEWAY_TOKEN.
- * O AI_CHAT_TEST_TOKEN NUNCA é aceito aqui (nem em dev): este endpoint tem a
- * sua própria credencial.
  */
 export function isAuthorized(request: Request): boolean {
   const provided = extractToken(request);
@@ -89,10 +105,9 @@ export function isAuthorized(request: Request): boolean {
 /* ─────────────────────────────── rate limiting ──────────────────────────── */
 
 const WINDOW_MS = 60_000;
-const MAX_REQUESTS_PER_WINDOW = 30;
+const MAX_REQUESTS_PER_WINDOW = 120; // Claude Code faz rajadas de tool-use em paralelo
 const buckets = new Map<string, number[]>();
 
-/** Chave derivada do IP (nunca do token) para não guardar credenciais. */
 export function rateLimitKey(request: Request): string {
   return (
     request.headers.get("cf-connecting-ip") ??
@@ -120,10 +135,16 @@ export function checkRateLimit(key: string): { ok: boolean; retryAfter: number }
 export const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "authorization, x-api-key, content-type, anthropic-version",
+  "Access-Control-Allow-Headers":
+    "authorization, x-api-key, content-type, anthropic-version, anthropic-beta, x-stainless-arch, x-stainless-lang, x-stainless-os, x-stainless-package-version, x-stainless-runtime, x-stainless-runtime-version",
 };
 
-export function anthropicError(status: number, type: string, message: string, extra?: Record<string, string>) {
+export function anthropicError(
+  status: number,
+  type: string,
+  message: string,
+  extra?: Record<string, string>,
+) {
   return new Response(
     JSON.stringify({ type: "error", error: { type, message }, notice: EXPERIMENTAL_NOTICE }),
     {
@@ -158,19 +179,20 @@ export interface MessagesRequest {
   system?: string | AnthropicContentBlock[];
   messages: AnthropicMessage[];
   tools?: AnthropicTool[];
-  tool_choice?: { type: "auto" | "any" | "tool"; name?: string };
+  tool_choice?: { type: "auto" | "any" | "tool" | "none"; name?: string };
   stream?: boolean;
   temperature?: number;
 }
 
 const blocks = (c: AnthropicMessage["content"]): AnthropicContentBlock[] =>
-  typeof c === "string" ? [{ type: "text", text: c }] : c;
+  typeof c === "string" ? [{ type: "text", text: c }] : Array.isArray(c) ? c : [];
 
 export function systemToText(system: MessagesRequest["system"]): string | undefined {
   if (!system) return undefined;
   if (typeof system === "string") return system;
+  if (!Array.isArray(system)) return undefined;
   return system
-    .map((b) => (b.type === "text" ? (b as { text: string }).text : ""))
+    .map((b) => (b && b.type === "text" ? String((b as { text?: unknown }).text ?? "") : ""))
     .filter(Boolean)
     .join("\n\n");
 }
@@ -180,11 +202,32 @@ const textOf = (content: unknown): string => {
   if (Array.isArray(content))
     return content
       .map((b) =>
-        typeof b === "string" ? b : b && typeof b === "object" && "text" in b ? String((b as { text: unknown }).text) : JSON.stringify(b),
+        typeof b === "string"
+          ? b
+          : b && typeof b === "object" && "text" in b
+            ? String((b as { text: unknown }).text)
+            : JSON.stringify(b),
       )
       .join("\n");
   return content == null ? "" : JSON.stringify(content);
 };
+
+/**
+ * Remove propriedades que quebram validadores estritos da Gemini/OpenAI
+ * em JSON Schema de ferramentas (`$schema`, `additionalProperties` aninhado inválido etc.).
+ */
+function sanitizeJsonSchema(schema?: Record<string, unknown>): Record<string, unknown> {
+  if (!schema || typeof schema !== "object") {
+    return { type: "object", properties: {} };
+  }
+  const clone: Record<string, unknown> = { ...schema };
+  delete clone["$schema"];
+  if (!clone["type"]) clone["type"] = "object";
+  if (clone["type"] === "object" && !clone["properties"]) {
+    clone["properties"] = {};
+  }
+  return clone;
+}
 
 /* ───────────────── Anthropic → OpenAI-compatible (chat completions) ─────── */
 
@@ -228,23 +271,28 @@ export function toChatCompletions(req: MessagesRequest, model: string) {
     for (const r of toolResults) {
       msgs.push({ role: "tool", tool_call_id: r.tool_use_id, content: textOf(r.content) });
     }
-    if (text) msgs.push({ role: "user", content: text });
+    if (text || toolResults.length === 0) {
+      msgs.push({ role: "user", content: text || " " });
+    }
   }
 
   const tools = req.tools?.length
-    ? req.tools.map((t) => ({
-        type: "function",
-        function: {
-          name: t.name,
-          ...(t.description ? { description: t.description } : {}),
-          parameters: t.input_schema ?? { type: "object", properties: {} },
-        },
-      }))
+    ? req.tools
+        .filter((t) => t && typeof t.name === "string" && t.name.length > 0)
+        .map((t) => ({
+          type: "function",
+          function: {
+            name: t.name,
+            ...(t.description ? { description: t.description } : {}),
+            parameters: sanitizeJsonSchema(t.input_schema),
+          },
+        }))
     : undefined;
 
   let toolChoice: unknown;
   if (req.tool_choice) {
     if (req.tool_choice.type === "auto") toolChoice = "auto";
+    else if (req.tool_choice.type === "none") toolChoice = "none";
     else if (req.tool_choice.type === "any") toolChoice = "required";
     else if (req.tool_choice.type === "tool" && req.tool_choice.name)
       toolChoice = { type: "function", function: { name: req.tool_choice.name } };
@@ -256,7 +304,8 @@ export function toChatCompletions(req: MessagesRequest, model: string) {
     stream: true,
     stream_options: { include_usage: true },
     ...(req.max_tokens ? { max_tokens: req.max_tokens } : {}),
-    ...(tools ? { tools } : {}),
+    ...(typeof req.temperature === "number" ? { temperature: req.temperature } : {}),
+    ...(tools?.length ? { tools } : {}),
     ...(toolChoice ? { tool_choice: toolChoice } : {}),
   };
 }
@@ -296,24 +345,28 @@ export function toResponsesRequest(req: MessagesRequest, model: string) {
 
     for (const r of toolResults)
       input.push({ type: "function_call_output", call_id: r.tool_use_id, output: textOf(r.content) });
-    if (text) input.push({ role: "user", content: [{ type: "input_text", text }] });
+    if (text || toolResults.length === 0)
+      input.push({ role: "user", content: [{ type: "input_text", text: text || " " }] });
   }
 
   const system = systemToText(req.system);
 
   const tools = req.tools?.length
-    ? req.tools.map((t) => ({
-        type: "function",
-        name: t.name,
-        ...(t.description ? { description: t.description } : {}),
-        parameters: t.input_schema ?? { type: "object", properties: {}, additionalProperties: false },
-        strict: false,
-      }))
+    ? req.tools
+        .filter((t) => t && typeof t.name === "string" && t.name.length > 0)
+        .map((t) => ({
+          type: "function",
+          name: t.name,
+          ...(t.description ? { description: t.description } : {}),
+          parameters: sanitizeJsonSchema(t.input_schema),
+          strict: false,
+        }))
     : undefined;
 
   let toolChoice: unknown;
   if (req.tool_choice) {
     if (req.tool_choice.type === "auto") toolChoice = "auto";
+    else if (req.tool_choice.type === "none") toolChoice = "none";
     else if (req.tool_choice.type === "any") toolChoice = "required";
     else if (req.tool_choice.type === "tool" && req.tool_choice.name)
       toolChoice = { type: "function", name: req.tool_choice.name };
@@ -326,7 +379,8 @@ export function toResponsesRequest(req: MessagesRequest, model: string) {
     store: false,
     ...(system ? { instructions: system } : {}),
     ...(req.max_tokens ? { max_output_tokens: req.max_tokens } : {}),
-    ...(tools ? { tools } : {}),
+    ...(typeof req.temperature === "number" ? { temperature: req.temperature } : {}),
+    ...(tools?.length ? { tools } : {}),
     ...(toolChoice ? { tool_choice: toolChoice } : {}),
   };
 }
@@ -389,8 +443,9 @@ export async function* sseEvents(body: ReadableStream<Uint8Array>): AsyncGenerat
       if (line.startsWith("data:")) yield line.slice(5).trim();
     }
   }
+  const trailing = buffer.trim();
+  if (trailing.startsWith("data:")) yield trailing.slice(5).trim();
 }
-
 
 /** Consome o SSE do upstream e produz um resultado normalizado. */
 export async function consumeUpstream(

@@ -1,5 +1,5 @@
 /**
- * Gerenciador do Pool de Chaves (Load Balancer Round-Robin + Failover 429)
+ * Gerenciador do Pool de Chaves (Load Balancer Round-Robin + Failover Inteligente)
  * conectado exclusivamente ao 2º Supabase (`qtsyuyuuzshnurdatzla`), mantendo o
  * Supabase original da Lovable Cloud intacto.
  */
@@ -9,6 +9,9 @@ import { safeEqual } from "./claude-compat.server";
 export const PARENT_ORIGIN = "https://snuggle-buddy-app-74.lovable.app";
 export const REMIX_SYNC_SECRET =
   process.env["REMIX_SYNC_SECRET"] ?? "snuggle-pool-sync-v1";
+
+/** Cooldown automático para chaves marcadas como exhausted (15 min) */
+const EXHAUSTED_COOLDOWN_MS = 15 * 60 * 1000;
 
 function isNewSupabaseApiKey(value: string): boolean {
   return value.startsWith("sb_publishable_") || value.startsWith("sb_secret_");
@@ -39,8 +42,6 @@ let _poolClient: SupabaseClient | null = null;
 
 /**
  * Cliente isolado do 2º Supabase (apenas para a tabela `public.gateway_key_pool`).
- * Lê `POOL_SUPABASE_URL` (default: projeto qtsyuyuuzshnurdatzla) e
- * `POOL_SUPABASE_SERVICE_ROLE_KEY`.
  */
 export function getPoolAdmin(): SupabaseClient | null {
   if (_poolClient) return _poolClient;
@@ -68,28 +69,52 @@ export function verifySyncToken(request: Request): boolean {
 }
 
 /**
- * Seleção da chave (Round-Robin ponderado por uso):
- * 1. Usa a função atômica `get_next_api_key()` no 2º Supabase (`last_used_at ASC NULLS FIRST` + `FOR UPDATE SKIP LOCKED`).
- * 2. Caso a tabela esteja vazia ou o pool não esteja configurado, usa `process.env.LOVABLE_API_KEY` do Pai como fallback.
+ * Reativa chaves `exhausted` cujo tempo de repouso (15 min) já expirou.
  */
-export async function getNextApiKey(): Promise<string | null> {
+export async function reviveCooledDownKeys(): Promise<void> {
+  const pool = getPoolAdmin();
+  if (!pool) return;
+  try {
+    const cutoff = new Date(Date.now() - EXHAUSTED_COOLDOWN_MS).toISOString();
+    await pool
+      .from("gateway_key_pool")
+      .update({ status: "active", exhausted_at: null })
+      .eq("status", "exhausted")
+      .lt("exhausted_at", cutoff);
+  } catch {
+    // silencioso
+  }
+}
+
+/**
+ * Seleção da chave (Round-Robin ponderado por uso):
+ * 1. Usa a função atômica `get_next_api_key()` no 2º Supabase (`last_used_at ASC NULLS FIRST` + `FOR UPDATE SKIP LOCKED` + auto-cooldown).
+ * 2. Fallback em query se necessário e por fim `process.env.LOVABLE_API_KEY` do Pai.
+ */
+export async function getNextApiKey(excludeKeys?: Set<string>): Promise<string | null> {
   const pool = getPoolAdmin();
   if (pool) {
     try {
-      const { data: rpcKey, error: rpcErr } = await pool.rpc("get_next_api_key");
-      if (!rpcErr && typeof rpcKey === "string" && rpcKey.trim().length > 0) {
-        return rpcKey.trim();
+      if (!excludeKeys || excludeKeys.size === 0) {
+        const { data: rpcKey, error: rpcErr } = await pool.rpc("get_next_api_key");
+        if (!rpcErr && typeof rpcKey === "string" && rpcKey.trim().length > 0) {
+          return rpcKey.trim();
+        }
       }
 
-      // Fallback em duas etapas caso a RPC não esteja disponível
+      await reviveCooledDownKeys();
+
       const { data: rows } = await pool
         .from("gateway_key_pool")
         .select("id, api_key, total_requests")
         .eq("status", "active")
         .order("last_used_at", { ascending: true, nullsFirst: true })
-        .limit(1);
+        .limit(10);
 
-      const picked = rows?.[0];
+      const picked = (rows ?? []).find(
+        (r) => r.api_key && (!excludeKeys || !excludeKeys.has(String(r.api_key))),
+      );
+
       if (picked?.api_key) {
         await pool
           .from("gateway_key_pool")
@@ -105,12 +130,15 @@ export async function getNextApiKey(): Promise<string | null> {
     }
   }
 
-  return process.env["LOVABLE_API_KEY"] ?? null;
+  const fallback = process.env["LOVABLE_API_KEY"]?.trim() ?? null;
+  if (fallback && excludeKeys?.has(fallback)) return null;
+  return fallback;
 }
 
-export async function markKeyExhausted(
+export async function markKeyStatus(
   apiKey: string,
-  lastError = "HTTP 429: Quota exceeded / Rate limited",
+  status: "exhausted" | "disabled",
+  lastError: string,
 ): Promise<void> {
   const pool = getPoolAdmin();
   if (!pool || !apiKey) return;
@@ -118,32 +146,35 @@ export async function markKeyExhausted(
     await pool
       .from("gateway_key_pool")
       .update({
-        status: "exhausted",
+        status,
         exhausted_at: new Date().toISOString(),
-        last_error: lastError,
+        last_error: lastError.slice(0, 500),
       })
       .eq("api_key", apiKey);
   } catch (err) {
-    console.error("[key-pool] falha ao marcar chave como exhausted", err);
+    console.error("[key-pool] falha ao atualizar status da chave", err);
   }
 }
 
 /**
- * Faz a requisição ao `ai.gateway.lovable.dev` usando o pool de chaves
- * com Failover Automático em caso de 429 (até 3 tentativas transparentes).
+ * Dispara a requisição para o `ai.gateway.lovable.dev` com Failover Automático:
+ * - 429 (Rate limit / Quota) ou 402 (Créditos esgotados): marca a chave como `exhausted` e tenta a próxima imediatamente.
+ * - 401 / 403 (Chave inválida/revogada): marca a chave como `disabled` e tenta a próxima imediatamente.
+ * - 500 / 502 / 503 / 504 ou erro de rede/timeout: tenta a próxima chave sem queimar a atual.
  */
 export async function fetchGatewayWithFailover(
   url: string,
   payload: unknown,
-  maxAttempts = 3,
+  maxAttempts = 4,
 ): Promise<{ upstream: Response | null; networkError: boolean }> {
   let lastUpstream: Response | null = null;
+  let sawNetworkError = false;
+  const triedKeys = new Set<string>();
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    const apiKey = await getNextApiKey();
-    if (!apiKey) {
-      return { upstream: null, networkError: false };
-    }
+    const apiKey = await getNextApiKey(triedKeys.size > 0 ? triedKeys : undefined);
+    if (!apiKey) break;
+    triedKeys.add(apiKey);
 
     try {
       const res = await fetch(url, {
@@ -157,27 +188,52 @@ export async function fetchGatewayWithFailover(
       });
 
       lastUpstream = res;
+      sawNetworkError = false;
 
-      if (res.status === 429) {
-        await markKeyExhausted(apiKey, "HTTP 429: Quota exceeded / Rate limited");
+      if (res.status === 429 || res.status === 402) {
+        const reason =
+          res.status === 402
+            ? "HTTP 402: Créditos esgotados (cooldown 15m)"
+            : "HTTP 429: Rate limit / Cota atingida (cooldown 15m)";
+        await markKeyStatus(apiKey, "exhausted", reason);
+        continue;
+      }
+
+      if (res.status === 401 || res.status === 403) {
+        await markKeyStatus(
+          apiKey,
+          "disabled",
+          `HTTP ${res.status}: Chave rejeitada pelo gateway`,
+        );
+        continue;
+      }
+
+      if (res.status >= 500 && attempt < maxAttempts) {
         continue;
       }
 
       return { upstream: res, networkError: false };
     } catch {
-      return { upstream: null, networkError: true };
+      sawNetworkError = true;
+      continue;
     }
   }
 
-  return { upstream: lastUpstream, networkError: false };
+  return {
+    upstream: lastUpstream,
+    networkError: !lastUpstream && sawNetworkError,
+  };
 }
 
 /* ─────────────── Passo 3: Auto-registro quando rodar como Filho ─────────── */
 
-let childHandshakeSent = false;
+let lastHandshakeAt = 0;
+const HANDSHAKE_TTL_MS = 10 * 60 * 1000; // re-sincroniza a cada 10 min
 
 export async function maybeAutoRegisterChild(requestUrl: string): Promise<void> {
-  if (childHandshakeSent) return;
+  const now = Date.now();
+  if (now - lastHandshakeAt < HANDSHAKE_TTL_MS) return;
+
   let currentOrigin = "";
   try {
     currentOrigin = new URL(requestUrl).origin.replace(/\/+$/, "");
@@ -191,14 +247,14 @@ export async function maybeAutoRegisterChild(requestUrl: string): Promise<void> 
     currentOrigin.includes("localhost") ||
     currentOrigin.includes("127.0.0.1")
   ) {
-    childHandshakeSent = true;
+    lastHandshakeAt = now;
     return;
   }
 
   const apiKey = process.env["LOVABLE_API_KEY"]?.trim();
   if (!apiKey) return;
 
-  childHandshakeSent = true;
+  lastHandshakeAt = now;
   try {
     await fetch(`${PARENT_ORIGIN}/api/public/v1/workers/register`, {
       method: "POST",
@@ -212,6 +268,6 @@ export async function maybeAutoRegisterChild(requestUrl: string): Promise<void> 
       }),
     });
   } catch {
-    childHandshakeSent = false;
+    lastHandshakeAt = 0;
   }
 }

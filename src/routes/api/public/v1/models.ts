@@ -1,9 +1,8 @@
 /**
  * GET /api/public/v1/models
  *
- * Descoberta de modelos no formato OpenAI:
- * { "object": "list", "data": [{ "id": "...", "object": "model" }] }
- * Não expõe secrets, defaultModel, status ou aliases.
+ * Descoberta de modelos no formato OpenAI/Anthropic:
+ * Inclui tanto os modelos nativos do gateway quanto os aliases do Claude Code.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -12,9 +11,9 @@ import {
   checkRateLimit,
   CORS_HEADERS,
   isAuthorized,
+  MODEL_ALIASES,
   rateLimitKey,
 } from "@/lib/claude-compat.server";
-
 
 export const Route = createFileRoute("/api/public/v1/models")({
   server: {
@@ -36,7 +35,8 @@ export const Route = createFileRoute("/api/public/v1/models")({
           );
         }
 
-        const data = ALLOWED_MODELS.map((id) => ({ id, object: "model" }));
+        const ids = Array.from(new Set([...ALLOWED_MODELS, ...Object.keys(MODEL_ALIASES)]));
+        const data = ids.map((id) => ({ id, object: "model" }));
 
         return new Response(JSON.stringify({ object: "list", data }), {
           status: 200,

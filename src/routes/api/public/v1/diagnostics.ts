@@ -2,8 +2,6 @@
  * GET /api/public/v1/diagnostics
  *
  * Diagnóstico protegido do gateway experimental compatível com Claude Code.
- * Retorna apenas se as secrets estão configuradas (true/false) e os nomes das
- * rotas. Nunca imprime, testa ou deriva qualquer valor de secret.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
@@ -18,6 +16,7 @@ import {
   MAX_MESSAGES,
   rateLimitKey,
 } from "@/lib/claude-compat.server";
+import { getPoolAdmin } from "@/lib/key-pool.server";
 
 export const Route = createFileRoute("/api/public/v1/diagnostics")({
   server: {
@@ -39,6 +38,8 @@ export const Route = createFileRoute("/api/public/v1/diagnostics")({
           );
         }
 
+        const pool = getPoolAdmin();
+
         return new Response(
           JSON.stringify({
             secrets: {
@@ -46,9 +47,15 @@ export const Route = createFileRoute("/api/public/v1/diagnostics")({
               CLAUDE_CODE_GATEWAY_TOKEN: {
                 configured: Boolean(process.env["CLAUDE_CODE_GATEWAY_TOKEN"]),
               },
+              POOL_SUPABASE_SERVICE_ROLE_KEY: {
+                configured: Boolean(process.env["POOL_SUPABASE_SERVICE_ROLE_KEY"]),
+              },
             },
+            pool_connected: Boolean(pool),
             routes: [
               "POST /api/public/v1/messages",
+              "POST /api/public/v1/chat/completions",
+              "POST /api/public/v1/workers/register",
               "GET /api/public/v1/models",
               "GET /api/public/v1/diagnostics",
             ],
