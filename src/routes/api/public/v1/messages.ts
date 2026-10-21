@@ -1,23 +1,18 @@
 /**
  * POST /api/public/v1/messages
  *
- * ⚠️ GATEWAY EXPERIMENTAL compatível com Claude Code (formato Anthropic
- * Messages API). Não é a API oficial da Anthropic: as chamadas são traduzidas
- * para o Lovable AI Gateway usando o Pool de Chaves (Round-Robin + Failover 429).
- *
- * Autenticação: `Authorization: Bearer <token>` ou `x-api-key: <token>`,
- * validados contra a secret CLAUDE_CODE_GATEWAY_TOKEN. O AI_CHAT_TEST_TOKEN
- * nunca é aceito neste endpoint.
+ * Endpoint compatível com Claude Code / Anthropic Messages API.
+ * Autentica via CLAUDE_CODE_GATEWAY_TOKEN ou chave de cliente emitida no Gateway.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
   anthropicError,
   anthropicStream,
+  authenticateGatewayRequest,
   checkRateLimit,
   consumeUpstream,
   CORS_HEADERS,
   EXPERIMENTAL_NOTICE,
-  isAuthorized,
   MAX_BODY_BYTES,
   MAX_MESSAGES,
   MAX_TOTAL_CHARS,
@@ -28,7 +23,7 @@ import {
   toResponsesRequest,
   type MessagesRequest,
 } from "@/lib/claude-compat.server";
-import { fetchGatewayWithFailover } from "@/lib/key-pool.server";
+import { fetchGatewayWithFailover, getPoolAdmin } from "@/lib/key-pool.server";
 
 export const Route = createFileRoute("/api/public/v1/messages")({
   server: {
@@ -36,19 +31,23 @@ export const Route = createFileRoute("/api/public/v1/messages")({
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
 
       POST: async ({ request }) => {
-        const rl = checkRateLimit(rateLimitKey(request));
-        if (!rl.ok) {
-          return anthropicError(429, "rate_limit_error", "Limite de requisições atingido.", {
-            "Retry-After": String(rl.retryAfter),
-          });
-        }
+        const startTime = Date.now();
+        const auth = await authenticateGatewayRequest(request);
 
-        if (!isAuthorized(request)) {
+        if (!auth.authorized) {
           return anthropicError(
             401,
             "authentication_error",
             "Token inválido. Envie Authorization: Bearer <token> ou x-api-key.",
           );
+        }
+
+        const rpmLimit = auth.client?.rate_limit_rpm || 120;
+        const rl = checkRateLimit(rateLimitKey(request), rpmLimit);
+        if (!rl.ok) {
+          return anthropicError(429, "rate_limit_error", "Limite de requisições atingido.", {
+            "Retry-After": String(rl.retryAfter),
+          });
         }
 
         const raw = await request.text();
@@ -80,13 +79,29 @@ export const Route = createFileRoute("/api/public/v1/messages")({
         if (JSON.stringify(body.messages).length > MAX_TOTAL_CHARS) {
           return anthropicError(413, "request_too_large", `Conteúdo total excede ${MAX_TOTAL_CHARS} caracteres.`);
         }
-        if (body.max_tokens !== undefined && (typeof body.max_tokens !== "number" || body.max_tokens < 1)) {
-          return anthropicError(400, "invalid_request_error", "`max_tokens` deve ser um número positivo.");
+
+        // Consultar modelos desabilitados globalmente
+        const pool = getPoolAdmin();
+        let disabledModels: string[] = [];
+        if (pool) {
+          const { data: setRow } = await pool.from("gateway_settings").select("disabled_models").eq("id", 1).single();
+          if (setRow?.disabled_models) disabledModels = setRow.disabled_models;
         }
 
-        const model = resolveModel(body.model);
+        const model = resolveModel(body.model, disabledModels);
         if (!model) {
-          return anthropicError(400, "invalid_request_error", `Modelo não permitido: ${String(body.model)}.`);
+          return anthropicError(
+            400,
+            "invalid_request_error",
+            `Modelo não permitido ou desabilitado pelo administrador: ${String(body.model)}.`,
+          );
+        }
+
+        // Confere permissão do cliente
+        if (auth.client?.allowed_models && auth.client.allowed_models.length > 0) {
+          if (!auth.client.allowed_models.includes(model)) {
+            return anthropicError(403, "permission_error", "Seu cliente não tem permissão para usar este modelo.");
+          }
         }
 
         const isOpenAI = model.startsWith("openai/");
@@ -96,16 +111,37 @@ export const Route = createFileRoute("/api/public/v1/messages")({
         const payload = isOpenAI ? toResponsesRequest(body, model) : toChatCompletions(body, model);
 
         const { upstream, networkError } = await fetchGatewayWithFailover(url, payload, 3);
+        const latency = Date.now() - startTime;
+
         if (networkError) {
           console.error("[claude-compat] upstream unreachable", { model, stream: !!body.stream });
           return anthropicError(502, "api_error", "Não foi possível contatar o serviço de IA.");
         }
         if (!upstream) {
-          return anthropicError(500, "api_error", "Serviço de IA indisponível.");
+          return anthropicError(500, "api_error", "Serviço de IA indisponível (sem chaves ativas no pool).");
+        }
+
+        // Registrar métricas de telemetria se houver cliente
+        if (pool && auth.client) {
+          pool.rpc("increment_client_stats", {
+            p_client_id: auth.client.id,
+            p_reqs: 1,
+            p_in_tok: 0,
+            p_out_tok: 0,
+          }).catch(() => {});
+
+          pool.from("gateway_request_logs").insert({
+            client_id: auth.client.id,
+            client_name: auth.client.name,
+            endpoint: "/api/public/v1/messages",
+            requested_model: body.model || "default",
+            resolved_model: model,
+            status_code: upstream.status,
+            latency_ms: latency,
+          }).catch(() => {});
         }
 
         if (!upstream.ok) {
-          console.error("[claude-compat] upstream error", { model, status: upstream.status });
           if (upstream.status === 429)
             return anthropicError(429, "rate_limit_error", "Limite de requisições do provedor atingido em todas as chaves do pool.");
           if (upstream.status === 402)

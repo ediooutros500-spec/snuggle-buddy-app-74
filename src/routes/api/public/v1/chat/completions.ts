@@ -1,16 +1,14 @@
 /**
  * POST /api/public/v1/chat/completions
  *
- * ⚠️ GATEWAY EXPERIMENTAL compatível com a OpenAI Chat Completions API.
- * Autenticação: `Authorization: Bearer <CLAUDE_CODE_GATEWAY_TOKEN>` ou
- * `x-api-key`. Usa o Pool de Chaves (Round-Robin + Failover 429).
+ * Endpoint OpenAI-compatible com autenticação por chave de cliente ou admin.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
+  authenticateGatewayRequest,
   checkRateLimit,
   consumeUpstream,
   CORS_HEADERS,
-  isAuthorized,
   MAX_BODY_BYTES,
   MAX_MESSAGES,
   MAX_TOTAL_CHARS,
@@ -26,7 +24,7 @@ import {
   toInternalRequest,
   type OpenAIChatRequest,
 } from "@/lib/openai-compat.server";
-import { fetchGatewayWithFailover } from "@/lib/key-pool.server";
+import { fetchGatewayWithFailover, getPoolAdmin } from "@/lib/key-pool.server";
 
 export const Route = createFileRoute("/api/public/v1/chat/completions")({
   server: {
@@ -34,18 +32,23 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
 
       POST: async ({ request }) => {
-        const rl = checkRateLimit(rateLimitKey(request));
-        if (!rl.ok) {
-          return openaiError(429, "Limite de requisições atingido.", "rate_limit_exceeded", {
-            "Retry-After": String(rl.retryAfter),
-          });
-        }
-        if (!isAuthorized(request)) {
+        const startTime = Date.now();
+        const auth = await authenticateGatewayRequest(request);
+
+        if (!auth.authorized) {
           return openaiError(
             401,
             "Token inválido. Envie Authorization: Bearer <token> ou x-api-key.",
             "invalid_api_key",
           );
+        }
+
+        const rpmLimit = auth.client?.rate_limit_rpm || 120;
+        const rl = checkRateLimit(rateLimitKey(request), rpmLimit);
+        if (!rl.ok) {
+          return openaiError(429, "Limite de requisições atingido.", "rate_limit_exceeded", {
+            "Retry-After": String(rl.retryAfter),
+          });
         }
 
         const raw = await request.text();
@@ -70,9 +73,23 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           return openaiError(413, `Conteúdo total excede ${MAX_TOTAL_CHARS} caracteres.`, "request_too_large");
         }
 
-        const model = resolveModel(body.model);
+        // Consultar modelos desabilitados globalmente
+        const pool = getPoolAdmin();
+        let disabledModels: string[] = [];
+        if (pool) {
+          const { data: setRow } = await pool.from("gateway_settings").select("disabled_models").eq("id", 1).single();
+          if (setRow?.disabled_models) disabledModels = setRow.disabled_models;
+        }
+
+        const model = resolveModel(body.model, disabledModels);
         if (!model) {
-          return openaiError(400, `Modelo não permitido: ${String(body.model)}.`, "model_not_found");
+          return openaiError(400, `Modelo não permitido ou desabilitado: ${String(body.model)}.`, "model_not_found");
+        }
+
+        if (auth.client?.allowed_models && auth.client.allowed_models.length > 0) {
+          if (!auth.client.allowed_models.includes(model)) {
+            return openaiError(403, "Seu cliente não possui permissão para usar este modelo.", "permission_denied");
+          }
         }
 
         const internal = toInternalRequest(body, model);
@@ -85,6 +102,8 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           : toChatCompletions(internal, model);
 
         const { upstream, networkError } = await fetchGatewayWithFailover(url, payload, 3);
+        const latency = Date.now() - startTime;
+
         if (networkError) {
           console.error("[openai-compat] upstream unreachable", { model, stream: !!body.stream });
           return openaiError(502, "Não foi possível contatar o serviço de IA.", "api_error");
@@ -93,8 +112,19 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           return openaiError(500, "Serviço de IA indisponível.", "api_error");
         }
 
+        if (pool && auth.client) {
+          pool.from("gateway_request_logs").insert({
+            client_id: auth.client.id,
+            client_name: auth.client.name,
+            endpoint: "/api/public/v1/chat/completions",
+            requested_model: body.model || "default",
+            resolved_model: model,
+            status_code: upstream.status,
+            latency_ms: latency,
+          }).catch(() => {});
+        }
+
         if (!upstream.ok) {
-          console.error("[openai-compat] upstream error", { model, status: upstream.status });
           if (upstream.status === 429)
             return openaiError(429, "Limite de requisições do provedor atingido em todas as chaves do pool.", "rate_limit_exceeded");
           if (upstream.status === 402) return openaiError(402, "Créditos de IA esgotados.", "insufficient_quota");
