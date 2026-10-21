@@ -1,10 +1,10 @@
 /**
  * Camada de compatibilidade com a Anthropic Messages API (Claude Code).
  *
- * ⚠️ GATEWAY EXPERIMENTAL — não é a API oficial da Anthropic. Este projeto
- * traduz requisições no formato Anthropic para o Lovable AI Gateway
- * (`google/*` via /v1/chat/completions, `openai/*` via /v1/responses).
+ * ⚠️ GATEWAY EXPERIMENTAL — traduz requisições para o Lovable AI Gateway
+ * com suporte a Autenticação por Chave de Cliente individual ou Token Admin.
  */
+import { getPoolAdmin } from "./key-pool.server";
 
 export const EXPERIMENTAL_NOTICE =
   "Gateway experimental compatível com Claude Code. Não é a API oficial da Anthropic; " +
@@ -55,11 +55,16 @@ export const MODEL_ALIASES: Record<string, string> = {
   "o3-mini": "openai/gpt-5.5",
 };
 
-export function resolveModel(model?: string): string | null {
+export function resolveModel(model?: string, disabledModels: string[] = []): string | null {
   if (!model) return DEFAULT_MODEL;
   const trimmed = model.trim();
   const alias = MODEL_ALIASES[trimmed];
   const candidate = alias ?? trimmed;
+
+  if (disabledModels.includes(candidate)) {
+    return null; // Bloqueado nas configurações globais
+  }
+
   if ((ALLOWED_MODELS as readonly string[]).includes(candidate)) return candidate;
   if (/^claude[-.]/i.test(trimmed)) {
     if (/haiku/i.test(trimmed)) return "google/gemini-3.6-flash";
@@ -70,13 +75,9 @@ export function resolveModel(model?: string): string | null {
   return null;
 }
 
-/* ───────────────────────────── limites de payload ───────────────────────── */
-
 export const MAX_MESSAGES = 200;
-export const MAX_BODY_BYTES = 2_000_000; // ~2 MB para sessões longas do Claude Code
+export const MAX_BODY_BYTES = 2_000_000;
 export const MAX_TOTAL_CHARS = 1_500_000;
-
-/* ─────────────────────────────── autenticação ───────────────────────────── */
 
 export function safeEqual(a: string, b: string) {
   if (a.length !== b.length) return false;
@@ -93,19 +94,67 @@ export function extractToken(request: Request): string {
 }
 
 /**
- * Valida o token contra a secret CLAUDE_CODE_GATEWAY_TOKEN.
+ * Validação de autorização dupla:
+ * 1. Confere se é o CLAUDE_CODE_GATEWAY_TOKEN (Admin).
+ * 2. OU confere se é uma client_key emitida na tabela `gateway_clients`.
  */
-export function isAuthorized(request: Request): boolean {
-  const provided = extractToken(request);
-  const expected = process.env["CLAUDE_CODE_GATEWAY_TOKEN"];
-  if (!provided || !expected) return false;
-  return safeEqual(provided, expected);
+export async function authenticateGatewayRequest(request: Request): Promise<{
+  authorized: boolean;
+  isAdmin: boolean;
+  client?: {
+    id: string;
+    name: string;
+    allowed_models: string[] | null;
+    rate_limit_rpm: number;
+  };
+}> {
+  const token = extractToken(request);
+  if (!token) return { authorized: false, isAdmin: false };
+
+  // 1. Confere token admin
+  const adminExpected = process.env["CLAUDE_CODE_GATEWAY_TOKEN"];
+  if (adminExpected && safeEqual(token, adminExpected)) {
+    return { authorized: true, isAdmin: true };
+  }
+
+  // 2. Confere cliente registrado no 2º Supabase
+  const pool = getPoolAdmin();
+  if (pool) {
+    try {
+      const { data, error } = await pool
+        .from("gateway_clients")
+        .select("id, name, status, allowed_models, rate_limit_rpm")
+        .eq("client_key", token)
+        .single();
+
+      if (!error && data && data.status === "active") {
+        return {
+          authorized: true,
+          isAdmin: false,
+          client: {
+            id: data.id,
+            name: data.name,
+            allowed_models: data.allowed_models,
+            rate_limit_rpm: data.rate_limit_rpm,
+          },
+        };
+      }
+    } catch {
+      // Silencioso
+    }
+  }
+
+  return { authorized: false, isAdmin: false };
 }
 
-/* ─────────────────────────────── rate limiting ──────────────────────────── */
+export function isAuthorized(request: Request): boolean {
+  const token = extractToken(request);
+  const expected = process.env["CLAUDE_CODE_GATEWAY_TOKEN"];
+  if (!token || !expected) return false;
+  return safeEqual(token, expected);
+}
 
 const WINDOW_MS = 60_000;
-const MAX_REQUESTS_PER_WINDOW = 120; // Claude Code faz rajadas de tool-use em paralelo
 const buckets = new Map<string, number[]>();
 
 export function rateLimitKey(request: Request): string {
@@ -116,10 +165,10 @@ export function rateLimitKey(request: Request): string {
   );
 }
 
-export function checkRateLimit(key: string): { ok: boolean; retryAfter: number } {
+export function checkRateLimit(key: string, limitRpm = 120): { ok: boolean; retryAfter: number } {
   const now = Date.now();
   const hits = (buckets.get(key) ?? []).filter((t) => now - t < WINDOW_MS);
-  if (hits.length >= MAX_REQUESTS_PER_WINDOW) {
+  if (hits.length >= limitRpm) {
     const retryAfter = Math.ceil((WINDOW_MS - (now - (hits[0] ?? now))) / 1000);
     buckets.set(key, hits);
     return { ok: false, retryAfter: Math.max(retryAfter, 1) };
@@ -129,8 +178,6 @@ export function checkRateLimit(key: string): { ok: boolean; retryAfter: number }
   if (buckets.size > 5_000) buckets.clear();
   return { ok: true, retryAfter: 0 };
 }
-
-/* ────────────────────────────────── erros ───────────────────────────────── */
 
 export const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
@@ -153,8 +200,6 @@ export function anthropicError(
     },
   );
 }
-
-/* ───────────────────────── tipos Anthropic (subset) ─────────────────────── */
 
 export type AnthropicContentBlock =
   | { type: "text"; text: string }
@@ -212,10 +257,6 @@ const textOf = (content: unknown): string => {
   return content == null ? "" : JSON.stringify(content);
 };
 
-/**
- * Remove propriedades que quebram validadores estritos da Gemini/OpenAI
- * em JSON Schema de ferramentas (`$schema`, `additionalProperties` aninhado inválido etc.).
- */
 function sanitizeJsonSchema(schema?: Record<string, unknown>): Record<string, unknown> {
   if (!schema || typeof schema !== "object") {
     return { type: "object", properties: {} };
@@ -228,8 +269,6 @@ function sanitizeJsonSchema(schema?: Record<string, unknown>): Record<string, un
   }
   return clone;
 }
-
-/* ───────────────── Anthropic → OpenAI-compatible (chat completions) ─────── */
 
 export function toChatCompletions(req: MessagesRequest, model: string) {
   const msgs: Record<string, unknown>[] = [];
@@ -310,8 +349,6 @@ export function toChatCompletions(req: MessagesRequest, model: string) {
   };
 }
 
-/* ─────────────────── Anthropic → Responses API (openai/*) ───────────────── */
-
 export function toResponsesRequest(req: MessagesRequest, model: string) {
   const input: Record<string, unknown>[] = [];
 
@@ -385,8 +422,6 @@ export function toResponsesRequest(req: MessagesRequest, model: string) {
   };
 }
 
-/* ───────────────────────── acumulador normalizado ───────────────────────── */
-
 export interface ToolUseAcc {
   id: string;
   name: string;
@@ -426,8 +461,6 @@ export function toAnthropicMessage(model: string, acc: Accumulated) {
   };
 }
 
-/* ─────────────────────────── parsing de SSE upstream ────────────────────── */
-
 export async function* sseEvents(body: ReadableStream<Uint8Array>): AsyncGenerator<string> {
   const reader = body.getReader();
   const decoder = new TextDecoder();
@@ -447,7 +480,6 @@ export async function* sseEvents(body: ReadableStream<Uint8Array>): AsyncGenerat
   if (trailing.startsWith("data:")) yield trailing.slice(5).trim();
 }
 
-/** Consome o SSE do upstream e produz um resultado normalizado. */
 export async function consumeUpstream(
   upstream: Response,
   isOpenAI: boolean,
@@ -495,7 +527,6 @@ export async function consumeUpstream(
       continue;
     }
 
-    // chat completions
     const choice = evt.choices?.[0];
     const delta = choice?.delta;
     if (typeof delta?.content === "string" && delta.content) {
@@ -523,8 +554,6 @@ export async function consumeUpstream(
   acc.toolUses = acc.toolUses.filter(Boolean);
   return acc;
 }
-
-/* ───────────────────────── streaming SSE Anthropic ──────────────────────── */
 
 export function anthropicStream(model: string, upstream: Response, isOpenAI: boolean): Response {
   const encoder = new TextEncoder();
