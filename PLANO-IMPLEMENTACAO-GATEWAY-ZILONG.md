@@ -2,11 +2,13 @@
 
 ## Decisão atualizada em 22/10/2026
 
+O gateway é independente: qualquer projeto Lovable do operador com o gatilho instalado pode enviar sua própria chave. Não há projeto pai obrigatório nem número fixo de contas/remixes. O modo padrão é automático: sem segredo compartilhado, com validação da chave no Lovable antes de salvar. HMAC é opção legada explícita. Veja [instalação do gatilho](docs/REMIX-HOOK.md).
+
 O pai também sai da hospedagem Lovable, conforme decisão do usuário. A arquitetura de destino é:
 
 1. **Pai central na VPS**: painel, administração e rotas de compatibilidade do app, executados como servidor Node.js. O pai usa `GATEWAY_ROLE=central` e nunca se anuncia como filho.
 2. **Gator na mesma VPS**: recebe handshakes e evolui para o motor unificado de proxy, pool, quotas e telemetria.
-3. **Filhos no Lovable**: os remixes leem a própria `LOVABLE_API_KEY` no servidor e enviam HMAC ao Gator. Não recebem credenciais administrativas do Supabase central.
+3. **Filhos no Lovable**: os remixes leem a própria `LOVABLE_API_KEY` no servidor e enviam a chave por HTTPS ao Gator no modo automático. Não recebem credenciais administrativas do Supabase central.
 4. **Dois subdomínios futuros**: painel/pai e API. Os nomes definitivos ainda não foram definidos. O IP da VPS serve para instalação e health checks; o envio de credenciais e o uso autenticado público exigem HTTPS.
 
 O código/template dos filhos pode continuar sendo importado/remixado no Lovable; isso não exige manter o pai central hospedado lá. A separação final do template e a retirada do deploy antigo devem ser comprovadas depois que o pai na VPS passar pelos testes.
@@ -25,7 +27,7 @@ O upstream continua sendo **um único provedor: Lovable AI Gateway**. As várias
 - Registro no Gator por HTTPS.
 - Nenhuma chave enviada pelo navegador.
 - Nenhum service role do Supabase dentro do remix.
-- Configuração do endereço do Gator por variável/secret e fallback somente para desenvolvimento.
+- Endereço público do Gator herdado no código do template, configurado uma vez, com sobrescrita por variável no servidor.
 
 ### Manter no Gator
 
@@ -43,7 +45,7 @@ O upstream continua sendo **um único provedor: Lovable AI Gateway**. As várias
 
 - Não colocar `LOVABLE_API_KEY` no bundle React.
 - Não deixar service role no projeto remixável.
-- Não aceitar registro sem assinatura em produção.
+- Não salvar uma chave sem validação no upstream; assinatura é opcional no modo signed.
 - Não confiar apenas em header fixo como segredo.
 - Não permitir que o Gator faça fetch para qualquer URL informada pelo usuário.
 - Não chamar o sistema de multi-provedor.
@@ -195,14 +197,14 @@ Se o Supabase for executado no próprio PC, usar Docker/Supabase CLI e persistê
 
 ### Fluxo correto
 
-1. O usuário faz Remix do projeto Lovable Pai.
+1. O operador usa qualquer projeto Lovable com o gatilho instalado, diretamente ou por remix.
 2. O filho é publicado no workspace desejado.
 3. O servidor do filho atende a primeira requisição.
 4. O filho lê `process.env.LOVABLE_API_KEY` no servidor.
-5. O filho cria `timestamp`, `nonce`, `project_origin` e `workspace_hint` opcional.
-6. O filho assina tudo com o segredo de handshake configurado no filho.
+5. O projeto monta `api_key` e `project_origin` sem expor dados ao navegador.
+6. No modo padrão auto não há segredo compartilhado. Timestamp, nonce e assinatura só são necessários no modo signed opcional.
 7. O filho envia HTTPS para o Gator.
-8. O Gator valida assinatura, timestamp, nonce e origem.
+8. O Gator valida a origem e os limites. Somente no modo signed também verifica assinatura, timestamp e nonce.
 9. O Gator testa a key no Lovable upstream.
 10. O Gator cifra e salva no Supabase.
 11. O Gator devolve somente `registered`, `worker_id` e status.
@@ -211,7 +213,7 @@ A chave nunca deve passar pelo browser, aparecer no JSON de resposta ou ser grav
 
 ### Gatilhos no filho
 
-- SSR em `src/server.ts`, em background.
+- SSR em `src/server.ts`, aguardando a tentativa com timeout para não perder a tarefa após a resposta.
 - `useEffect` em `src/routes/__root.tsx`, chamando apenas endpoint local.
 - `POST /api/public/v1/workers/announce` no filho.
 
@@ -219,12 +221,11 @@ O frontend não chama o Gator diretamente. Ele chama o endpoint local; o servido
 
 ### Segurança
 
-- HMAC-SHA256.
-- Timestamp com janela curta.
-- Nonce de uso único.
+- Modo auto padrão: validação upstream sem segredo por remix.
+- Modo signed opcional: HMAC-SHA256, timestamp com janela curta e nonce de uso único.
 - Rate limit por origem.
 - Allowlist de domínios.
-- Rejeição sem secret configurado.
+- Secret obrigatório somente no modo signed.
 - Validação upstream da key antes de salvar.
 - Resposta sem ecoar a key.
 

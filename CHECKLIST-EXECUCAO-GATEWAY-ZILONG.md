@@ -2,6 +2,20 @@
 
 Este arquivo registra o avanço real da implementação. A checklist detalhada continua em `CHECKLIST-IMPLEMENTACAO-GATEWAY-ZILONG.md`.
 
+## Decisão vigente: registro automático e projetos independentes
+
+Em 22/10/2026 o usuário definiu que qualquer projeto Lovable seu com gatilho pode fornecer a própria chave, incluindo o projeto original. Não há quantidade fixa de contas/remixes nem dependência de um pai Lovable. Painel e Gator ficam na VPS. O modo padrão passa a ser auto: validação no upstream, sem segredo compartilhado. Referências históricas abaixo a HMAC obrigatório descrevem a implementação anterior, preservada como modo signed opcional. Guia: docs/REMIX-HOOK.md.
+
+- [x] Emissor desacoplado do banco central, com três módulos copiáveis.
+- [x] Validação upstream obrigatória antes da persistência no modo auto.
+- [x] Limites por origem e por processo/conexão; respostas sem credenciais.
+- [x] Endereço público herdável configurável uma vez no template.
+- [x] Snapshot isolado desta etapa: 21 testes do app e 25 do Gator aprovados; TypeScript e dois builds aprovados; lint com zero erros e sete avisos existentes.
+- [x] Smoke do pai Node: home/health HTTP 200, papel central e administração sem token HTTP 401.
+- [ ] Endereço HTTPS real preenchido: ainda não informado.
+- [ ] Remix real registrado e chave usada contra o upstream.
+- [ ] Motor unificado, quotas concorrentes e implantação real concluídos.
+
 ## Fase 0: baseline
 
 - [x] Repositório original confirmado: `ediooutros500-spec/snuggle-buddy-app-74`.

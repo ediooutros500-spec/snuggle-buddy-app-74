@@ -58,6 +58,7 @@ export function registrationServices(env = process.env, fetcher = fetch) {
   }
   return {
     secret: env.REMIX_SYNC_SECRET?.trim(),
+    mode: env.GATOR_REGISTRATION_MODE ?? "auto",
     store,
     async validateKey(apiKey) {
       const response = await fetcher("https://ai.gateway.lovable.dev/v1/chat/completions", {

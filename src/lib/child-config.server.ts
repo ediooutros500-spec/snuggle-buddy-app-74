@@ -1,9 +1,10 @@
 import { createHmac, randomUUID } from "node:crypto";
 
-export const PARENT_ORIGIN = "https://snuggle-buddy-app-74.lovable.app";
+import { CENTRAL_REGISTRATION_ORIGIN } from "./central-address";
 
 export interface ChildConfig {
   gatorPublicUrl: string;
+  registrationMode: "auto" | "signed";
   remixSyncSecret: string;
   lovableApiKey: string;
   workspaceLabel: string;
@@ -14,7 +15,8 @@ export function getChildConfig(): ChildConfig {
   const gatorPublicUrl = (
     process.env["GATOR_PUBLIC_URL"] ??
     process.env["PARENT_GATEWAY_URL"] ??
-    (process.env["NODE_ENV"] === "production" ? "" : "http://127.0.0.1:20128")
+    (CENTRAL_REGISTRATION_ORIGIN ||
+      (process.env["NODE_ENV"] === "production" ? "" : "http://127.0.0.1:20128"))
   )
     .trim()
     .replace(/\/+$/, "");
@@ -26,6 +28,7 @@ export function getChildConfig(): ChildConfig {
 
   return {
     gatorPublicUrl,
+    registrationMode: process.env["GATOR_REGISTRATION_MODE"] === "signed" ? "signed" : "auto",
     remixSyncSecret,
     lovableApiKey,
     workspaceLabel,

@@ -1,6 +1,6 @@
 # Pai central e Gator na VPS
 
-O pai é o painel/administração e as rotas de compatibilidade existentes. Ele roda em Node.js na VPS. O Gator é outro processo na mesma VPS. Os filhos continuam no Lovable e enviam registro assinado ao Gator. O pai usa `GATEWAY_ROLE=central`, portanto não envia sua key nem se registra como filho.
+O pai é o painel/administração e as rotas de compatibilidade existentes. Ele roda em Node.js na VPS. O Gator é outro processo na mesma VPS. Qualquer projeto do operador no Lovable pode enviar a própria chave com o [gatilho instalado](../docs/REMIX-HOOK.md). O registro padrão é automático, sem segredo compartilhado. O pai usa `GATEWAY_ROLE=central`, portanto não envia sua key nem se registra como filho.
 
 ## Executar o pai fora do Lovable
 
@@ -14,7 +14,7 @@ npm run start:parent
 
 O build do pai usa o preset `node-server` do Nitro. O build padrão permanece compatível com os ambientes Lovable dos filhos. As credenciais administrativas só entram no processo em execução; os únicos argumentos públicos do build Docker são `VITE_SUPABASE_URL` e a chave publicável, quando necessários pela interface.
 
-Na VPS, configure `.env.parent` e `gator/.env` com o mesmo Supabase central e o mesmo `REMIX_SYNC_SECRET`. O pai precisa das credenciais centrais durante a ponte de compatibilidade; nenhum filho precisa delas. Proteja os arquivos reais com permissões de leitura restritas ao operador.
+Na VPS, configure `.env.parent` e `gator/.env` com o mesmo Supabase central e `GATOR_REGISTRATION_MODE=auto`. O segredo compartilhado é necessário somente no modo signed opcional. O pai precisa das credenciais centrais durante a ponte de compatibilidade; nenhum filho precisa delas. Proteja os arquivos reais com permissões de leitura restritas ao operador.
 
 ## Containers e primeiro teste pelo IP
 
@@ -39,13 +39,13 @@ docker compose --env-file deploy/.env.deploy -f deploy/compose.yml --profile ip-
 docker compose --env-file deploy/.env.deploy -f deploy/compose.yml --profile https up -d --build
 ```
 
-O Caddy solicita os certificados. Configure `PARENT_PUBLIC_URL=https://SEU_PAINEL` no pai e `GATOR_PUBLIC_URL=https://SUA_API` no pai/filhos. Os valores `panel.invalid` e `api.invalid` são marcadores: não geram uma instalação pública funcional.
+O Caddy solicita os certificados. Configure `PARENT_PUBLIC_URL=https://SEU_PAINEL` no pai e `GATOR_PUBLIC_URL=https://SUA_API` na central. Defina também esse endereço público uma vez em `src/lib/central-address.ts` no projeto de origem, para os remixes herdarem o destino sem configurar segredo. Os valores `panel.invalid` e `api.invalid` são marcadores: não geram uma instalação pública funcional.
 
 | Endereço                                             | Destino atual                                            |
 | ---------------------------------------------------- | -------------------------------------------------------- |
 | Subdomínio do painel                                 | Pai Node.js                                              |
 | Subdomínio da API, `/health`                         | Health do Gator                                          |
-| Subdomínio da API, `/api/public/v1/workers/register` | Registro HMAC do Gator                                   |
+| Subdomínio da API, `/api/public/v1/workers/register` | Registro automático do Gator                             |
 | Subdomínio da API, `/v1/*`                           | Ponte para as rotas `/api/public/v1/*` existentes no pai |
 
 Essa ponte não conclui o motor unificado: autenticação, quotas concorrentes, catálogo validado, telemetria e failover ainda precisam ser centralizados no Gator. O painel atual também não equivale ao painel comercial completo do plano.

@@ -25,6 +25,7 @@ function fixture(overrides = {}) {
   const seen = new Set();
   const options = {
     secret,
+    mode: "signed",
     now: () => now,
     store: {
       async claimNonce(nonce) {
@@ -177,4 +178,70 @@ test("HTTP health, registration, payload limits and rate limit", async (t) => {
   assert.equal((await send("x".repeat(17000))).status, 413);
   for (let n = 0; n < 7; n++) await send("{}");
   assert.equal((await send("{}", { "x-forwarded-for": "different-ip" })).status, 429);
+});
+
+test("automatic registration requires upstream acceptance but no shared secret", async () => {
+  const f = fixture({ mode: "auto", secret: undefined });
+  const result = await f.register({}, body);
+  assert.deepEqual(result, {
+    status: 200,
+    body: { registered: true, worker_id: id, status: "active" },
+  });
+  assert.deepEqual(f.calls, ["validate", [key, origin, "active"]]);
+});
+for (const state of ["invalid", "unavailable"]) {
+  test(`automatic registration does not save a key after upstream ${state}`, async () => {
+    const f = fixture({ mode: "auto", secret: undefined, validateKey: async () => state });
+    assert.equal((await f.register({}, body)).status, state === "invalid" ? 400 : 503);
+    assert.deepEqual(f.calls, []);
+  });
+}
+test("automatic repeated registration returns one identifier and limits origin attempts", async () => {
+  const f = fixture({ mode: "auto", secret: undefined });
+  for (let attempt = 0; attempt < 3; attempt++) {
+    assert.equal((await f.register({}, body)).body.worker_id, id);
+  }
+  assert.equal((await f.register({}, body)).status, 429);
+  assert.equal(f.calls.filter((c) => c === "validate").length, 3);
+});
+test("automatic registration handles database failures without exposing keys", async () => {
+  const f = fixture({
+    mode: "auto",
+    secret: undefined,
+    store: {
+      async register() {
+        throw new Error(key);
+      },
+    },
+  });
+  assert.deepEqual(await f.register({}, body), {
+    status: 503,
+    body: { error: "registration_unavailable" },
+  });
+});
+
+test("HTTP automatic mode registers without signature and never echoes the key", async (t) => {
+  const f = fixture({ mode: undefined, secret: undefined });
+  const server = createGatorServer(readConfig({}), f.register);
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(
+    () =>
+      new Promise((resolve) => {
+        server.close(resolve);
+        server.closeAllConnections();
+      }),
+  );
+  const response = await fetch(
+    `http://127.0.0.1:${server.address().port}/api/public/v1/workers/register`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
+    },
+  );
+  assert.equal(response.status, 200);
+  const payload = await response.text();
+  assert.equal(payload.includes(key), false);
+  assert.deepEqual(JSON.parse(payload), { registered: true, worker_id: id, status: "active" });
+  assert.deepEqual(f.calls, ["validate", [key, origin, "active"]]);
 });

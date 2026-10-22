@@ -12,7 +12,7 @@ function route(t, fetcher) {
   const { Route } = load("src/routes/api/public/v1/workers/register.ts", {
     "@tanstack/react-router": { createFileRoute: () => (configuration) => configuration },
     "@/lib/claude-compat.server": { CORS_HEADERS: {}, isAuthorized: () => false },
-    "@/lib/child-handshake.server": { verifyIncomingHandshake: async () => ({ ok: true }) },
+    "@/lib/registration-auth.server": { verifyIncomingHandshake: async () => ({ ok: true }) },
     "@/lib/key-pool.server": {
       getPoolAdmin: () => ({
         async rpc() {
@@ -76,4 +76,16 @@ test("successful compatibility registration returns the Gator response contract"
     status: "active",
   });
   assert.equal(r.rpcCalls(), 1);
+});
+
+test("compatibility receiver limits repeated origin probes before calling upstream", async (t) => {
+  let probes = 0;
+  const r = route(t, async () => {
+    probes++;
+    return new Response("{}");
+  });
+  for (let i = 0; i < 3; i++) assert.equal((await r.send()).status, 200);
+  assert.equal((await r.send()).status, 429);
+  assert.equal(probes, 3);
+  assert.equal(r.rpcCalls(), 3);
 });

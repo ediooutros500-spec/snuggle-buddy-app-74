@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CORS_HEADERS, isAuthorized } from "@/lib/claude-compat.server";
 import { getPoolAdmin } from "@/lib/key-pool.server";
-import { verifyIncomingHandshake } from "@/lib/child-handshake.server";
+import { verifyIncomingHandshake } from "@/lib/registration-auth.server";
 
 const HEADERS = {
   ...CORS_HEADERS,
@@ -15,17 +15,15 @@ const json = (body: unknown, status = 200) =>
   });
 
 const registrations = new Map<string, number[]>();
-function allowedRegistration(request: Request): boolean {
-  const ip =
-    request.headers.get("cf-connecting-ip") ??
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
-    "unknown";
+function allowedRegistration(bucket: string, limit: number): boolean {
   const now = Date.now();
-  const hits = (registrations.get(ip) ?? []).filter((t) => now - t < 60_000);
-  if (hits.length >= 10) return false;
+  for (const [name, hits] of registrations)
+    if (!hits.some((t) => now - t < 60_000)) registrations.delete(name);
+  const hits = (registrations.get(bucket) ?? []).filter((t) => now - t < 60_000);
+  if (hits.length >= limit || (!registrations.has(bucket) && registrations.size >= 5000))
+    return false;
   hits.push(now);
-  registrations.set(ip, hits);
-  if (registrations.size > 5000) registrations.clear();
+  registrations.set(bucket, hits);
   return true;
 }
 
@@ -134,7 +132,8 @@ export const Route = createFileRoute("/api/public/v1/workers/register")({
             { success: false, message: "Pool Supabase secondary client not configured" },
             500,
           );
-        if (!allowedRegistration(request))
+        // This framework does not expose a trusted socket IP; forwarded headers cannot bypass this cap.
+        if (!allowedRegistration("global", 30))
           return json({ success: false, message: "Registration rate limit exceeded" }, 429);
         const body = (await request.json().catch(() => null)) as {
           action?: "reactivate";
@@ -156,12 +155,15 @@ export const Route = createFileRoute("/api/public/v1/workers/register")({
         const apiKey = typeof body.api_key === "string" ? body.api_key.trim() : "";
         const origin =
           typeof body.project_origin === "string" ? body.project_origin.trim() : "unknown";
-        if (!apiKey || apiKey.length < 8)
+        if (!apiKey || apiKey.length < 8 || apiKey.length > 8192)
           return json({ success: false, message: "Invalid or empty api_key" }, 400);
 
         const hs = await verifyIncomingHandshake(request, apiKey, origin);
         if (!hs.ok)
           return json({ success: false, message: hs.reason ?? "Unauthorized handshake" }, 401);
+
+        if (!allowedRegistration(`origin:${origin}`, 3))
+          return json({ success: false, message: "Origin registration rate limit exceeded" }, 429);
 
         const validation = await validateUpstreamKey(apiKey);
         if ("unavailable" in validation)
