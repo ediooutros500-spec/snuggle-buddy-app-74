@@ -1,5 +1,9 @@
 # Plano Mestre: Pai e Gator na VPS + Filhos Lovable
 
+## Evolução administrativa
+
+O detalhamento de produto, comparação com OmniRoute/9Router, lacunas do código atual, telas, ordem de entregas e critérios de aceite está em [Plano administrativo do gateway](docs/PLANO-ADMINISTRATIVO-GATEWAY.md), elaborado em 22/10/2026. Ele complementa este plano técnico e preserva o cadastro automático dos remixes. As fases propostas não estão concluídas apenas por estarem documentadas.
+
 ## Decisão atualizada em 22/10/2026
 
 O gateway é independente: qualquer projeto Lovable do operador com o gatilho instalado pode enviar sua própria chave. Não há projeto pai obrigatório nem número fixo de contas/remixes. O modo padrão é automático: sem segredo compartilhado, com validação da chave no Lovable antes de salvar. HMAC é opção legada explícita. Veja [instalação do gatilho](docs/REMIX-HOOK.md).
