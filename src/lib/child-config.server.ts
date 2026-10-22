@@ -13,10 +13,10 @@ export interface ChildConfig {
 
 export function getChildConfig(): ChildConfig {
   const gatorPublicUrl = (
-    process.env["GATOR_PUBLIC_URL"] ??
-    process.env["PARENT_GATEWAY_URL"] ??
-    (CENTRAL_REGISTRATION_ORIGIN ||
-      (process.env["NODE_ENV"] === "production" ? "" : "http://127.0.0.1:20128"))
+    process.env["GATOR_PUBLIC_URL"]?.trim() ||
+    process.env["PARENT_GATEWAY_URL"]?.trim() ||
+    CENTRAL_REGISTRATION_ORIGIN ||
+    (process.env["NODE_ENV"] === "production" ? "" : "http://127.0.0.1:20128")
   )
     .trim()
     .replace(/\/+$/, "");

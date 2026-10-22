@@ -36,7 +36,11 @@ function setup(t, fetcher, pool = null, extra = {}) {
       else process.env[name] = before[name];
     }
   });
-  const overrides = { "./key-pool.server": { getPoolAdmin: () => pool }, ...extra };
+  const overrides = {
+    "./key-pool.server": { getPoolAdmin: () => pool },
+    "./central-address": { CENTRAL_REGISTRATION_ORIGIN: "" },
+    ...extra,
+  };
   return {
     ...load("src/lib/child-handshake.server.ts", overrides),
     ...load("src/lib/registration-auth.server.ts", overrides),
@@ -203,4 +207,21 @@ test("automatic remix inherits the central address and registers without a secre
   delete process.env.GATOR_PUBLIC_URL;
   assert.equal((await child.triggerChildHandshake(origin)).registered, true);
   assert.equal(stored, 1);
+});
+
+test("blank environment URLs do not hide the inherited central address", async (t) => {
+  const child = setup(
+    t,
+    async (url) => {
+      assert.equal(url, "https://gator.example.test/api/public/v1/workers/register");
+      return success();
+    },
+    null,
+    { "./central-address": { CENTRAL_REGISTRATION_ORIGIN: "https://gator.example.test" } },
+  );
+  process.env.GATOR_REGISTRATION_MODE = "auto";
+  process.env.GATOR_PUBLIC_URL = "  ";
+  process.env.PARENT_GATEWAY_URL = "";
+  delete process.env.REMIX_SYNC_SECRET;
+  assert.equal((await child.triggerChildHandshake(origin)).registered, true);
 });

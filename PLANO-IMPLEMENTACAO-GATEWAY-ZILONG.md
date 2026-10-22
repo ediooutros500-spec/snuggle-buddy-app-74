@@ -9,7 +9,7 @@ O pai também sai da hospedagem Lovable, conforme decisão do usuário. A arquit
 1. **Pai central na VPS**: painel, administração e rotas de compatibilidade do app, executados como servidor Node.js. O pai usa `GATEWAY_ROLE=central` e nunca se anuncia como filho.
 2. **Gator na mesma VPS**: recebe handshakes e evolui para o motor unificado de proxy, pool, quotas e telemetria.
 3. **Filhos no Lovable**: os remixes leem a própria `LOVABLE_API_KEY` no servidor e enviam a chave por HTTPS ao Gator no modo automático. Não recebem credenciais administrativas do Supabase central.
-4. **Dois subdomínios futuros**: painel/pai e API. Os nomes definitivos ainda não foram definidos. O IP da VPS serve para instalação e health checks; o envio de credenciais e o uso autenticado público exigem HTTPS.
+4. **Dois hosts públicos ativos**: painel em `https://secretsof.delvertokens.store` e API em `https://api.delvertokens.store/v1`, reaproveitados do OmniRoute com DNS e HTTPS existentes. A origem de cadastro herdada pelos remixes é `https://api.delvertokens.store`.
 
 O código/template dos filhos pode continuar sendo importado/remixado no Lovable; isso não exige manter o pai central hospedado lá. A separação final do template e a retirada do deploy antigo devem ser comprovadas depois que o pai na VPS passar pelos testes.
 

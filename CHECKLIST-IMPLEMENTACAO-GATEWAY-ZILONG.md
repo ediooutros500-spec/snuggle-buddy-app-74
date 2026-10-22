@@ -11,7 +11,7 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 - [x] Confirmar que o browser nunca recebe a key.
 - [x] Confirmar que o Supabase central não entrega key ao remix.
 - [x] Confirmar se o Supabase será local no PC ou hospedado acessível pelo Gator.
-- [ ] Registrar domínio/URL do Gator.
+- [x] Hosts públicos ativos: painel `secretsof.delvertokens.store` e API/cadastro `api.delvertokens.store`, com HTTPS verificado em 22/10/2026.
 - [ ] Registrar política de workspaces e créditos.
 - [ ] Registrar que workspaces diferentes podem ter cotas separadas.
 - [ ] Registrar que remixes no mesmo workspace podem compartilhar créditos.
