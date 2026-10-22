@@ -33,4 +33,19 @@ docker compose -f deploy/compose.shared-vps.yml config --quiet
 
 ## Estado real
 
-Estrutura Compose validada localmente com `config --no-env-resolution --quiet`, sem carregar segredos. SSH e inspeção de recursos comprovados. A validação completa com os arquivos de ambiente efetivos deve ser repetida no runtime da VPS. A VPS foi apenas inspecionada; nenhum serviço foi alterado. Instalação do gateway, subdomínios, certificados e registro real continuam pendentes. O motor unificado e as quotas concorrentes do gateway são pendências separadas da hospedagem.
+**Instalado e rodando na VPS em 22/10/2026**, por autorização do usuário. Projeto `zilong-gateway-shared` no runtime `/opt/zilong-gateway/runtime`. Imagens Linux construídas no computador e transferidas por SSH: `zilong-gateway-parent:ea2e83fbb037` e `zilong-gator:ea2e83fbb037`. Código equivalente publicado no commit `edff5af7811924501be1fc9f087cb997d0ed70f1`. Arquivo de imagens verificado por SHA-256 antes do carregamento; preservado em `/opt/zilong-gateway/releases/ea2e83fbb037`.
+
+Validação Compose com os arquivos de ambiente efetivos aprovada. Credenciais separadas, arquivos com permissão 600, somente o runtime central possui service role. Containers saudáveis, usuário sem privilégios, filesystem somente leitura, reinício `unless-stopped` e limites de 384/128 MiB conferidos. Portas publicadas exclusivamente em `127.0.0.1:4430` e `127.0.0.1:4431`.
+
+Verificações reais aprovadas:
+
+- Home, health do pai e health do Gator: HTTP 200; papel central confirmado.
+- Administração sem token: HTTP 401; com token: HTTP 200 e leitura do Supabase aprovada.
+- Catálogo autenticado e consulta do pool: HTTP 200.
+- Origem inválida recusada pelo Gator com HTTP 400 antes de chamar o upstream.
+- Pool e clientes vazios: nenhuma chave Lovable real cadastrada e nenhuma chamada de IA consumida nesta verificação.
+- StarChef readiness: HTTP 200 antes e depois; backend saudável. IDs dos 26 containers anteriores preservados, sem recriação dos demais projetos.
+
+Acesso provisório neste computador por túnel SSH: painel em `http://127.0.0.1:34430` e health do Gator em `http://127.0.0.1:34431/health`. O transporte até a VPS é cifrado pelo SSH; essas URLs são locais, não acessíveis pelos remixes. O túnel dura enquanto o processo SSH e este computador estiverem ativos.
+
+Continuam pendentes os dois subdomínios, DNS/certificados/rotas no proxy compartilhado, URL HTTPS herdada no template e registro de um projeto Lovable real. O motor unificado e as quotas concorrentes do gateway são pendências separadas da hospedagem. Instalação e health aprovados não significam plano completo nem validação de tráfego de IA real.
