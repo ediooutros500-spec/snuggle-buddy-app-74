@@ -13,10 +13,16 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAdminGatewayRouteImport } from './routes/api/admin/gateway'
 import { Route as ApiPublicAiChatRouteImport } from './routes/api/public/ai-chat'
 import { Route as ApiPublicAiModelsRouteImport } from './routes/api/public/ai-models'
+import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
 import { Route as ApiPublicV1DiagnosticsRouteImport } from './routes/api/public/v1/diagnostics'
+import { Route as ApiPublicV1EmbeddingsRouteImport } from './routes/api/public/v1/embeddings'
 import { Route as ApiPublicV1MessagesRouteImport } from './routes/api/public/v1/messages'
 import { Route as ApiPublicV1ModelsRouteImport } from './routes/api/public/v1/models'
 import { Route as ApiPublicV1ChatCompletionsRouteImport } from './routes/api/public/v1/chat/completions'
+import { Route as ApiPublicV1ImagesGenerationsRouteImport } from './routes/api/public/v1/images/generations'
+import { Route as ApiPublicV1VideosGenerationsRouteImport } from './routes/api/public/v1/videos/generations'
+import { Route as ApiPublicV1WorkersAnnounceRouteImport } from './routes/api/public/v1/workers/announce'
+import { Route as ApiPublicV1WorkersDispatchRouteImport } from './routes/api/public/v1/workers/dispatch'
 import { Route as ApiPublicV1WorkersRegisterRouteImport } from './routes/api/public/v1/workers/register'
 
 const IndexRoute = IndexRouteImport.update({
@@ -39,9 +45,19 @@ const ApiPublicAiModelsRoute = ApiPublicAiModelsRouteImport.update({
   path: '/api/public/ai-models',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
+  id: '/api/public/health',
+  path: '/api/public/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicV1DiagnosticsRoute = ApiPublicV1DiagnosticsRouteImport.update({
   id: '/api/public/v1/diagnostics',
   path: '/api/public/v1/diagnostics',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicV1EmbeddingsRoute = ApiPublicV1EmbeddingsRouteImport.update({
+  id: '/api/public/v1/embeddings',
+  path: '/api/public/v1/embeddings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicV1MessagesRoute = ApiPublicV1MessagesRouteImport.update({
@@ -60,6 +76,30 @@ const ApiPublicV1ChatCompletionsRoute =
     path: '/api/public/v1/chat/completions',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicV1ImagesGenerationsRoute =
+  ApiPublicV1ImagesGenerationsRouteImport.update({
+    id: '/api/public/v1/images/generations',
+    path: '/api/public/v1/images/generations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1VideosGenerationsRoute =
+  ApiPublicV1VideosGenerationsRouteImport.update({
+    id: '/api/public/v1/videos/generations',
+    path: '/api/public/v1/videos/generations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1WorkersAnnounceRoute =
+  ApiPublicV1WorkersAnnounceRouteImport.update({
+    id: '/api/public/v1/workers/announce',
+    path: '/api/public/v1/workers/announce',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicV1WorkersDispatchRoute =
+  ApiPublicV1WorkersDispatchRouteImport.update({
+    id: '/api/public/v1/workers/dispatch',
+    path: '/api/public/v1/workers/dispatch',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicV1WorkersRegisterRoute =
   ApiPublicV1WorkersRegisterRouteImport.update({
     id: '/api/public/v1/workers/register',
@@ -72,10 +112,16 @@ export interface FileRoutesByFullPath {
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/v1/diagnostics': typeof ApiPublicV1DiagnosticsRoute
+  '/api/public/v1/embeddings': typeof ApiPublicV1EmbeddingsRoute
   '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
   '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
+  '/api/public/v1/images/generations': typeof ApiPublicV1ImagesGenerationsRoute
+  '/api/public/v1/videos/generations': typeof ApiPublicV1VideosGenerationsRoute
+  '/api/public/v1/workers/announce': typeof ApiPublicV1WorkersAnnounceRoute
+  '/api/public/v1/workers/dispatch': typeof ApiPublicV1WorkersDispatchRoute
   '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRoutesByTo {
@@ -83,10 +129,16 @@ export interface FileRoutesByTo {
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/v1/diagnostics': typeof ApiPublicV1DiagnosticsRoute
+  '/api/public/v1/embeddings': typeof ApiPublicV1EmbeddingsRoute
   '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
   '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
+  '/api/public/v1/images/generations': typeof ApiPublicV1ImagesGenerationsRoute
+  '/api/public/v1/videos/generations': typeof ApiPublicV1VideosGenerationsRoute
+  '/api/public/v1/workers/announce': typeof ApiPublicV1WorkersAnnounceRoute
+  '/api/public/v1/workers/dispatch': typeof ApiPublicV1WorkersDispatchRoute
   '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRoutesById {
@@ -95,10 +147,16 @@ export interface FileRoutesById {
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
+  '/api/public/health': typeof ApiPublicHealthRoute
   '/api/public/v1/diagnostics': typeof ApiPublicV1DiagnosticsRoute
+  '/api/public/v1/embeddings': typeof ApiPublicV1EmbeddingsRoute
   '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
   '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
   '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
+  '/api/public/v1/images/generations': typeof ApiPublicV1ImagesGenerationsRoute
+  '/api/public/v1/videos/generations': typeof ApiPublicV1VideosGenerationsRoute
+  '/api/public/v1/workers/announce': typeof ApiPublicV1WorkersAnnounceRoute
+  '/api/public/v1/workers/dispatch': typeof ApiPublicV1WorkersDispatchRoute
   '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRouteTypes {
@@ -108,10 +166,16 @@ export interface FileRouteTypes {
     | '/api/admin/gateway'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
+    | '/api/public/health'
     | '/api/public/v1/diagnostics'
+    | '/api/public/v1/embeddings'
     | '/api/public/v1/messages'
     | '/api/public/v1/models'
     | '/api/public/v1/chat/completions'
+    | '/api/public/v1/images/generations'
+    | '/api/public/v1/videos/generations'
+    | '/api/public/v1/workers/announce'
+    | '/api/public/v1/workers/dispatch'
     | '/api/public/v1/workers/register'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -119,10 +183,16 @@ export interface FileRouteTypes {
     | '/api/admin/gateway'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
+    | '/api/public/health'
     | '/api/public/v1/diagnostics'
+    | '/api/public/v1/embeddings'
     | '/api/public/v1/messages'
     | '/api/public/v1/models'
     | '/api/public/v1/chat/completions'
+    | '/api/public/v1/images/generations'
+    | '/api/public/v1/videos/generations'
+    | '/api/public/v1/workers/announce'
+    | '/api/public/v1/workers/dispatch'
     | '/api/public/v1/workers/register'
   id:
     | '__root__'
@@ -130,10 +200,16 @@ export interface FileRouteTypes {
     | '/api/admin/gateway'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
+    | '/api/public/health'
     | '/api/public/v1/diagnostics'
+    | '/api/public/v1/embeddings'
     | '/api/public/v1/messages'
     | '/api/public/v1/models'
     | '/api/public/v1/chat/completions'
+    | '/api/public/v1/images/generations'
+    | '/api/public/v1/videos/generations'
+    | '/api/public/v1/workers/announce'
+    | '/api/public/v1/workers/dispatch'
     | '/api/public/v1/workers/register'
   fileRoutesById: FileRoutesById
 }
@@ -142,10 +218,16 @@ export interface RootRouteChildren {
   ApiAdminGatewayRoute: typeof ApiAdminGatewayRoute
   ApiPublicAiChatRoute: typeof ApiPublicAiChatRoute
   ApiPublicAiModelsRoute: typeof ApiPublicAiModelsRoute
+  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
   ApiPublicV1DiagnosticsRoute: typeof ApiPublicV1DiagnosticsRoute
+  ApiPublicV1EmbeddingsRoute: typeof ApiPublicV1EmbeddingsRoute
   ApiPublicV1MessagesRoute: typeof ApiPublicV1MessagesRoute
   ApiPublicV1ModelsRoute: typeof ApiPublicV1ModelsRoute
   ApiPublicV1ChatCompletionsRoute: typeof ApiPublicV1ChatCompletionsRoute
+  ApiPublicV1ImagesGenerationsRoute: typeof ApiPublicV1ImagesGenerationsRoute
+  ApiPublicV1VideosGenerationsRoute: typeof ApiPublicV1VideosGenerationsRoute
+  ApiPublicV1WorkersAnnounceRoute: typeof ApiPublicV1WorkersAnnounceRoute
+  ApiPublicV1WorkersDispatchRoute: typeof ApiPublicV1WorkersDispatchRoute
   ApiPublicV1WorkersRegisterRoute: typeof ApiPublicV1WorkersRegisterRoute
 }
 
@@ -179,11 +261,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicAiModelsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/health': {
+      id: '/api/public/health'
+      path: '/api/public/health'
+      fullPath: '/api/public/health'
+      preLoaderRoute: typeof ApiPublicHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/diagnostics': {
       id: '/api/public/v1/diagnostics'
       path: '/api/public/v1/diagnostics'
       fullPath: '/api/public/v1/diagnostics'
       preLoaderRoute: typeof ApiPublicV1DiagnosticsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/embeddings': {
+      id: '/api/public/v1/embeddings'
+      path: '/api/public/v1/embeddings'
+      fullPath: '/api/public/v1/embeddings'
+      preLoaderRoute: typeof ApiPublicV1EmbeddingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/v1/messages': {
@@ -207,6 +303,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1ChatCompletionsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/v1/images/generations': {
+      id: '/api/public/v1/images/generations'
+      path: '/api/public/v1/images/generations'
+      fullPath: '/api/public/v1/images/generations'
+      preLoaderRoute: typeof ApiPublicV1ImagesGenerationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/videos/generations': {
+      id: '/api/public/v1/videos/generations'
+      path: '/api/public/v1/videos/generations'
+      fullPath: '/api/public/v1/videos/generations'
+      preLoaderRoute: typeof ApiPublicV1VideosGenerationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/workers/announce': {
+      id: '/api/public/v1/workers/announce'
+      path: '/api/public/v1/workers/announce'
+      fullPath: '/api/public/v1/workers/announce'
+      preLoaderRoute: typeof ApiPublicV1WorkersAnnounceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/v1/workers/dispatch': {
+      id: '/api/public/v1/workers/dispatch'
+      path: '/api/public/v1/workers/dispatch'
+      fullPath: '/api/public/v1/workers/dispatch'
+      preLoaderRoute: typeof ApiPublicV1WorkersDispatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/v1/workers/register': {
       id: '/api/public/v1/workers/register'
       path: '/api/public/v1/workers/register'
@@ -222,10 +346,16 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminGatewayRoute: ApiAdminGatewayRoute,
   ApiPublicAiChatRoute: ApiPublicAiChatRoute,
   ApiPublicAiModelsRoute: ApiPublicAiModelsRoute,
+  ApiPublicHealthRoute: ApiPublicHealthRoute,
   ApiPublicV1DiagnosticsRoute: ApiPublicV1DiagnosticsRoute,
+  ApiPublicV1EmbeddingsRoute: ApiPublicV1EmbeddingsRoute,
   ApiPublicV1MessagesRoute: ApiPublicV1MessagesRoute,
   ApiPublicV1ModelsRoute: ApiPublicV1ModelsRoute,
   ApiPublicV1ChatCompletionsRoute: ApiPublicV1ChatCompletionsRoute,
+  ApiPublicV1ImagesGenerationsRoute: ApiPublicV1ImagesGenerationsRoute,
+  ApiPublicV1VideosGenerationsRoute: ApiPublicV1VideosGenerationsRoute,
+  ApiPublicV1WorkersAnnounceRoute: ApiPublicV1WorkersAnnounceRoute,
+  ApiPublicV1WorkersDispatchRoute: ApiPublicV1WorkersDispatchRoute,
   ApiPublicV1WorkersRegisterRoute: ApiPublicV1WorkersRegisterRoute,
 }
 export const routeTree = rootRouteImport
