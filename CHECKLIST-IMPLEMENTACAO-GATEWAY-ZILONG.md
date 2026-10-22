@@ -63,9 +63,249 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 - [ ] Vault/segredo de cifra definido.
 - [ ] Migration `gateway_clients` aplicada.
 - [ ] Migration `gateway_client_keys` aplicada.
-- [ ] Migration `gateway_key_pol` aplicada.
+- [ ] Migration `gateway_key_pool` aplicada.
 - [ ] Migration `gateway_request_logs` aplicada.
 - [ ] Migration `gateway_usage_daily` aplicada.
 - [ ] Migration `gateway_jobs` aplicada.
 - [ ] Migration `gateway_workers` aplicada.
 - [ ] Migration `gateway_audit_logs` aplicada.
+- [ ] Migration `gateway_settings` aplicada.
+- [ ] RLS ativo.
+- [ ] RPC `register_worker_key` testada.
+- [ ] RPC `get_next_api_key` testada.
+- [ ] RPC `mark_key_status` testada.
+- [ ] RPC `consume_client_quota` testada.
+- [ ] RPC `log_request_and_increment_usage` testada.
+- [ ] Backup criado.
+- [ ] Restauração testada.
+- [ ] Nenhuma key aberta em tabela, resposta ou log.
+
+## E. Handshake do remix Lovable
+
+- [ ] `GATOR_PUBLIC_URL` definido no pai/remix.
+- [ ] Secret/HMAC do filho definido no ambiente server-side.
+- [ ] `src/lib/child-handshake.server.ts` criado.
+- [ ] `src/lib/child-config.server.ts` criado.
+- [ ] `POST /api/public/v1/workers/announce` local criado.
+- [ ] Gatilho SSR em `src/server.ts` criado.
+- [ ] Gatilho client-side chama somente endpoint local.
+- [ ] Payload contém origem, timestamp e nonce.
+- [ ] Assinatura HMAC implementada.
+- [ ] Replay bloqueado.
+- [ ] Sem secret, registro é recusado com mensagem clara.
+- [ ] Filho envia HTTPS ao Gator.
+- [ ] Gator valida assinatura.
+- [ ] Gator valida origem.
+- [ ] Gator limita tentativas por origem.
+- [ ] Gator testa a key no Lovable upstream.
+- [ ] Gator grava por RPC.
+- [ ] Resposta não contém a key.
+- [ ] Repetição do handshake é idempotente.
+- [ ] Remix publicado aparece no Gator.
+- [ ] `key_hint` aparece no painel.
+- [ ] Browser não consegue ver a key.
+
+## F. Motor unificado do Gator
+
+- [ ] `gateway-engine.ts` criado.
+- [ ] Auth de cliente centralizada.
+- [ ] Quota centralizada.
+- [ ] Rate limit centralizado.
+- [ ] Request ID centralizado.
+- [ ] Catálogo centralizado.
+- [ ] Seleção de key centralizada.
+- [ ] Retry/failover centralizados.
+- [ ] Telemetria centralizada.
+- [ ] Erros centralizados.
+- [ ] Chat Completions usa o motor.
+- [ ] Messages usa o motor.
+- [ ] Responses usa o motor.
+- [ ] Imagens usa o motor.
+- [ ] Embeddings usa o motor.
+- [ ] Vídeos/jobs usam o motor.
+- [ ] Áudio usa o motor se validado.
+- [ ] Nenhuma rota mantém auth/quota/log duplicado.
+
+## G. Catálogo e modelos Lovable
+
+- [ ] Fonte única de modelos criada.
+- [ ] Aliases definidos.
+- [ ] Endpoint upstream por modelo definido.
+- [ ] Capacidades por modelo definidas.
+- [ ] Streaming testado.
+- [ ] Tools testadas.
+- [ ] Visão testada.
+- [ ] Imagem testada.
+- [ ] Vídeo testado.
+- [ ] Embedding testado.
+- [ ] Áudio testado se disponível.
+- [ ] Probe com timeout criado.
+- [ ] Cache de disponibilidade criado.
+- [ ] `/v1/models` usa fonte única.
+- [ ] Painel usa fonte única.
+- [ ] Modelo não validado não aparece como ativo.
+
+## H. Clientes, proxy e quotas
+
+- [ ] Login do painel implementado.
+- [ ] RBAC implementado.
+- [ ] Cliente criado por API/painel.
+- [ ] API key mostrada uma vez.
+- [ ] Hash armazenado.
+- [ ] Rotação implementada.
+- [ ] Revogação implementada.
+- [ ] Quota RPM aplicada antes do upstream.
+- [ ] Quota diária aplicada.
+- [ ] Quota mensal aplicada.
+- [ ] Quota de tokens aplicada.
+- [ ] Allowlist de modelos aplicada.
+- [ ] Allowlist de endpoints aplicada.
+- [ ] Rate limit distribuído aplicado.
+- [ ] `X-Request-ID` retornado.
+- [ ] Headers de rate limit retornados.
+- [ ] Proxy localhost testado.
+- [ ] Proxy na LAN testado.
+- [ ] API key obrigatória fora do localhost.
+- [ ] CORS restrito.
+- [ ] Configuração Cursor documentada.
+- [ ] Configuração Claude Code documentada.
+- [ ] Configuração Cline/Continue documentada.
+
+## I. Pool e failover
+
+- [ ] Key selecionada com `SKIP LOCKED`.
+- [ ] Quota do worker respeitada.
+- [ ] Cooldown respeitado.
+- [ ] Contador atômico atualizado.
+- [ ] 401/403 desabilita.
+- [ ] 402/429 entra em cooldown.
+- [ ] 5xx/timeout têm retry controlado.
+- [ ] Backoff/jitter aplicado.
+- [ ] Circuit breaker testado.
+- [ ] Tentativas registradas.
+- [ ] Stream não é duplicado depois de iniciado.
+- [ ] Pool vazio retorna erro claro.
+- [ ] Fallback do pai é explícito.
+- [ ] Failover entre duas keys testado.
+
+## J. Painel comercial do Gator
+
+- [ ] `/dashboard` funcional.
+- [ ] `/dashboard/endpoints` funcional.
+- [ ] `/dashboard/models` funcional.
+- [ ] `/dashboard/routes` funcional.
+- [ ] `/dashboard/clients` funcional.
+- [ ] `/dashboard/workers` funcional.
+- [ ] `/dashboard/usage` funcional.
+- [ ] `/dashboard/logs` funcional.
+- [ ] `/dashboard/token-saver` funcional.
+- [ ] `/dashboard/settings` funcional.
+- [ ] `/dashboard/security` funcional.
+- [ ] Loading/empty/error/success em todas as telas.
+- [ ] Dados vêm da API, não hard-coded.
+- [ ] Busca/filtros/paginação funcionam.
+- [ ] Uso por worker aparece.
+- [ ] Uso por cliente aparece.
+- [ ] Cooldown aparece.
+- [ ] Custos são marcados como estimativa.
+- [ ] Textos revisados em PT-BR.
+- [ ] Desktop testado.
+- [ ] Mobile testado.
+
+## K. Token Saver e jobs
+
+- [ ] Detecção de `git diff` implementada.
+- [ ] Detecção de `grep/find/ls/tree` implementada.
+- [ ] Logs repetidos detectados.
+- [ ] Código preservado.
+- [ ] JSON preservado.
+- [ ] Tool calls preservados.
+- [ ] Binários ignorados.
+- [ ] Sensíveis ignorados.
+- [ ] Ativação por Gator implementada.
+- [ ] Ativação por cliente implementada.
+- [ ] Bypass por header implementado.
+- [ ] Economia antes/depois medida.
+- [ ] Jobs de vídeo/áudio/imagem implementados quando suportados.
+- [ ] `job_id` devolvido.
+- [ ] Polling/status implementado.
+- [ ] Expiração/limpeza implementada.
+
+## L. Operação local e VPS
+
+- [ ] Scripts PowerShell de instalação criados.
+- [ ] Script de início criado.
+- [ ] Script de parada criado.
+- [ ] Script de atualização criado.
+- [ ] Supabase local por Docker documentado, se escolhido.
+- [ ] Supabase hospedado documentado, se escolhido.
+- [ ] Dockerfile do Gator criado.
+- [ ] Docker Compose criado.
+- [ ] Reverse proxy HTTPS documentado.
+- [ ] Backup automático documentado.
+- [ ] Logs com retenção.
+- [ ] Monitoramento configurado.
+- [ ] Health público mínimo.
+- [ ] Diagnóstico protegido.
+- [ ] Firewall configurado.
+- [ ] Teste em VPS realizado.
+- [ ] Teste em segundo computador realizado.
+
+## M. Segurança e conformidade
+
+- [ ] `.env` não versionado.
+- [ ] Service role não aparece no Lovable.
+- [ ] Key do filho nunca aparece no browser.
+- [ ] Key não aparece em logs.
+- [ ] Key não aparece em GET administrativo.
+- [ ] CORS administrativo protegido.
+- [ ] HMAC/nonce/replay testados.
+- [ ] SSRF testado.
+- [ ] Redirect externo testado.
+- [ ] Brute force testado.
+- [ ] Rate limit de registro testado.
+- [ ] Rotação de secrets testada.
+- [ ] Auditoria administrativa criada.
+- [ ] Retenção de logs definida.
+- [ ] Termos do provedor revisados antes de uso comercial.
+
+## N. Testes e release
+
+- [ ] Testes unitários de auth.
+- [ ] Testes unitários de HMAC.
+- [ ] Testes de keys.
+- [ ] Testes de quotas.
+- [ ] Testes de rate limit.
+- [ ] Testes de seleção concorrente.
+- [ ] Testes de cooldown.
+- [ ] Testes de failover.
+- [ ] Testes de catálogo.
+- [ ] Testes de streaming.
+- [ ] Testes de tool use.
+- [ ] Testes de jobs.
+- [ ] Testes de workers.
+- [ ] Testes do painel.
+- [ ] Teste E2E: remix publicado envia key.
+- [ ] Teste E2E: key aparece cifrada no Supabase.
+- [ ] Teste E2E: Gator usa key do worker.
+- [ ] Teste E2E: 429/402 troca key.
+- [ ] Teste E2E: outro PC usa proxy.
+- [ ] CI roda lint, build e testes.
+- [ ] Release documentado.
+- [ ] Checklist atualizada com evidências.
+
+## Critério final de pronto
+
+- [ ] App Lovable continua remixável.
+- [ ] Remix publicado registra automaticamente no Gator.
+- [ ] Supabase central armazena somente cifra/hash/hint.
+- [ ] Gator atende API autenticada.
+- [ ] Pool round-robin funciona.
+- [ ] Quotas funcionam de verdade.
+- [ ] Failover foi comprovado.
+- [ ] Painel comercial funciona.
+- [ ] Proxy local/VPS funciona.
+- [ ] Backup e restauração foram comprovados.
+- [ ] Documentação está atualizada.
+
+Uma caixa só vira `[x]` depois de evidência verificável.
