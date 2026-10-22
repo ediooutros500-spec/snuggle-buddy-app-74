@@ -1,4 +1,6 @@
 FROM caddy@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
+# Only port 8080 is used; strip the image's privileged-port file capability.
+RUN setcap -r /usr/bin/caddy
 COPY --chown=1000:1000 deploy/Caddyfile.api /etc/caddy/Caddyfile
 ENV XDG_CONFIG_HOME=/tmp/config XDG_DATA_HOME=/tmp/data
 USER 1000:1000
