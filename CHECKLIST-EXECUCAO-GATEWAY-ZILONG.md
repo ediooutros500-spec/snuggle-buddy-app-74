@@ -28,7 +28,7 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 - [x] `gator/src/server.mjs` criado com health check e resposta 404 segura.
 - [x] `gator/README.md` criado com instruções locais.
 - [x] `gator/npm run check` validado por `node --check`.
-- [ ] Health check executado no PC: pendente de iniciar o Gator local.
+- [x] Health check executado no PC: HTTP 200 no registro anterior e teste HTTP local aprovado nesta etapa.
 - [x] Supabase central acessível em 22/10/2026 com as credenciais de `.env.local` e `gator/.env`: dez tabelas consultadas sem retornar registros; sete RPCs expostas no catálogo REST.
 - [ ] Gateway engine implementado: próxima etapa.
 
@@ -47,9 +47,9 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 ## Próxima fase autorizada
 
 1. Corrigir e publicar a normalização de formato sem tocar na lógica do app.
-2. Iniciar o Gator local e validar `GET /health`.
-3. Validar o schema já existente do Supabase, RLS e RPCs antes de aplicar novas migrations.
-4. Implementar o handshake Lovable remixável apontando para o Gator, sem enviar a key pelo browser.
+2. Validar o schema já existente do Supabase, RLS, Vault e RPCs antes de aplicar novas migrations.
+3. Validar o handshake de um remix publicado contra o Gator.
+4. Implementar o motor unificado e o primeiro endpoint autenticado do Gator.
 
 Uma caixa só deve virar `[x]` quando existir evidência verificável.
 

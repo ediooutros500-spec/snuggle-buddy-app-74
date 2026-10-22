@@ -4,13 +4,13 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 
 ## A. Decisões e segurança do desenho
 
-- [ ] Confirmar que o root é o projeto Lovable Pai Remixável.
-- [ ] Confirmar que o Gator será executado localmente e depois poderá ir para VPS/Docker.
-- [ ] Confirmar que Lovable é o único upstream.
-- [ ] Confirmar que cada remix publicado envia a própria key pelo servidor.
-- [ ] Confirmar que o browser nunca recebe a key.
-- [ ] Confirmar que o Supabase central não entrega key ao remix.
-- [ ] Confirmar se o Supabase será local no PC ou hospedado acessível pelo Gator.
+- [x] Confirmar que o root é o projeto Lovable Pai Remixável.
+- [x] Confirmar que o Gator será executado localmente e depois poderá ir para VPS/Docker.
+- [x] Confirmar que Lovable é o único upstream.
+- [x] Confirmar que cada remix publicado envia a própria key pelo servidor.
+- [x] Confirmar que o browser nunca recebe a key.
+- [x] Confirmar que o Supabase central não entrega key ao remix.
+- [x] Confirmar se o Supabase será local no PC ou hospedado acessível pelo Gator.
 - [ ] Registrar domínio/URL do Gator.
 - [ ] Registrar política de workspaces e créditos.
 - [ ] Registrar que workspaces diferentes podem ter cotas separadas.
@@ -19,29 +19,29 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 
 ## B. Baseline do projeto Lovable
 
-- [ ] Checkout em `C:\Users\e_dio\Desktop\Gateway` confirmado.
-- [ ] Remote do GitHub confirmado.
-- [ ] Node/npm fixados.
-- [ ] `.env.example` criado sem valores reais.
-- [ ] `.env` ignorado pelo Git.
-- [ ] Scripts do root definidos.
+- [x] Checkout em `C:\Users\e_dio\Desktop\Gateway` confirmado.
+- [x] Remote do GitHub confirmado.
+- [x] Node/npm fixados.
+- [x] `.env.example` criado sem valores reais.
+- [x] `.env` ignorado pelo Git.
+- [x] Scripts do root definidos.
 - [ ] CRLF/Prettier normalizados.
-- [ ] `npm install` executado.
+- [x] `npm install` executado.
 - [ ] `npm run lint` aprovado.
-- [ ] `npm run build` aprovado.
+- [x] `npm run build` aprovado.
 - [ ] `npm test` aprovado ou pendências documentadas.
 - [ ] `src/routeTree.gen.ts` regenerado.
-- [ ] Todas as rotas fonte aparecem no route tree.
-- [ ] Home local responde.
-- [ ] Health local responde.
+- [x] Todas as rotas fonte aparecem no route tree.
+- [x] Home local responde.
+- [x] Health local responde.
 
 ## C. Estrutura do Gator
 
-- [ ] Pasta `gator/` criada.
-- [ ] `gator/package.json` criado.
-- [ ] `gator/.env.example` criado.
-- [ ] `gator/src/server.ts` criado.
-- [ ] `gator/src/config.ts` criado.
+- [x] Pasta `gator/` criada.
+- [x] `gator/package.json` criado.
+- [x] `gator/.env.example` criado.
+- [x] `gator/src/server.ts` criado (implementado em `gator/src/server.mjs`).
+- [x] `gator/src/config.ts` criado (implementado em `gator/src/config.mjs`).
 - [ ] `gator/src/engine/` criado.
 - [ ] `gator/src/auth/` criado.
 - [ ] `gator/src/workers/` criado.
@@ -50,9 +50,9 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 - [ ] `gator/src/token-saver/` criado.
 - [ ] `gator/src/db/` criado.
 - [ ] `gator/tests/` criado.
-- [ ] Health do Gator responde sem banco.
-- [ ] Gator inicia sem keys e informa configuração ausente.
-- [ ] App Lovable e Gator têm comandos/documentação separados.
+- [x] Health do Gator responde sem banco.
+- [x] Gator inicia sem keys e informa configuração ausente.
+- [x] App Lovable e Gator têm comandos/documentação separados.
 
 ## D. Supabase central do Gator
 
