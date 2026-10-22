@@ -3,6 +3,7 @@ import { getPoolAdmin } from "@/lib/key-pool.server";
 import { authorizeAdmin } from "@/lib/admin-auth.server";
 import { recordAdminAudit } from "@/lib/admin-store.server";
 import { clientKeyHint, createClientKey, storedClientKey } from "@/lib/client-keys.server";
+import { MODEL_CATALOG, settingsPatch, clientPatch } from "@/lib/gateway-policy.server";
 
 const headers = {
   "Content-Type": "application/json",
@@ -53,6 +54,11 @@ export const Route = createFileRoute("/api/admin/gateway")({
             legacy_key: !client_key.startsWith("gw_hash_v1:"),
           })),
           settings: settings.data,
+          catalog: MODEL_CATALOG.map((model) => ({
+            ...model,
+            enabled: !(settings.data.disabled_models || []).includes(model.id),
+            availability: "unverified",
+          })),
           logs: logs.data ?? [],
         });
       },
@@ -62,19 +68,15 @@ export const Route = createFileRoute("/api/admin/gateway")({
         const pool = getPoolAdmin();
         if (!pool) return json({ error: "Pool unavailable" }, 503);
         const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-        if (!body || typeof body["name"] !== "string" || !body["name"].trim())
-          return json({ error: "name is required" }, 400);
+        if (!body) return json({ error: "JSON inválido." }, 400);
+        let validated: Record<string, unknown>;
+        try {
+          validated = clientPatch(body, true);
+        } catch (error) {
+          return json({ error: error instanceof Error ? error.message : "Cliente inválido." }, 400);
+        }
         const key = createClientKey();
-        const row = {
-          name: body["name"].trim(),
-          client_key: storedClientKey(key),
-          status: "active",
-          allowed_models: Array.isArray(body["allowed_models"]) ? body["allowed_models"] : null,
-          rate_limit_rpm: Number(body["rate_limit_rpm"]) || 60,
-          quota_limit_requests:
-            body["quota_limit_requests"] == null ? null : Number(body["quota_limit_requests"]),
-          notes: typeof body["notes"] === "string" ? body["notes"] : null,
-        };
+        const row = { ...validated, client_key: storedClientKey(key), status: "active" };
         const { data, error } = await pool
           .from("gateway_clients")
           .insert(row)
@@ -105,12 +107,15 @@ export const Route = createFileRoute("/api/admin/gateway")({
         const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
         if (!body) return json({ error: "Invalid body" }, 400);
         if (body["action"] === "settings") {
-          const patch = {
-            default_model: body["default_model"],
-            disabled_models: Array.isArray(body["disabled_models"]) ? body["disabled_models"] : [],
-            global_rate_limit_rpm: Number(body["global_rate_limit_rpm"]) || 120,
-            cooldown_minutes: Number(body["cooldown_minutes"]) || 15,
-          };
+          let patch: Record<string, unknown>;
+          try {
+            patch = settingsPatch(body);
+          } catch (error) {
+            return json(
+              { error: error instanceof Error ? error.message : "Configuração inválida." },
+              400,
+            );
+          }
           const { error } = await pool.from("gateway_settings").update(patch).eq("id", 1);
           if (!error) await recordAdminAudit(auth.actorId, "settings.update", "gateway");
           return error ? json({ error: "Failed to update settings" }, 400) : json({ ok: true });
@@ -128,31 +133,22 @@ export const Route = createFileRoute("/api/admin/gateway")({
           await recordAdminAudit(auth.actorId, "client.key.rotate", data.id);
           return json({ api_key: key, key_hint: clientKeyHint(key), id: data.id });
         }
-        if (
-          body["status"] !== undefined &&
-          !["active", "suspended"].includes(String(body["status"]))
-        )
-          return json({ error: "Status inválido." }, 400);
-        if (
-          body["rate_limit_rpm"] !== undefined &&
-          (!Number.isInteger(body["rate_limit_rpm"]) ||
-            Number(body["rate_limit_rpm"]) < 1 ||
-            Number(body["rate_limit_rpm"]) > 10000)
-        )
-          return json({ error: "RPM inválido." }, 400);
-        const patch: Record<string, unknown> = {};
-        for (const key of [
-          "name",
-          "status",
-          "allowed_models",
-          "rate_limit_rpm",
-          "quota_limit_requests",
-          "notes",
-        ])
-          if (key in body) patch[key] = body[key];
-        const { error } = await pool.from("gateway_clients").update(patch).eq("id", body["id"]);
-        if (!error) await recordAdminAudit(auth.actorId, "client.update", body["id"]);
-        return error ? json({ error: "Failed to update client" }, 400) : json({ ok: true });
+        let patch: Record<string, unknown>;
+        try {
+          patch = clientPatch(body);
+        } catch (error) {
+          return json({ error: error instanceof Error ? error.message : "Cliente inválido." }, 400);
+        }
+        const { data, error } = await pool
+          .from("gateway_clients")
+          .update(patch)
+          .eq("id", body["id"])
+          .select("id")
+          .maybeSingle();
+        if (error) return json({ error: "Failed to update client" }, 400);
+        if (!data) return json({ error: "Cliente não encontrado." }, 404);
+        await recordAdminAudit(auth.actorId, "client.update", String(body["id"]));
+        return json({ ok: true });
       },
     },
   },

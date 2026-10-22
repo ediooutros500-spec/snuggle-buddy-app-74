@@ -56,24 +56,30 @@ export const MODEL_ALIASES: Record<string, string> = {
   "o3-mini": "openai/gpt-5.5",
 };
 
-export function resolveModel(model?: string, disabledModels: string[] = []): string | null {
-  if (!model) return DEFAULT_MODEL;
-  const trimmed = model.trim();
+export function resolveModel(
+  model?: string,
+  disabledModels: string[] = [],
+  defaultModel = DEFAULT_MODEL,
+): string | null {
+  if (model !== undefined && typeof model !== "string") return null;
+  const trimmed = model?.trim() || defaultModel;
   const alias = MODEL_ALIASES[trimmed];
-  const candidate = alias ?? trimmed;
-
-  if (disabledModels.includes(candidate)) {
-    return null; // Bloqueado nas configurações globais
+  let candidate = alias ?? trimmed;
+  if (!(ALLOWED_MODELS as readonly string[]).includes(candidate)) {
+    if (/^claude[-.]/i.test(trimmed)) {
+      candidate = /haiku/i.test(trimmed)
+        ? "google/gemini-3.6-flash"
+        : /opus/i.test(trimmed)
+          ? "openai/gpt-5.5"
+          : "openai/gpt-5.6-sol";
+    } else if (/^(gpt-|o1|o3|o4|gemini-)/i.test(trimmed)) {
+      candidate = defaultModel;
+    } else return null;
   }
-
-  if ((ALLOWED_MODELS as readonly string[]).includes(candidate)) return candidate;
-  if (/^claude[-.]/i.test(trimmed)) {
-    if (/haiku/i.test(trimmed)) return "google/gemini-3.6-flash";
-    if (/opus/i.test(trimmed)) return "openai/gpt-5.5";
-    return "openai/gpt-5.6-sol";
-  }
-  if (/^(gpt-|o1|o3|o4|gemini-)/i.test(trimmed)) return DEFAULT_MODEL;
-  return null;
+  return (ALLOWED_MODELS as readonly string[]).includes(candidate) &&
+    !disabledModels.some((x) => x === trimmed || (MODEL_ALIASES[x] ?? x) === candidate)
+    ? candidate
+    : null;
 }
 
 export const MAX_MESSAGES = 200;

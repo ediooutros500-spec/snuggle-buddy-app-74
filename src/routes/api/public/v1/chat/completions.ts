@@ -6,14 +6,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   authenticateGatewayRequest,
-  checkRateLimit,
   consumeUpstream,
   CORS_HEADERS,
   MAX_BODY_BYTES,
   MAX_MESSAGES,
   MAX_TOTAL_CHARS,
-  rateLimitKey,
-  resolveModel,
   toChatCompletions,
   toResponsesRequest,
 } from "@/lib/claude-compat.server";
@@ -25,6 +22,13 @@ import {
   type OpenAIChatRequest,
 } from "@/lib/openai-compat.server";
 import { fetchGatewayWithFailover, getPoolAdmin } from "@/lib/key-pool.server";
+
+import {
+  admitModelAttempt,
+  policyErrorResponse,
+  readGatewaySettings,
+  resolvePolicyModel,
+} from "@/lib/gateway-policy.server";
 
 export const Route = createFileRoute("/api/public/v1/chat/completions")({
   server: {
@@ -41,14 +45,6 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
             "Token inválido. Envie Authorization: Bearer <token> ou x-api-key.",
             "invalid_api_key",
           );
-        }
-
-        const rpmLimit = auth.client?.rate_limit_rpm || 120;
-        const rl = checkRateLimit(rateLimitKey(request), rpmLimit);
-        if (!rl.ok) {
-          return openaiError(429, "Limite de requisições atingido.", "rate_limit_exceeded", {
-            "Retry-After": String(rl.retryAfter),
-          });
         }
 
         const raw = await request.text();
@@ -89,35 +85,14 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           );
         }
 
-        // Consultar modelos desabilitados globalmente
         const pool = getPoolAdmin();
-        let disabledModels: string[] = [];
-        if (pool) {
-          const { data: setRow } = await pool
-            .from("gateway_settings")
-            .select("disabled_models")
-            .eq("id", 1)
-            .single();
-          if (setRow?.disabled_models) disabledModels = setRow.disabled_models;
-        }
-
-        const model = resolveModel(body["model"], disabledModels);
-        if (!model) {
-          return openaiError(
-            400,
-            `Modelo não permitido ou desabilitado: ${String(body["model"])}.`,
-            "model_not_found",
-          );
-        }
-
-        if (auth.client?.allowed_models && auth.client.allowed_models.length > 0) {
-          if (!auth.client.allowed_models.includes(model)) {
-            return openaiError(
-              403,
-              "Seu cliente não possui permissão para usar este modelo.",
-              "permission_denied",
-            );
-          }
+        let model: string;
+        try {
+          const settings = await readGatewaySettings();
+          model = resolvePolicyModel(body.model, auth, settings);
+          await admitModelAttempt(model, auth, settings);
+        } catch (error) {
+          return policyErrorResponse(error);
         }
 
         const internal = toInternalRequest(body, model);

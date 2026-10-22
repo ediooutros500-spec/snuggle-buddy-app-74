@@ -105,6 +105,12 @@ export const Route = createFileRoute("/api/public/ai-chat")({
         }),
 
       POST: async ({ request }) => {
+        if (process.env["GATEWAY_ROLE"] === "central")
+          return jsonError(
+            410,
+            "legacy_route_disabled",
+            "Use a API /v1/chat/completions com uma chave de cliente.",
+          );
         const devTest = isDevTestRequest(request);
 
         if (!devTest && !(await hasValidSession(request))) {

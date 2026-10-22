@@ -14,22 +14,31 @@ function fixture(t, status = "active") {
     "@tanstack/react-router": { createFileRoute: () => (config) => config },
     "./key-pool.server": {
       getPoolAdmin: () => ({
-        from: () => ({
+        from: (table) => ({
           select: () => ({
             eq: (_column, value) => ({
               single: async () => ({
                 error:
-                  value === "gw_test-client-key" || value === hashed ? null : { code: "not_found" },
+                  table === "gateway_settings" || value === "gw_test-client-key" || value === hashed
+                    ? null
+                    : { code: "not_found" },
                 data:
-                  value === "gw_test-client-key" || value === hashed
+                  table === "gateway_settings"
                     ? {
-                        id: "client-1",
-                        name: "Test client",
-                        status,
-                        allowed_models: ["google/gemini-3.6-flash"],
-                        rate_limit_rpm: 60,
+                        default_model: "google/gemini-3.6-flash",
+                        disabled_models: [],
+                        global_rate_limit_rpm: 120,
+                        cooldown_minutes: 15,
                       }
-                    : null,
+                    : value === "gw_test-client-key" || value === hashed
+                      ? {
+                          id: "client-1",
+                          name: "Test client",
+                          status,
+                          allowed_models: ["google/gemini-3.6-flash"],
+                          rate_limit_rpm: 60,
+                        }
+                      : null,
               }),
             }),
           }),

@@ -13,6 +13,8 @@ import {
 } from "@/lib/claude-compat.server";
 import { getPoolAdmin } from "@/lib/key-pool.server";
 
+import { authorizeAdmin } from "@/lib/admin-auth.server";
+
 export const Route = createFileRoute("/api/public/v1/diagnostics")({
   server: {
     handlers: {
@@ -23,8 +25,11 @@ export const Route = createFileRoute("/api/public/v1/diagnostics")({
           return anthropicError(429, "rate_limit_error", "Limite de requisições atingido.", {
             "Retry-After": String(rl.retryAfter),
           });
-        if (!isAuthorized(request))
-          return anthropicError(401, "authentication_error", "Token inválido.");
+        const allowed =
+          process.env["GATEWAY_ROLE"] === "central"
+            ? (await authorizeAdmin(request)).ok
+            : isAuthorized(request);
+        if (!allowed) return anthropicError(401, "authentication_error", "Token inválido.");
         return new Response(
           JSON.stringify({
             secrets: {

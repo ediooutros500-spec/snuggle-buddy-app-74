@@ -1,11 +1,11 @@
-import {
-  authenticateGatewayRequest,
-  checkRateLimit,
-  CORS_HEADERS,
-  rateLimitKey,
-  safeEqual,
-} from "./claude-compat.server";
+import { authenticateGatewayRequest, CORS_HEADERS } from "./claude-compat.server";
 import { fetchGatewayWithFailover } from "./key-pool.server";
+
+import {
+  admitModelAttempt,
+  policyErrorResponse,
+  readGatewaySettings,
+} from "./gateway-policy.server";
 
 export const MEDIA_HEADERS = {
   ...CORS_HEADERS,
@@ -26,20 +26,11 @@ export async function authorizeMedia(request: Request) {
         401,
       ),
     };
-  const limit = auth.client?.rate_limit_rpm || 120;
-  const rl = checkRateLimit(
-    auth.client ? `client:${auth.client.id}` : rateLimitKey(request),
-    limit,
-  );
-  if (!rl.ok)
-    return {
-      response: jsonMedia(
-        { error: { type: "rate_limit_error", message: "Limite de requisições atingido." } },
-        429,
-        { "Retry-After": String(rl.retryAfter) },
-      ),
-    };
-  return { auth };
+  try {
+    return { auth, settings: await readGatewaySettings() };
+  } catch (error) {
+    return { response: policyErrorResponse(error) };
+  }
 }
 
 export async function readJson(request: Request): Promise<Record<string, unknown> | null> {
@@ -79,4 +70,18 @@ export function upstreamError(upstream: Response | null, networkError: boolean) 
     { error: { type: "api_error", message: "O serviço de IA retornou um erro." } },
     502,
   );
+}
+
+export async function admitMediaModel(
+  gate: Awaited<ReturnType<typeof authorizeMedia>>,
+  model: string,
+): Promise<Response | null> {
+  if (!gate.auth || !gate.settings)
+    return gate.response || jsonMedia({ error: { message: "Política indisponível." } }, 503);
+  try {
+    await admitModelAttempt(model, gate.auth, gate.settings);
+    return null;
+  } catch (error) {
+    return policyErrorResponse(error);
+  }
 }

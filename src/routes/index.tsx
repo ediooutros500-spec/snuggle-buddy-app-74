@@ -61,6 +61,9 @@ type Client = {
   status: string;
   key_hint: string;
   rate_limit_rpm: number;
+  allowed_models: string[] | null;
+  quota_limit_requests: number | null;
+  total_requests: number;
 };
 type Log = {
   id: string;
@@ -70,14 +73,7 @@ type Log = {
   status_code: number;
   latency_ms: number;
 };
-const models: [string, ...string[]] = [
-  "google/gemini-3.6-flash",
-  "openai/gpt-5.6-sol",
-  "openai/gpt-5.5-pro",
-  "openai/gpt-image-2.5-sunburst",
-  "openai/text-embedding-3-small",
-  "google/veo-3.1-fast",
-];
+type CatalogModel = { id: string; kind: string; enabled: boolean; availability: string };
 const endpointRows: [string, string, string][] = [
   ["POST", "/v1/messages", "Anthropic Messages"],
   ["POST", "/v1/chat/completions", "OpenAI Chat"],
@@ -110,9 +106,14 @@ function Dashboard() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [origin, setOrigin] = useState("");
   const [clientName, setClientName] = useState("");
+  const [editingClient, setEditingClient] = useState<string | null>(null);
+  const [clientRpm, setClientRpm] = useState("60");
+  const [clientQuota, setClientQuota] = useState("");
+  const [clientModels, setClientModels] = useState<string[]>([]);
   const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null);
   const [rpm, setRpm] = useState("120");
-  const [defaultModel, setDefaultModel] = useState(models[0]);
+  const [defaultModel, setDefaultModel] = useState("");
+  const [catalog, setCatalog] = useState<CatalogModel[]>([]);
   const headers = { "Content-Type": "application/json" };
   async function login(e: React.FormEvent) {
     e.preventDefault();
@@ -161,6 +162,13 @@ function Dashboard() {
       setClients(ad.clients || []);
       setApiBaseUrl(ad.addresses?.apiBaseUrl || null);
       setLogs(ad.logs || []);
+      setCatalog(ad.catalog || []);
+      setDefaultModel(ad.settings?.default_model || "");
+      setRpm(String(ad.settings?.global_rate_limit_rpm || 120));
+      if (!w.ok) {
+        setWorkers([]);
+        throw new Error(wd.error || "Falha ao consultar workers; dados do gateway carregados.");
+      }
       setWorkers(wd.workers || []);
       setMessage("Dados atualizados.");
     } catch (e) {
@@ -170,9 +178,15 @@ function Dashboard() {
   async function createClient() {
     if (!clientName.trim()) return;
     const r = await fetch("/api/admin/gateway", {
-      method: "POST",
+      method: editingClient ? "PATCH" : "POST",
       headers,
-      body: JSON.stringify({ name: clientName.trim() }),
+      body: JSON.stringify({
+        ...(editingClient ? { id: editingClient } : {}),
+        name: clientName.trim(),
+        rate_limit_rpm: Number(clientRpm),
+        quota_limit_requests: clientQuota.trim() ? Number(clientQuota) : null,
+        allowed_models: clientModels.length ? clientModels : null,
+      }),
     });
     const data = await r.json();
     setMessage(
@@ -181,8 +195,14 @@ function Dashboard() {
         : data.error || "Não foi possível criar o cliente.",
     );
     if (r.ok) setOneTimeKey(data.api_key || "");
-    setClientName("");
-    if (r.ok) refresh();
+    if (r.ok) {
+      setClientName("");
+      setEditingClient(null);
+      setClientRpm("60");
+      setClientQuota("");
+      setClientModels([]);
+      await refresh();
+    }
   }
   async function rotateClientKey(client: Client) {
     if (
@@ -217,12 +237,24 @@ function Dashboard() {
       body: JSON.stringify({
         action: "settings",
         default_model: defaultModel,
-        disabled_models: [],
         global_rate_limit_rpm: Number(rpm),
-        cooldown_minutes: 15,
       }),
     });
-    setMessage(r.ok ? "Configurações salvas." : "Falha ao salvar.");
+    const data = await r.json();
+    if (r.ok) await refresh();
+    setMessage(r.ok ? "Configurações salvas e aplicadas." : data.error || "Falha ao salvar.");
+  }
+  async function toggleModel(model: CatalogModel) {
+    const disabled = catalog.filter((x) => !x.enabled && x.id !== model.id).map((x) => x.id);
+    if (model.enabled) disabled.push(model.id);
+    const r = await fetch("/api/admin/gateway", {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ action: "settings", disabled_models: disabled }),
+    });
+    const data = await r.json();
+    if (r.ok) await refresh();
+    else setMessage(data.error || "Falha ao alterar modelo.");
   }
   async function dispatch() {
     if (!origin.trim()) {
@@ -235,7 +267,15 @@ function Dashboard() {
       body: JSON.stringify({ project_origin: origin.trim() }),
     });
     const d = await r.json();
-    setMessage(d.ok ? "Sinal enviado ao remix." : d.error || "O remix não respondeu.");
+    const registered = d.result?.registered === true && typeof d.result?.worker_id === "string";
+    setMessage(
+      registered
+        ? "Cadastro confirmado pela central."
+        : d.result?.message ||
+            d.error ||
+            "O sinal foi enviado, mas o cadastro ainda não foi confirmado.",
+    );
+    if (registered) await refresh();
   }
   const go = (value: string) => {
     setScreen(value as Screen);
@@ -400,7 +440,7 @@ function Dashboard() {
                 {screen}
               </div>
               <h1 className="text-3xl font-bold">
-                {screen === "Visão geral" ? "Bom dia, Edio" : screen}
+                {screen === "Visão geral" ? `Olá, ${user.username}` : screen}
               </h1>
               <p className="mt-2 text-[#8b91a0]">
                 Controle sua infraestrutura de IA em um único lugar.
@@ -426,6 +466,9 @@ function Dashboard() {
           )}
           <ScreenContent
             screen={screen}
+            catalog={catalog}
+            toggleModel={toggleModel}
+            canWrite={user.role !== "viewer"}
             workers={workers}
             clients={clients}
             logs={logs}
@@ -436,6 +479,22 @@ function Dashboard() {
             apiBaseUrl={apiBaseUrl}
             setClientName={setClientName}
             createClient={createClient}
+            clientRpm={clientRpm}
+            setClientRpm={setClientRpm}
+            clientQuota={clientQuota}
+            setClientQuota={setClientQuota}
+            clientModels={clientModels}
+            setClientModels={setClientModels}
+            editingClient={editingClient}
+            editClient={(client) => {
+              setEditingClient(client?.id || null);
+              setClientName(client?.name || "");
+              setClientRpm(String(client?.rate_limit_rpm || 60));
+              setClientQuota(
+                client?.quota_limit_requests == null ? "" : String(client.quota_limit_requests),
+              );
+              setClientModels(client?.allowed_models || []);
+            }}
             toggleClient={toggleClient}
             rotateClientKey={rotateClientKey}
             rpm={rpm}
@@ -451,6 +510,9 @@ function Dashboard() {
 }
 function ScreenContent({
   screen,
+  catalog,
+  toggleModel,
+  canWrite,
   workers,
   clients,
   logs,
@@ -461,6 +523,14 @@ function ScreenContent({
   apiBaseUrl,
   setClientName,
   createClient,
+  clientRpm,
+  setClientRpm,
+  clientQuota,
+  setClientQuota,
+  clientModels,
+  setClientModels,
+  editingClient,
+  editClient,
   toggleClient,
   rotateClientKey,
   rpm,
@@ -470,6 +540,9 @@ function ScreenContent({
   save,
 }: {
   screen: Screen;
+  catalog: CatalogModel[];
+  toggleModel: (model: CatalogModel) => Promise<void>;
+  canWrite: boolean;
   workers: Worker[];
   clients: Client[];
   logs: Log[];
@@ -480,6 +553,14 @@ function ScreenContent({
   apiBaseUrl: string | null;
   setClientName: (value: string) => void;
   createClient: () => Promise<void>;
+  clientRpm: string;
+  setClientRpm: (value: string) => void;
+  clientQuota: string;
+  setClientQuota: (value: string) => void;
+  clientModels: string[];
+  setClientModels: (value: string[]) => void;
+  editingClient: string | null;
+  editClient: (client: Client | null) => void;
   toggleClient: (client: Client) => Promise<void>;
   rotateClientKey: (client: Client) => Promise<void>;
   rpm: string;
@@ -488,6 +569,7 @@ function ScreenContent({
   setDefaultModel: (value: string) => void;
   save: () => Promise<void>;
 }) {
+  const models = catalog.filter((model) => model.kind === "text").map((model) => model.id);
   const card = "border-[#e7e9ee] bg-white shadow-sm";
   const Table = <T extends { id: string }>({
     rows,
@@ -565,49 +647,136 @@ function ScreenContent({
     );
   if (screen === "Modelos")
     return (
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {models.map((model) => (
-          <Card key={model} className={`${card} p-5`}>
-            <Zap size={18} className="text-[#7257ff]" />
-            <div className="mt-4 break-all font-mono text-xs">{model}</div>
-            <div className="mt-4 text-xs font-semibold text-[#28a879]">Ativo</div>
-          </Card>
-        ))}
+      <div className="space-y-4">
+        <p className="text-sm text-slate-600">
+          Catálogo de configuração. Disponibilidade e consumo de cada modelo ainda precisam de
+          validação real. Bloqueios valem para todas as modalidades.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {catalog.map((model) => (
+            <Card key={model.id} className={`${card} space-y-3 p-5`}>
+              <div className="break-all font-mono text-xs">{model.id}</div>
+              <div className="text-sm">
+                {model.enabled ? "Permitido na configuração" : "Bloqueado"}
+              </div>
+              <div className="text-xs text-slate-500">
+                {model.kind} · Disponibilidade não verificada
+              </div>
+              <Button disabled={!canWrite} variant="outline" onClick={() => toggleModel(model)}>
+                {model.enabled ? "Bloquear" : "Permitir"}
+              </Button>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   if (screen === "Clientes e API keys")
     return (
       <div className="space-y-5">
-        <Card className={`${card} flex gap-2 p-5`}>
-          <Input
-            placeholder="Nome do cliente"
-            value={clientName}
-            onChange={(e) => setClientName(e.target.value)}
-          />
-          <Button className="bg-[#7257ff]" onClick={createClient}>
-            <Plus size={15} className="mr-2" />
-            Criar
+        <Card className={`${card} space-y-4 p-5`}>
+          <h2 className="font-semibold">{editingClient ? "Editar cliente" : "Criar cliente"}</h2>
+          <div className="grid gap-3 md:grid-cols-3">
+            <label>
+              Nome
+              <Input
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                maxLength={200}
+                disabled={!canWrite}
+              />
+            </label>
+            <label>
+              RPM do cliente
+              <Input
+                type="number"
+                min={1}
+                max={10000}
+                value={clientRpm}
+                onChange={(e) => setClientRpm(e.target.value)}
+                disabled={!canWrite}
+              />
+            </label>
+            <label>
+              Quota total (vazio = sem limite)
+              <Input
+                type="number"
+                min={0}
+                value={clientQuota}
+                onChange={(e) => setClientQuota(e.target.value)}
+                disabled={!canWrite}
+              />
+            </label>
+          </div>
+          <label className="block">
+            Modelos permitidos (nenhum selecionado = todos os permitidos globalmente)
+            <select
+              multiple
+              className="mt-2 h-36 w-full rounded border p-2 text-xs"
+              value={clientModels}
+              disabled={!canWrite}
+              onChange={(e) =>
+                setClientModels(Array.from(e.target.selectedOptions, (option) => option.value))
+              }
+            >
+              {catalog.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.id}
+                  {model.enabled ? "" : " (bloqueado globalmente)"}
+                </option>
+              ))}
+            </select>
+          </label>
+          <p className="text-xs text-slate-500">
+            A quota conta tentativas de geração admitidas, incluindo falhas posteriores do provedor.
+            Consultar o catálogo não consome quota. Zero bloqueia novas gerações.
+          </p>
+          <Button disabled={!canWrite} className="bg-[#7257ff]" onClick={createClient}>
+            {editingClient ? "Salvar cliente" : "Criar cliente"}
           </Button>
+          {editingClient && (
+            <Button variant="outline" className="ml-2" onClick={() => editClient(null)}>
+              Cancelar
+            </Button>
+          )}
         </Card>
         <Table
           rows={clients}
-          heads={["Cliente", "API key", "RPM", "Status", "Ação"]}
+          heads={["Cliente", "API key", "RPM / Quota", "Status", "Ação"]}
           render={(c: Client) => (
             <>
               <td className="p-4 font-medium">{c.name}</td>
               <td className="p-4 font-mono text-xs">{c.key_hint}</td>
-              <td className="p-4">{c.rate_limit_rpm}</td>
+              <td className="p-4">
+                {c.rate_limit_rpm} RPM
+                <br />
+                {c.total_requests || 0} / {c.quota_limit_requests ?? "∞"}
+              </td>
               <td className="p-4 text-[#28a879]">{c.status === "active" ? "Ativo" : "Suspenso"}</td>
               <td className="p-4">
+                <Button
+                  disabled={!canWrite}
+                  size="sm"
+                  variant="outline"
+                  className="mr-2"
+                  onClick={() => editClient(c)}
+                >
+                  Editar
+                </Button>
                 <Button
                   size="sm"
                   variant="outline"
                   className="mr-2"
+                  disabled={!canWrite}
                   onClick={() => rotateClientKey(c)}
                 >
                   Substituir chave
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => toggleClient(c)}>
+                <Button
+                  disabled={!canWrite}
+                  size="sm"
+                  variant="outline"
+                  onClick={() => toggleClient(c)}
+                >
                   {c.status === "active" ? "Suspender" : "Ativar"}
                 </Button>
               </td>
@@ -630,7 +799,7 @@ function ScreenContent({
               value={origin}
               onChange={(e) => setOrigin(e.target.value)}
             />
-            <Button className="bg-[#7257ff]" onClick={dispatch}>
+            <Button disabled={!canWrite} className="bg-[#7257ff]" onClick={dispatch}>
               Enviar sinal
             </Button>
           </div>
@@ -670,10 +839,35 @@ function ScreenContent({
         )}
       />
     );
-  if (["Limites e quotas", "Preferências", "Rotas e fallback"].includes(screen))
+  if (screen === "Rotas e fallback")
+    return (
+      <Card className={`${card} space-y-3 p-6`}>
+        <h2 className="font-bold">Roteamento avançado pendente</h2>
+        <p>
+          O failover atual troca credenciais do mesmo provedor. Prioridades, combos e simulação de
+          rotas ainda não estão disponíveis.
+        </p>
+      </Card>
+    );
+  if (screen === "Uso e custos")
+    return (
+      <Card className={`${card} space-y-3 p-6`}>
+        <h2 className="font-bold">Relatório de consumo pendente</h2>
+        <p>
+          Os contadores atuais não conciliam tokens, tentativas e custo real. Nenhuma estimativa é
+          apresentada como cobrança medida.
+        </p>
+      </Card>
+    );
+  if (["Limites e quotas", "Preferências"].includes(screen))
     return (
       <Card className={`${card} max-w-xl space-y-5 p-6`}>
-        <h2 className="font-bold">Configuração do gateway</h2>
+        <h2 className="font-bold">Configuração aplicada pela API</h2>
+        <p className="text-sm text-slate-600">
+          RPM global compartilhado entre endpoints nesta instância. A quota total por cliente conta
+          tentativas de geração admitidas, inclusive falhas posteriores do provedor; catálogo não
+          consome quota. Limites distribuídos e conciliação continuam pendentes.
+        </p>
         <label className="block text-sm">
           Requisições por minuto
           <Input
@@ -695,7 +889,7 @@ function ScreenContent({
             ))}
           </select>
         </label>
-        <Button className="bg-[#7257ff]" onClick={save}>
+        <Button disabled={!canWrite} className="bg-[#7257ff]" onClick={save}>
           <Save size={15} className="mr-2" />
           Salvar
         </Button>
@@ -714,7 +908,7 @@ function ScreenContent({
       Server,
     ],
     ["Clientes ativos", clients.filter((client) => client.status === "active").length, Users],
-    ["Modelos", models.length, Boxes],
+    ["Modelos configurados", catalog.length, Boxes],
   ];
   return (
     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

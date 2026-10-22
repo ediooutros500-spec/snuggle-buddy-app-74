@@ -6,14 +6,18 @@
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  ALLOWED_MODELS,
   anthropicError,
-  checkRateLimit,
   CORS_HEADERS,
   authenticateGatewayRequest,
   MODEL_ALIASES,
-  rateLimitKey,
 } from "@/lib/claude-compat.server";
+import {
+  enforcePolicyRate,
+  MODEL_CATALOG,
+  modelPermitted,
+  policyErrorResponse,
+  readGatewaySettings,
+} from "@/lib/gateway-policy.server";
 
 export const Route = createFileRoute("/api/public/v1/models")({
   server: {
@@ -22,13 +26,6 @@ export const Route = createFileRoute("/api/public/v1/models")({
 
       GET: async ({ request }) => {
         const auth = await authenticateGatewayRequest(request);
-        const bucket = auth.client ? `client:${auth.client.id}` : rateLimitKey(request);
-        const rl = checkRateLimit(bucket, auth.client?.rate_limit_rpm || 120);
-        if (!rl.ok) {
-          return anthropicError(429, "rate_limit_error", "Limite de requisições atingido.", {
-            "Retry-After": String(rl.retryAfter),
-          });
-        }
         if (!auth.authorized) {
           return anthropicError(
             401,
@@ -37,11 +34,17 @@ export const Route = createFileRoute("/api/public/v1/models")({
           );
         }
 
-        const ids = Array.from(new Set([...ALLOWED_MODELS, ...Object.keys(MODEL_ALIASES)]));
-        const permitted = auth.client?.allowed_models;
-        const data = ids
-          .filter((id) => !permitted?.length || permitted.includes(MODEL_ALIASES[id] ?? id))
-          .map((id) => ({ id, object: "model" }));
+        let data;
+        try {
+          const settings = await readGatewaySettings();
+          enforcePolicyRate(auth, settings);
+          const ids = [...MODEL_CATALOG.map((x) => x.id), ...Object.keys(MODEL_ALIASES)];
+          data = ids
+            .filter((id) => modelPermitted(id, auth, settings))
+            .map((id) => ({ id, object: "model" }));
+        } catch (error) {
+          return policyErrorResponse(error);
+        }
 
         return new Response(JSON.stringify({ object: "list", data }), {
           status: 200,

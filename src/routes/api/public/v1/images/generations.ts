@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CORS_HEADERS } from "@/lib/claude-compat.server";
 import {
   authorizeMedia,
+  admitMediaModel,
   forwardMedia,
   jsonMedia,
   MEDIA_HEADERS,
@@ -31,6 +32,8 @@ export const Route = createFileRoute("/api/public/v1/images/generations")({
             },
             400,
           );
+        const denied = await admitMediaModel(gate, model);
+        if (denied) return denied;
         const { upstream, networkError } = await forwardMedia(
           "https://ai.gateway.lovable.dev/v1/images/generations",
           { ...body, model },

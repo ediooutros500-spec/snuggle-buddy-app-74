@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   authorizeMedia,
+  admitMediaModel,
   forwardMedia,
   jsonMedia,
   MEDIA_HEADERS,
@@ -32,6 +33,8 @@ export const Route = createFileRoute("/api/public/v1/videos/generations")({
             { error: { type: "invalid_request_error", message: "Modelo de vídeo não permitido." } },
             400,
           );
+        const denied = await admitMediaModel(gate, model);
+        if (denied) return denied;
         const { upstream, networkError } = await forwardMedia(
           "https://ai.gateway.lovable.dev/v1/videos/generations",
           { ...body, model },
