@@ -52,3 +52,14 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 4. Implementar o handshake Lovable remixável apontando para o Gator, sem enviar a key pelo browser.
 
 Uma caixa só deve virar `[x]` quando existir evidência verificável.
+
+## Registro seguro no Gator — 22/10/2026
+
+- [x] Endpoint de registro implementado no serviço Gator separado.
+- [x] HMAC obrigatório, timestamp, allowlist HTTPS e nonce persistido antes do upstream.
+- [x] Falhas de banco/upstream não ativam keys; respostas não expõem credenciais.
+- [x] Testes HTTP e de segurança com serviços simulados: 19 testes aprovados.
+- [ ] Registro real de remix publicado, Vault, RLS e idempotência no banco comprovados.
+- [ ] Motor de proxy autenticado do Gator implementado.
+
+Os testes do Gator são separados do root; a ausência de suíte no app Lovable continua pendente.
