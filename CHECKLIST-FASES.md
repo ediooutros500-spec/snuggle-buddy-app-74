@@ -4,13 +4,14 @@
 - [x] Pool v2 e regras pai/filhos commitados
 - [x] Registro seguro, validação upstream e rate limit
 - [x] Painel administrativo autenticado
-- [x] Quotas e fallback auditado
+- [x] Painel comercial com Overview, Endpoints, Models, Workers, Clients e Usage
 - [x] Health check público em `/api/public/health`
-- [ ] Build e lint verdes no Lovable
-- [ ] Modelos Claude Code extras e Anthropic pass-through revisados
+- [x] Disparo manual do pai para sincronizar remixes publicados
 - [x] Endpoint `/api/public/v1/images/generations`
 - [x] Endpoint `/api/public/v1/embeddings`
 - [x] Endpoint `/api/public/v1/videos/generations`
+- [ ] Build e lint verdes no Lovable
+- [ ] Modelos Claude Code extras e Anthropic pass-through revisados
 - [ ] Smoke test dos endpoints com gateway configurado
 
 ## SUPABASE E SECRETS, POR ÚLTIMO
