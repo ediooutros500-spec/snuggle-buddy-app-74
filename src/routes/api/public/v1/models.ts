@@ -10,7 +10,7 @@ import {
   anthropicError,
   checkRateLimit,
   CORS_HEADERS,
-  isAuthorized,
+  authenticateGatewayRequest,
   MODEL_ALIASES,
   rateLimitKey,
 } from "@/lib/claude-compat.server";
@@ -21,13 +21,15 @@ export const Route = createFileRoute("/api/public/v1/models")({
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
 
       GET: async ({ request }) => {
-        const rl = checkRateLimit(rateLimitKey(request));
+        const auth = await authenticateGatewayRequest(request);
+        const bucket = auth.client ? `client:${auth.client.id}` : rateLimitKey(request);
+        const rl = checkRateLimit(bucket, auth.client?.rate_limit_rpm || 120);
         if (!rl.ok) {
           return anthropicError(429, "rate_limit_error", "Limite de requisições atingido.", {
             "Retry-After": String(rl.retryAfter),
           });
         }
-        if (!isAuthorized(request)) {
+        if (!auth.authorized) {
           return anthropicError(
             401,
             "authentication_error",
@@ -36,7 +38,10 @@ export const Route = createFileRoute("/api/public/v1/models")({
         }
 
         const ids = Array.from(new Set([...ALLOWED_MODELS, ...Object.keys(MODEL_ALIASES)]));
-        const data = ids.map((id) => ({ id, object: "model" }));
+        const permitted = auth.client?.allowed_models;
+        const data = ids
+          .filter((id) => !permitted?.length || permitted.includes(MODEL_ALIASES[id] ?? id))
+          .map((id) => ({ id, object: "model" }));
 
         return new Response(JSON.stringify({ object: "list", data }), {
           status: 200,

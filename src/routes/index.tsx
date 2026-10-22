@@ -78,12 +78,12 @@ const models: [string, ...string[]] = [
   "google/veo-3.1-fast",
 ];
 const endpointRows: [string, string, string][] = [
-  ["POST", "/api/public/v1/messages", "Anthropic Messages"],
-  ["POST", "/api/public/v1/chat/completions", "OpenAI Chat"],
-  ["POST", "/api/public/v1/images/generations", "Imagens"],
-  ["POST", "/api/public/v1/embeddings", "Embeddings"],
-  ["POST", "/api/public/v1/videos/generations", "Vídeos"],
-  ["GET", "/api/public/v1/models", "Catálogo"],
+  ["POST", "/v1/messages", "Anthropic Messages"],
+  ["POST", "/v1/chat/completions", "OpenAI Chat"],
+  ["POST", "/v1/images/generations", "Imagens"],
+  ["POST", "/v1/embeddings", "Embeddings"],
+  ["POST", "/v1/videos/generations", "Vídeos"],
+  ["GET", "/v1/models", "Catálogo"],
 ];
 const nav = [
   { label: "Visão geral", icon: LayoutDashboard },
@@ -105,6 +105,7 @@ function Dashboard() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [origin, setOrigin] = useState("");
   const [clientName, setClientName] = useState("");
+  const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null);
   const [rpm, setRpm] = useState("120");
   const [defaultModel, setDefaultModel] = useState(models[0]);
   const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
@@ -122,6 +123,7 @@ function Dashboard() {
       const wd = await w.json();
       if (!a.ok) throw new Error(ad.error || "Token inválido.");
       setClients(ad.clients || []);
+      setApiBaseUrl(ad.addresses?.apiBaseUrl || null);
       setLogs(ad.logs || []);
       setWorkers(wd.workers || []);
       setMessage("Dados atualizados.");
@@ -309,6 +311,7 @@ function Dashboard() {
             setOrigin={setOrigin}
             dispatch={dispatch}
             clientName={clientName}
+            apiBaseUrl={apiBaseUrl}
             setClientName={setClientName}
             createClient={createClient}
             toggleClient={toggleClient}
@@ -332,6 +335,7 @@ function ScreenContent({
   setOrigin,
   dispatch,
   clientName,
+  apiBaseUrl,
   setClientName,
   createClient,
   toggleClient,
@@ -349,6 +353,7 @@ function ScreenContent({
   setOrigin: (value: string) => void;
   dispatch: () => Promise<void>;
   clientName: string;
+  apiBaseUrl: string | null;
   setClientName: (value: string) => void;
   createClient: () => Promise<void>;
   toggleClient: (client: Client) => Promise<void>;
@@ -400,16 +405,31 @@ function ScreenContent({
   if (screen === "Endpoints")
     return (
       <div className="grid gap-4 md:grid-cols-2">
+        <Card className={`${card} p-5 md:col-span-2`}>
+          <h3 className="font-semibold">Endereço da API</h3>
+          <code className="mt-2 block break-all text-sm">
+            {apiBaseUrl || "Endereço público da API ainda não configurado."}
+          </code>
+          <p className="mt-3 text-sm text-[#8b91a0]">
+            Use este endereço com a chave criada em Clientes e API keys. A chave administrativa fica
+            somente no painel.
+          </p>
+        </Card>
         {endpointRows.map(([method, path, name]) => (
           <Card key={path} className={`${card} p-5`}>
             <span className="text-xs font-bold text-[#28a879]">{method}</span>
             <h3 className="mt-4 font-semibold">{name}</h3>
-            <code className="mt-2 block text-xs text-[#8b91a0]">{path}</code>
+            <code className="mt-2 block break-all text-xs text-[#8b91a0]">
+              {apiBaseUrl ? `${apiBaseUrl}${path.slice(3)}` : path}
+            </code>
             <Button
               variant="outline"
               size="sm"
               className="mt-4"
-              onClick={() => navigator.clipboard?.writeText(path)}
+              disabled={!apiBaseUrl}
+              onClick={() =>
+                apiBaseUrl && navigator.clipboard?.writeText(`${apiBaseUrl}${path.slice(3)}`)
+              }
             >
               <Copy size={14} className="mr-2" />
               Copiar endpoint

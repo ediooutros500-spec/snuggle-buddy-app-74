@@ -1,5 +1,7 @@
 # Gateway independente com painel e Gator na VPS
 
+O produto tem dois acessos: [painel administrativo e API de clientes](docs/PAINEL-E-API.md). O painel cria a chave que os aplicativos usam na API `/v1`; as chaves Lovable ficam no servidor.
+
 Qualquer projeto Lovable seu com o [gatilho instalado](docs/REMIX-HOOK.md) pode enviar automaticamente a própria chave ao pool. O modo padrão valida a chave no Lovable, sem segredo compartilhado por remix. O envio ocorre na primeira execução do servidor após a publicação.
 
 O pai também será executado fora do Lovable. O destino atual é pai Node.js e Gator na mesma VPS, com filhos/remixes no Lovable e dois subdomínios futuros para painel e API.

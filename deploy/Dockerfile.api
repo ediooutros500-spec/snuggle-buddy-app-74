@@ -1,0 +1,6 @@
+FROM caddy@sha256:eb4d35b7452d1ab6171fbdbe8d9275b2301dad6dad92115d91e19fb9b24d510f
+COPY --chown=1000:1000 deploy/Caddyfile.api /etc/caddy/Caddyfile
+ENV XDG_CONFIG_HOME=/tmp/config XDG_DATA_HOME=/tmp/data
+USER 1000:1000
+EXPOSE 8080
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
