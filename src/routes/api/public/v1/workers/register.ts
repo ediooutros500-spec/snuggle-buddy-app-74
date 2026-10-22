@@ -1,224 +1,63 @@
-/**
- * POST /api/public/v1/workers/register
- * GET  /api/public/v1/workers/register
- *
- * Endpoint de recepção de chaves dos workers (Passo 2) e consulta de métricas
- * com chaves mascaradas para o Painel Visual da Central (Passo 5).
- */
 import { createFileRoute } from "@tanstack/react-router";
 import { CORS_HEADERS, isAuthorized } from "@/lib/claude-compat.server";
 import { getPoolAdmin, verifySyncToken } from "@/lib/key-pool.server";
 
-const REGISTER_CORS_HEADERS: Record<string, string> = {
-  ...CORS_HEADERS,
-  "Access-Control-Allow-Headers":
-    "authorization, x-api-key, x-remix-sync-token, content-type, anthropic-version",
-};
-
-function maskApiKey(key: string): string {
-  const clean = key.trim();
-  if (clean.length <= 8) return "lov_...****";
-  return `${clean.slice(0, 4)}...${clean.slice(-4)}`;
+const HEADERS = { ...CORS_HEADERS, "Access-Control-Allow-Headers": "authorization, x-api-key, x-remix-sync-token, content-type" };
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...HEADERS } });
+const registrations = new Map<string, number[]>();
+function allowedRegistration(request: Request): boolean {
+  const ip = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const now = Date.now();
+  const hits = (registrations.get(ip) ?? []).filter((t) => now - t < 60_000);
+  if (hits.length >= 10) return false;
+  hits.push(now); registrations.set(ip, hits);
+  if (registrations.size > 5000) registrations.clear();
+  return true;
+}
+async function validateUpstreamKey(apiKey: string): Promise<{ status: "active" | "exhausted"; error?: string } | { invalid: true }> {
+  try {
+    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", { method: "POST", headers: { "Content-Type": "application/json", "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "fetch" }, body: JSON.stringify({ model: "google/gemini-3.6-flash", messages: [{ role: "user", content: "ping" }], max_tokens: 1 }) });
+    if (response.status === 401 || response.status === 403) return { invalid: true };
+    if (response.status === 402 || response.status === 429) return { status: "exhausted", error: `Validação upstream retornou HTTP ${response.status}` };
+    if (response.ok) return { status: "active" };
+    return { status: "active", error: `Validação inconclusiva: upstream HTTP ${response.status}` };
+  } catch { return { status: "active", error: "Validação inconclusiva: erro de rede" }; }
 }
 
-export const Route = createFileRoute("/api/public/v1/workers/register")({
-  server: {
-    handlers: {
-      OPTIONS: async () =>
-        new Response(null, { status: 204, headers: REGISTER_CORS_HEADERS }),
-
-      GET: async () => {
-        const pool = getPoolAdmin();
-        if (!pool) {
-          return new Response(
-            JSON.stringify({
-              configured: false,
-              metrics: { active: 0, exhausted: 0, totalRequests: 0 },
-              workers: [],
-            }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        const { data, error } = await pool
-          .from("gateway_key_pool")
-          .select(
-            "id, api_key, project_origin, status, total_requests, last_used_at, last_error, exhausted_at, created_at",
-          )
-          .order("created_at", { ascending: true });
-
-        if (error) {
-          return new Response(
-            JSON.stringify({ error: "Falha ao carregar pool de chaves." }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        const rows = data ?? [];
-        const active = rows.filter((r) => r.status === "active").length;
-        const exhausted = rows.filter((r) => r.status === "exhausted").length;
-        const totalRequests = rows.reduce(
-          (acc, r) => acc + Number(r.total_requests ?? 0),
-          0,
-        );
-
-        const workers = rows.map((r, idx) => ({
-          id: r.id,
-          name: `Remix #${idx + 1}`,
-          project_origin: r.project_origin ?? "desconhecido",
-          masked_key: maskApiKey(String(r.api_key ?? "")),
-          status: r.status,
-          total_requests: Number(r.total_requests ?? 0),
-          last_used_at: r.last_used_at,
-          last_error: r.last_error,
-          exhausted_at: r.exhausted_at,
-          created_at: r.created_at,
-        }));
-
-        return new Response(
-          JSON.stringify({
-            configured: true,
-            metrics: { active, exhausted, totalRequests },
-            workers,
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-          },
-        );
-      },
-
-      POST: async ({ request }) => {
-        const pool = getPoolAdmin();
-        if (!pool) {
-          return new Response(
-            JSON.stringify({
-              success: false,
-              message: "Pool Supabase secondary client not configured",
-            }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        let body: {
-          action?: "reactivate";
-          id?: string;
-          api_key?: string;
-          project_origin?: string;
-        };
-        try {
-          body = await request.json();
-        } catch {
-          return new Response(
-            JSON.stringify({ success: false, message: "Invalid JSON payload" }),
-            {
-              status: 400,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        // Ação do Painel (Passo 5): reativar manualmente uma chave esgotada
-        if (body.action === "reactivate" && typeof body.id === "string" && body.id) {
-          const { error } = await pool
-            .from("gateway_key_pool")
-            .update({
-              status: "active",
-              exhausted_at: null,
-              last_error: null,
-            })
-            .eq("id", body.id);
-
-          if (error) {
-            return new Response(
-              JSON.stringify({ success: false, message: "Failed to reactivate worker" }),
-              {
-                status: 500,
-                headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-              },
-            );
-          }
-
-          return new Response(
-            JSON.stringify({ success: true, message: "Worker reactivated in pool" }),
-            {
-              status: 200,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        // Passo 2.1: Autenticação do Registro via x-remix-sync-token (ou token admin)
-        if (!verifySyncToken(request) && !isAuthorized(request)) {
-          return new Response(
-            JSON.stringify({ success: false, message: "Unauthorized sync token" }),
-            {
-              status: 401,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        // Passo 2.2: Validação do Payload
-        const apiKey = typeof body.api_key === "string" ? body.api_key.trim() : "";
-        const projectOrigin =
-          typeof body.project_origin === "string" && body.project_origin.trim()
-            ? body.project_origin.trim()
-            : "unknown";
-
-        if (!apiKey || apiKey.length < 8) {
-          return new Response(
-            JSON.stringify({ success: false, message: "Invalid or empty api_key" }),
-            {
-              status: 400,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        // Passo 2.3: Persistência Inteligente (Upsert)
-        const { error } = await pool.from("gateway_key_pool").upsert(
-          {
-            api_key: apiKey,
-            project_origin: projectOrigin,
-            status: "active",
-            exhausted_at: null,
-            last_error: null,
-          },
-          { onConflict: "api_key" },
-        );
-
-        if (error) {
-          return new Response(
-            JSON.stringify({ success: false, message: "Database upsert error" }),
-            {
-              status: 500,
-              headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-            },
-          );
-        }
-
-        // Passo 2.4: Resposta Segura (sem ecoar a chave)
-        return new Response(
-          JSON.stringify({
-            success: true,
-            message: "Worker registered in pool",
-          }),
-          {
-            status: 200,
-            headers: { "Content-Type": "application/json", ...REGISTER_CORS_HEADERS },
-          },
-        );
-      },
-    },
+export const Route = createFileRoute("/api/public/v1/workers/register")({ server: { handlers: {
+  OPTIONS: async () => new Response(null, { status: 204, headers: HEADERS }),
+  GET: async ({ request }) => {
+    if (!isAuthorized(request)) return json({ error: "Unauthorized" }, 401);
+    const pool = getPoolAdmin(); if (!pool) return json({ configured: false, metrics: { active: 0, exhausted: 0, totalRequests: 0 }, workers: [] });
+    const { data, error } = await pool.from("gateway_key_pool").select("id,key_hint,project_origin,status,total_requests,daily_request_limit,requests_today,usage_date,last_used_at,last_error,exhausted_at,created_at").order("created_at", { ascending: true });
+    if (error) return json({ error: "Falha ao carregar pool de chaves." }, 500);
+    const rows = data ?? [];
+    return json({ configured: true, metrics: { active: rows.filter((r) => r.status === "active").length, exhausted: rows.filter((r) => r.status === "exhausted").length, totalRequests: rows.reduce((n, r) => n + Number(r.total_requests ?? 0), 0) }, workers: rows.map((r, idx) => ({ id: r.id, name: `Remix #${idx + 1}`, project_origin: r.project_origin ?? "desconhecido", key_hint: r.key_hint, status: r.status, total_requests: Number(r.total_requests ?? 0), daily_request_limit: r.daily_request_limit, requests_today: Number(r.requests_today ?? 0), usage_date: r.usage_date, last_used_at: r.last_used_at, last_error: r.last_error, exhausted_at: r.exhausted_at, created_at: r.created_at })) });
   },
-});
+  PATCH: async ({ request }) => {
+    if (!isAuthorized(request)) return json({ error: "Unauthorized" }, 401);
+    const body = await request.json().catch(() => null) as { id?: string; daily_request_limit?: number | null } | null;
+    if (!body?.id || (body.daily_request_limit !== null && body.daily_request_limit !== undefined && (!Number.isInteger(body.daily_request_limit) || body.daily_request_limit < 0))) return json({ error: "id and valid daily_request_limit are required" }, 400);
+    const pool = getPoolAdmin(); if (!pool) return json({ error: "Pool unavailable" }, 503);
+    const { error } = await pool.from("gateway_key_pool").update({ daily_request_limit: body.daily_request_limit ?? null }).eq("id", body.id);
+    return error ? json({ error: "Failed to update worker quota" }, 400) : json({ ok: true });
+  },
+  POST: async ({ request }) => {
+    const pool = getPoolAdmin(); if (!pool) return json({ success: false, message: "Pool Supabase secondary client not configured" }, 500);
+    if (!allowedRegistration(request)) return json({ success: false, message: "Registration rate limit exceeded" }, 429);
+    const body = await request.json().catch(() => null) as { action?: "reactivate"; id?: string; api_key?: string; project_origin?: string } | null;
+    if (!body) return json({ success: false, message: "Invalid JSON payload" }, 400);
+    if (body.action === "reactivate" && body.id) {
+      if (!isAuthorized(request)) return json({ error: "Unauthorized" }, 401);
+      const { error } = await pool.from("gateway_key_pool").update({ status: "active", exhausted_at: null, last_error: null }).eq("id", body.id);
+      return error ? json({ success: false, message: "Failed to reactivate worker" }, 500) : json({ success: true, message: "Worker reactivated in pool" });
+    }
+    if (!verifySyncToken(request) && !isAuthorized(request)) return json({ success: false, message: "Unauthorized sync token" }, 401);
+    const apiKey = typeof body.api_key === "string" ? body.api_key.trim() : "";
+    if (!apiKey || apiKey.length < 8) return json({ success: false, message: "Invalid or empty api_key" }, 400);
+    const validation = await validateUpstreamKey(apiKey);
+    if ("invalid" in validation) return json({ success: false, message: "invalid api_key" }, 400);
+    const { error } = await pool.rpc("register_worker_key", { p_api_key: apiKey, p_origin: typeof body.project_origin === "string" ? body.project_origin.trim() : "unknown", p_status: validation.status, p_error: validation.error ?? null });
+    return error ? json({ success: false, message: "Database registration error" }, 500) : json({ success: true, message: "Worker registered in pool" });
+  },
+} } });
