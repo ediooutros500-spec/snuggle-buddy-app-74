@@ -1,10 +1,12 @@
 # Gateway independente com painel e Gator na VPS
 
+Endereços públicos ativos: [painel](https://secretsof.delvertokens.store) e API em `https://api.delvertokens.store/v1`. Foram reaproveitados os dois hosts do OmniRoute, com HTTPS existente. O template aponta novos remixes para essa API; a versão atualizada ainda precisa ser publicada no Lovable.
+
 O produto tem dois acessos: [painel administrativo e API de clientes](docs/PAINEL-E-API.md). O painel cria a chave que os aplicativos usam na API `/v1`; as chaves Lovable ficam no servidor.
 
 Qualquer projeto Lovable seu com o [gatilho instalado](docs/REMIX-HOOK.md) pode enviar automaticamente a própria chave ao pool. O modo padrão valida a chave no Lovable, sem segredo compartilhado por remix. O envio ocorre na primeira execução do servidor após a publicação.
 
-O pai também será executado fora do Lovable. O destino atual é pai Node.js e Gator na mesma VPS, com filhos/remixes no Lovable e dois subdomínios futuros para painel e API.
+Painel Node.js, entrada de API e Gator já rodam na VPS, com projetos/remixes no Lovable e dois hosts públicos para painel e API.
 
 Consulte [implantação e testes da VPS](deploy/README.md), [verificação do banco central](gator/DB-VERIFICACAO.md) e [registro de execução](CHECKLIST-EXECUCAO-GATEWAY-ZILONG.md). O plano completo ainda contém etapas pendentes; a base e o handshake já possuem testes.
 

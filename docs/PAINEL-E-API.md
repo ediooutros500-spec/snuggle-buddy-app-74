@@ -1,6 +1,6 @@
 # Painel administrativo e API de clientes
 
-O gateway tem dois endereços distintos:
+O gateway tem dois endereços públicos ativos: painel em **https://secretsof.delvertokens.store** e base da API em **https://api.delvertokens.store/v1**.
 
 | Acesso                | Quem usa                                             | Função                                                                     |
 | --------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------- |
@@ -17,10 +17,10 @@ O cliente recebe a URL base da API e sua chave `gw_...`. Usa `Authorization: Bea
 4. O aplicativo usa essa URL e a chave de cliente. O gateway autentica o cliente e seleciona uma chave Lovable do pool.
 5. Suspender o cliente no painel bloqueia novas chamadas com essa chave.
 
-Exemplo, quando houver domínio HTTPS:
+Exemplo com o endereço HTTPS ativo:
 
 ```sh
-curl https://SUA_API/v1/models \
+curl https://api.delvertokens.store/v1/models \
   -H 'Authorization: Bearer SUA_CHAVE_DE_CLIENTE'
 ```
 
@@ -30,7 +30,7 @@ curl https://SUA_API/v1/models \
 
 `PARENT_PUBLIC_URL` e `API_PUBLIC_URL` configuram os endereços mostrados no painel. `API_PUBLIC_URL` deve conter somente a origem, sem `/v1`; a interface acrescenta esse prefixo. `GATOR_PUBLIC_URL`/`CENTRAL_REGISTRATION_ORIGIN` destinam-se ao cadastro dos remixes e precisam do endereço público HTTPS da API.
 
-Os endereços provisórios por túnel SSH são `http://127.0.0.1:34430` (painel) e `http://127.0.0.1:34431/v1` (API). Só funcionam neste computador enquanto o túnel estiver ativo. Os dois subdomínios, DNS e certificados públicos ainda precisam ser definidos e ativados.
+Os dois hosts públicos foram reaproveitados do OmniRoute com DNS e certificados existentes; não dependem do túnel SSH. Os acessos locais `http://127.0.0.1:34430` e `http://127.0.0.1:34431/v1` continuam disponíveis como alternativa enquanto o túnel estiver ativo.
 
 ## Limites da etapa
 

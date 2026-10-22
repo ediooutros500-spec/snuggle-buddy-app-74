@@ -1,5 +1,7 @@
 # Gateway na mesma VPS do StarChef
 
+**Acessos públicos atuais:** painel `https://secretsof.delvertokens.store` e base da API `https://api.delvertokens.store/v1`. DNS e HTTPS reaproveitados do OmniRoute; independem do túnel local.
+
 Destino escolhido pelo usuário em 22/10/2026: reutilizar a VPS do StarChef. O acesso é SSH direto, com chave privada já existente no computador do operador. A Hostinger não é necessária para acessar esta VPS; sua conexão não bloqueia a implantação. O usuário esclareceu que a Hostinger é usada apenas para o site.
 
 Conexão SSH comprovada em 22/10/2026, com conferência estrita da chave do servidor. Containers `starchef-cloud` e OpenResty existentes identificados; backend e Redis do StarChef saudáveis. A documentação operacional existente usa `starchef.daataflow.com` e runtime `/opt/starchef/runtime`. Endereço SSH e chave privada ficam nos registros privados do operador, fora do repositório público.
@@ -61,3 +63,15 @@ Teste real aprovado: criação de chave pelo painel, consulta autenticada de mod
 Os três containers estão saudáveis. StarChef readiness permaneceu HTTP 200. A primeira tentativa do proxy retornou automaticamente à versão anterior por uma capacidade Linux incompatível com a restrição do container; a imagem foi corrigida removendo a capacidade de porta privilegiada, mantendo usuário sem privilégios, `cap_drop: ALL` e `no-new-privileges`. Validação local nessas mesmas condições aprovada e incluída no CI.
 
 Backups da configuração anterior e scripts privados de ativação/verificação estão em `/opt/zilong-gateway/releases/fedcdf418cb6`. A versão anterior permanece disponível. A ponte de compatibilidade continua no pai; isso não conclui o motor unificado, quotas concorrentes, HTTPS público ou cadastro real de remixes. Fluxo de uso em [PAINEL-E-API.md](../docs/PAINEL-E-API.md).
+
+## Ativação dos hosts públicos do OmniRoute — 22/10/2026
+
+Por instrução do usuário, os dois hosts existentes foram redirecionados para o novo gateway: `secretsof.delvertokens.store` para loopback 4430 e `api.delvertokens.store` para 4431. Ambos já apontavam para a VPS. Certificados existentes conferidos, válidos até 22/12/2026. Não houve alteração de DNS, emissão de certificado ou substituição de chave privada.
+
+Vhosts versionados em `deploy/openresty/`. Backup privado dos vhosts anteriores e ambientes do gateway em `/opt/zilong-gateway/releases/public-hosts-20261022/before`. A configuração completa do OpenResty passou em `nginx -t` antes da recarga graciosa. O container do proxy e os containers/dados do OmniRoute foram preservados. A inspeção mostrou que o OmniRoute ainda estava executando; somente esses dois endereços públicos mudaram de destino. O host `omni.dataiaorder.fun` e os demais projetos não foram alterados.
+
+Ambiente efetivo atualizado: `PARENT_PUBLIC_URL=https://secretsof.delvertokens.store`, `API_PUBLIC_URL=https://api.delvertokens.store` e `GATOR_PUBLIC_URL=https://api.delvertokens.store`. As imagens continuam na versão `fedcdf418cb6`; essa etapa alterou configuração operacional e o template dos remixes.
+
+Verificação por HTTPS público com validação TLS, sem seguir redirects: painel/health/API HTTP 200, chave temporária criada pelo painel e aceita em `/v1/models`, chave de cliente recusada na administração, caminhos administrativos no host de API HTTP 404, suspensão recusando a chave, rota pública de registro alcançando o Gator e recusando origem inválida antes do upstream. Cliente temporário removido e ausência conferida. Nenhum crédito de IA consumido. StarChef readiness HTTP 200 após a troca.
+
+`src/lib/central-address.ts` agora contém o endereço público herdável. O teste de ambiente vazio confirma que uma variável vazia não apaga esse endereço. Ainda falta publicar essa versão do projeto de origem no Lovable e registrar um remix real; o remix antigo `oi-kindred-connection.lovable.app` usa o gatilho anterior e não recebe mudanças retroativas. Não exigir GitHub dos filhos. Motor unificado, quotas concorrentes e inferência real permanecem pendentes.
