@@ -1,5 +1,7 @@
 # Pai central e Gator na VPS
 
+**Destino escolhido: a mesma VPS do StarChef.** Para esse servidor compartilhado, siga [STARCHEF-VPS.md](STARCHEF-VPS.md) e use `compose.shared-vps.yml`, aproveitando o OpenResty existente. Os perfis Caddy abaixo são para hospedagem dedicada e não devem ser iniciados na VPS compartilhada.
+
 O pai é o painel/administração e as rotas de compatibilidade existentes. Ele roda em Node.js na VPS. O Gator é outro processo na mesma VPS. Qualquer projeto do operador no Lovable pode enviar a própria chave com o [gatilho instalado](../docs/REMIX-HOOK.md). O registro padrão é automático, sem segredo compartilhado. O pai usa `GATEWAY_ROLE=central`, portanto não envia sua key nem se registra como filho.
 
 ## Executar o pai fora do Lovable
