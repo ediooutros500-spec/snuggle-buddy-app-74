@@ -1,0 +1,291 @@
+{
+  "scope": "Functional audit, not a complete penetration test",
+  "deployedImage": "zilong-gateway-parent:3264c13f9262",
+  "publicHttp": {
+    "date": "2026-10-22T20:19:09.003Z",
+    "anonymous": [
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/public/health",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/health",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/admin/gateway",
+        "method": "GET",
+        "status": 401
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/admin/users",
+        "method": "GET",
+        "status": 401
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/admin/session",
+        "method": "GET",
+        "status": 200
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/api/admin/gateway",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/api/admin/users",
+        "method": "GET",
+        "status": 404
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/v1/models",
+        "method": "GET",
+        "status": 401
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/v1/chat/completions",
+        "method": "POST",
+        "status": 401
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/v1/messages",
+        "method": "POST",
+        "status": 401
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/v1/images/generations",
+        "method": "POST",
+        "status": 401
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/v1/embeddings",
+        "method": "POST",
+        "status": 401
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/v1/videos/generations",
+        "method": "POST",
+        "status": 401
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/public/ai-chat",
+        "method": "POST",
+        "status": 401
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/public/ai-models",
+        "method": "GET",
+        "status": 500
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/public/v1/diagnostics",
+        "method": "GET",
+        "status": 401
+      },
+      {
+        "host": "api.delvertokens.store",
+        "path": "/api/public/v1/workers/register",
+        "method": "POST",
+        "status": 400
+      },
+      {
+        "host": "secretsof.delvertokens.store",
+        "path": "/api/public/v1/workers/announce",
+        "method": "POST",
+        "status": 401
+      }
+    ],
+    "authenticated": {
+      "loginStatus": 200,
+      "gatewayStatus": 200,
+      "workerStatus": 200,
+      "teamStatus": 200,
+      "clientCount": 0,
+      "logCount": 0,
+      "workerCount": 0,
+      "activeWorkers": 0,
+      "activeUsers": 1,
+      "disabledTestUsers": 2,
+      "auditEventsReturned": 22,
+      "settings": {
+        "id": 1,
+        "default_model": "google/gemini-3.6-flash",
+        "disabled_models": [],
+        "global_rate_limit_rpm": 120,
+        "cooldown_minutes": 15,
+        "allow_env_token_fallback": true,
+        "updated_at": "2026-10-21T01:52:58.983783+00:00",
+        "token_saver_enabled": true,
+        "combos": []
+      },
+      "addresses": {
+        "panelUrl": "https://secretsof.delvertokens.store",
+        "apiBaseUrl": "https://api.delvertokens.store/v1"
+      },
+      "badOriginStatus": 403,
+      "afterLogoutStatus": 401
+    },
+    "securityHeaders": {
+      "secretsof.delvertokens.store": {
+        "strict-transport-security": null,
+        "content-security-policy": null,
+        "x-frame-options": null,
+        "x-content-type-options": null,
+        "referrer-policy": null,
+        "cache-control": null
+      },
+      "api.delvertokens.store": {
+        "strict-transport-security": null,
+        "content-security-policy": null,
+        "x-frame-options": null,
+        "x-content-type-options": null,
+        "referrer-policy": null,
+        "cache-control": null
+      }
+    }
+  },
+  "centralAnonymousChecks": {
+    "anonymousKeyAvailable": true,
+    "anonymousKeyValidationStatus": 200,
+    "signupDisabled": false,
+    "tables": [
+      {
+        "table": "gateway_settings",
+        "status": 200,
+        "rows": 0,
+        "errorCode": null
+      },
+      {
+        "table": "gateway_clients",
+        "status": 200,
+        "rows": 0,
+        "errorCode": null
+      },
+      {
+        "table": "gateway_key_pool",
+        "status": 200,
+        "rows": 0,
+        "errorCode": null
+      },
+      {
+        "table": "gateway_workers",
+        "status": 200,
+        "rows": 0,
+        "errorCode": null
+      },
+      {
+        "table": "gateway_request_logs",
+        "status": 200,
+        "rows": 0,
+        "errorCode": null
+      },
+      {
+        "table": "gateway_client_keys",
+        "status": 200,
+        "rows": 0,
+        "errorCode": null
+      }
+    ]
+  },
+  "isolatedPolicyReproductions": {
+    "sourceCommit": "3264c13f9262",
+    "network": "mocked; no provider requests",
+    "findings": [
+      {
+        "id": "A01",
+        "reproduced": true,
+        "behavior": "Default and fallback resolution can return a disabled model"
+      },
+      {
+        "id": "A02",
+        "route": "images/generations",
+        "reproduced": true,
+        "behavior": "Client restricted to text model is allowed to forward media model"
+      },
+      {
+        "id": "A02",
+        "route": "embeddings",
+        "reproduced": true,
+        "behavior": "Client restricted to text model is allowed to forward media model"
+      },
+      {
+        "id": "A02",
+        "route": "videos/generations",
+        "reproduced": true,
+        "behavior": "Client restricted to text model is allowed to forward media model"
+      },
+      {
+        "id": "A03",
+        "reproduced": true,
+        "behavior": "Client with quota 0 and 100 prior requests still reaches upstream"
+      },
+      {
+        "id": "A04",
+        "reproduced": true,
+        "behavior": "Two consecutive requests accepted despite stored global RPM 1"
+      },
+      {
+        "id": "A05",
+        "reproduced": true,
+        "behavior": "Stored OpenAI default ignored; constant Gemini default used"
+      }
+    ]
+  },
+  "existingTests": {
+    "application": {
+      "passed": 31,
+      "failed": 0
+    },
+    "gator": {
+      "passed": 25,
+      "failed": 0
+    }
+  },
+  "databaseContractChecks": {
+    "passed": 19,
+    "sqlRlsAudit": "pending_project_sql_access"
+  },
+  "remix": {
+    "url": "https://oi-kindred-connection.lovable.app",
+    "announceStatus": 200,
+    "registered": false,
+    "requiresLegacySecret": true
+  },
+  "operations": {
+    "gatewayContainersHealthy": 3,
+    "preexistingContainersUnchanged": 26,
+    "starChefReadiness": 200,
+    "diskUsedPercent": 86
+  },
+  "browserReview": "not_performed_local_browser_disabled"
+}
