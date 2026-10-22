@@ -1,17 +1,25 @@
-# Plano Mestre de Implementação: Lovable Remixável + Gator Local
+# Plano Mestre: Pai e Gator na VPS + Filhos Lovable
 
-Este é um plano de implementação, não uma descrição de funcionalidades já prontas. O repositório terá dois papéis relacionados:
+## Decisão atualizada em 22/10/2026
 
-1. **Projeto Lovable Pai Remixável**: continua sendo um app Lovable que pode ser remixado. Cada remix publicado roda no workspace do filho, lê a própria `LOVABLE_API_KEY` no servidor e envia um handshake ao Gator.
-2. **Gator**: gateway central que roda localmente no PC, na VPS ou em Docker. Recebe as chaves dos remixes, grava-as cifradas no Supabase central, escolhe a próxima chave Lovable e expõe o proxy para Cursor, Claude Code e outros computadores.
+O pai também sai da hospedagem Lovable, conforme decisão do usuário. A arquitetura de destino é:
+
+1. **Pai central na VPS**: painel, administração e rotas de compatibilidade do app, executados como servidor Node.js. O pai usa `GATEWAY_ROLE=central` e nunca se anuncia como filho.
+2. **Gator na mesma VPS**: recebe handshakes e evolui para o motor unificado de proxy, pool, quotas e telemetria.
+3. **Filhos no Lovable**: os remixes leem a própria `LOVABLE_API_KEY` no servidor e enviam HMAC ao Gator. Não recebem credenciais administrativas do Supabase central.
+4. **Dois subdomínios futuros**: painel/pai e API. Os nomes definitivos ainda não foram definidos. O IP da VPS serve para instalação e health checks; o envio de credenciais e o uso autenticado público exigem HTTPS.
+
+O código/template dos filhos pode continuar sendo importado/remixado no Lovable; isso não exige manter o pai central hospedado lá. A separação final do template e a retirada do deploy antigo devem ser comprovadas depois que o pai na VPS passar pelos testes.
+
+Esta decisão substitui as referências anteriores deste plano a “pai hospedado no Lovable”. Durante a transição, as rotas existentes do pai são uma ponte de compatibilidade; o motor central ainda deve ser concluído no Gator.
 
 O upstream continua sendo **um único provedor: Lovable AI Gateway**. As várias chaves pertencem a remixes/workspaces Lovable diferentes. Isso não transforma o sistema em multi-provedor; é um pool de credenciais do mesmo provedor.
 
 ## 0. Regras de arquitetura
 
-### Manter no projeto Lovable remixável
+### Manter no template dos filhos Lovable
 
-- Home/painel que pode ser remixado.
+- Interface/template do filho que pode ser remixado; o painel administrativo central fica na VPS.
 - Endpoint local de anúncio do filho.
 - Leitura de `LOVABLE_API_KEY` somente no servidor.
 - Registro no Gator por HTTPS.
@@ -43,7 +51,7 @@ O upstream continua sendo **um único provedor: Lovable AI Gateway**. As várias
 
 ## 1. Estrutura final de arquivos
 
-O root atual continua sendo o projeto Lovable remixável. O Gator será adicionado em uma área separada para poder rodar localmente/VPS sem quebrar o Remix.
+O root contém o pai central com build Node para a VPS e compatibilidade com o template dos filhos. O Gator permanece separado em `gator/`. Os papéis de execução são distintos; apenas filhos se registram automaticamente.
 
 ```text
 /
@@ -111,6 +119,7 @@ A divisão pode começar incrementalmente. Não mover o root do Lovable para mon
 ## 2. Fase 0: baseline do repositório e Gator local
 
 ### Objetivo
+
 Ter uma cópia confiável do projeto e uma área reservada para o gateway central.
 
 ### Implementação
@@ -135,6 +144,7 @@ Ter uma cópia confiável do projeto e uma área reservada para o gateway centra
 ## 3. Fase 1: Supabase central do Gator
 
 ### Objetivo
+
 O Supabase central será o banco do Gator. O projeto remixável nunca recebe service role.
 
 ### Ambiente

@@ -1,0 +1,12 @@
+:80 {
+  handle /health {
+    reverse_proxy gator:20128
+  }
+  handle /parent-health {
+    rewrite * /api/public/health
+    reverse_proxy parent:3000
+  }
+  handle {
+    respond "Configure HTTPS before enabling authenticated access." 503
+  }
+}

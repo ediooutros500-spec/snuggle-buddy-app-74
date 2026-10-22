@@ -14,6 +14,7 @@ function setup(t, fetcher, pool = null) {
     "REMIX_SYNC_SECRET",
     "LOVABLE_API_KEY",
     "NODE_ENV",
+    "GATEWAY_ROLE",
   ];
   const before = Object.fromEntries(names.map((n) => [n, process.env[n]]));
   const oldFetch = global.fetch;
@@ -22,6 +23,7 @@ function setup(t, fetcher, pool = null) {
     REMIX_SYNC_SECRET: secret,
     LOVABLE_API_KEY: key,
     NODE_ENV: "production",
+    GATEWAY_ROLE: "child",
   });
   delete process.env.PARENT_GATEWAY_URL;
   if (fetcher) global.fetch = fetcher;
@@ -156,4 +158,12 @@ test("compatibility receiver accepts HMAC once and rejects a persistent duplicat
   });
   assert.equal((await child.verifyIncomingHandshake(request, key, origin)).ok, true);
   assert.equal((await child.verifyIncomingHandshake(request, key, origin)).ok, false);
+});
+
+test("central parent never registers itself even when forced", async (t) => {
+  const child = setup(t, () => {
+    assert.fail("central parent must not send a key");
+  });
+  process.env.GATEWAY_ROLE = "central";
+  assert.equal((await child.triggerChildHandshake(origin, true)).attempted, false);
 });

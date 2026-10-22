@@ -4,7 +4,7 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 
 ## A. Decisões e segurança do desenho
 
-- [x] Confirmar que o root é o projeto Lovable Pai Remixável.
+- [x] Decisão atualizada: pai central e Gator na VPS; filhos/remixes continuam no Lovable.
 - [x] Confirmar que o Gator será executado localmente e depois poderá ir para VPS/Docker.
 - [x] Confirmar que Lovable é o único upstream.
 - [x] Confirmar que cada remix publicado envia a própria key pelo servidor.
@@ -49,18 +49,18 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 - [ ] `gator/src/media/` criado.
 - [ ] `gator/src/token-saver/` criado.
 - [ ] `gator/src/db/` criado.
-- [ ] `gator/tests/` criado.
+- [x] `gator/tests/` criado e executado: 19 testes de registro/HTTP aprovados.
 - [x] Health do Gator responde sem banco.
 - [x] Gator inicia sem keys e informa configuração ausente.
 - [x] App Lovable e Gator têm comandos/documentação separados.
 
 ## D. Supabase central do Gator
 
-- [ ] Projeto Supabase central criado ou Supabase local definido.
-- [ ] `GATOR_SUPABASE_URL` configurado no Gator.
+- [x] Supabase central hospedado definido e conexão REST validada.
+- [x] `GATOR_SUPABASE_URL` configurado no ambiente local do Gator.
 - [ ] `GATOR_SUPABASE_ANON_KEY` protegido conforme o uso.
 - [ ] `GATOR_SUPABASE_SERVICE_ROLE_KEY` somente no servidor.
-- [ ] Vault/segredo de cifra definido.
+- [x] Vault configurado; acesso do servidor aprovado e acesso anônimo recusado.
 - [ ] Migration `gateway_clients` aplicada.
 - [ ] Migration `gateway_client_keys` aplicada.
 - [ ] Migration `gateway_key_pool` aplicada.
@@ -71,7 +71,7 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 - [ ] Migration `gateway_audit_logs` aplicada.
 - [ ] Migration `gateway_settings` aplicada.
 - [ ] RLS ativo.
-- [ ] RPC `register_worker_key` testada.
+- [x] RPC `register_worker_key` testada com fixture desabilitada e limpeza: hash, cifra armazenada e upsert idempotente.
 - [ ] RPC `get_next_api_key` testada.
 - [ ] RPC `mark_key_status` testada.
 - [ ] RPC `consume_client_quota` testada.
@@ -84,8 +84,8 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 
 - [ ] `GATOR_PUBLIC_URL` definido no pai/remix.
 - [ ] Secret/HMAC do filho definido no ambiente server-side.
-- [ ] `src/lib/child-handshake.server.ts` criado.
-- [ ] `src/lib/child-config.server.ts` criado.
+- [x] Emissor em `src/lib/child-handshake.server.ts` implementado e testado.
+- [x] Configuração server-side em `src/lib/child-config.server.ts` implementada e testada.
 - [ ] `POST /api/public/v1/workers/announce` local criado.
 - [ ] Gatilho SSR em `src/server.ts` criado.
 - [ ] Gatilho client-side chama somente endpoint local.
@@ -253,7 +253,7 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 
 ## M. Segurança e conformidade
 
-- [ ] `.env` não versionado.
+- [x] `.env` retirado do versionamento; arquivos reais de ambiente ignorados.
 - [ ] Service role não aparece no Lovable.
 - [ ] Key do filho nunca aparece no browser.
 - [ ] Key não aparece em logs.
@@ -309,3 +309,7 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 - [ ] Documentação está atualizada.
 
 Uma caixa só vira `[x]` depois de evidência verificável.
+
+## Leitura do estado atual
+
+O registro de execução distingue testes simulados, testes no Supabase real e implantação. As caixas de VPS, HTTPS, RLS, proxy completo e E2E continuam abertas até haver evidência. O pai central na VPS substitui a premissa antiga de hospedagem do pai no Lovable.
