@@ -1,5 +1,7 @@
 # Auditoria funcional do Gateway — 22/10/2026
 
+**Atualização após a auditoria:** primeira correção implantada na VPS em `48e3b429e209`. A01, A02 e os caminhos legados centrais foram corrigidos; configuração parcial/modelo padrão e proteção inicial de quota/RPM foram validados. O corpo abaixo preserva os achados originais. Consulte [o checklist atual](../CHECKLIST-ADMINISTRATIVO-GATEWAY.md) e [as regras e limitações da correção](CORRECOES-POLITICAS-GATEWAY.md); ledger/reconciliação, RPM distribuído e demais entregas continuam abertos.
+
 ## Resultado
 
 O sistema está online e possui uma base administrativa funcional, mas **ainda não é um gateway totalmente administrável nem foi validado com inferência real**. Há controles exibidos/salvos que não governam as requisições, telas incompletas e falhas de aplicação de políticas. Corrigir os itens P1 antes de liberar consumo real a clientes.

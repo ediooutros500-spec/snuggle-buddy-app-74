@@ -26,3 +26,5 @@ Implementação sobre a versão implantada na VPS, preservando alterações loca
 ## Validação e implantação
 
 Verificações de regressão cobrem modelos desabilitados em default/fallback/aliases, configuração parcial, RPM compartilhado, quota zero/esgotada, concorrência na última unidade, recarga da política, falha do banco, restrições nas três modalidades e bloqueio das rotas legadas. Testes e build são realizados em cópia isolada do código escolhido para publicação. O checklist diferencia validação local e confirmação na VPS.
+
+Implantado em 22/10/2026: commit `48e3b429e209`, imagem de mesmo sufixo. 45 testes da aplicação aprovados; builds Node/Lovable, tipos, lint e smoke aprovados. Em HTTPS real, quota zero bloqueou cinco rotas, restrições de modelo foram respeitadas e uma unidade de quota admitiu apenas um de oito pedidos concorrentes. Como o pool/local estavam sem chave Lovable, essa admissão terminou em indisponibilidade e não consumiu crédito do provedor. RPM global e preservação dos bloqueios foram testados e os valores originais restaurados. Clientes sintéticos foram removidos. StarChef e os 26 containers anteriores permaneceram saudáveis/inalterados.

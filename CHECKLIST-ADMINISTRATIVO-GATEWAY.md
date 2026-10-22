@@ -28,6 +28,9 @@ Auditoria atual: [revisão funcional de todas as telas em 22/10/2026](docs/AUDIT
 ## E2 — Motor e limites
 
 - [ ] Migrar catálogo/chat/messages para pipeline único no Gator.
+- [x] Compartilhar políticas de modelos e limites entre texto, mídia e catálogo na ponte Node atual, sem declarar migração do motor para o Gator concluída.
+- [x] Admissão de quota total de cliente por atualização condicional atômica no banco; uma unidade disponível admite somente uma chamada concorrente.
+- [x] Aplicar RPM global e por cliente, compartilhado entre endpoints da instância atual.
 - [ ] Reservas de quota atômicas, reconciliação e recuperação após falha.
 - [ ] Limites compartilhados por cliente, chave e simultaneidade.
 - [ ] Deadline/cancelamento/streaming e failover seguro testados.
@@ -82,15 +85,30 @@ Auditoria atual: [revisão funcional de todas as telas em 22/10/2026](docs/AUDIT
 - [x] Reproduzir localmente, sem chamadas de IA, falhas de bloqueio de modelos, autorização de mídia, quota, RPM global e configuração do modelo padrão.
 - [x] Validar a chave anônima correta do banco central e registrar leituras vazias; manter auditoria SQL/RLS/grants pendente.
 - [x] Conferir remix existente: HTTP 200, mas `registered: false` e exigência do segredo legado; pool central ainda vazio.
-- [ ] A01: aplicar bloqueio de modelo após qualquer default/alias/fallback.
-- [ ] A02: respeitar modelos do cliente e bloqueios globais em imagem, vídeo e embeddings.
-- [ ] A03/A04: fazer cumprir quota e RPM global/por cliente, com reservas e limites compartilhados.
-- [ ] A05: refletir configurações reais no formulário e na API; impedir que salvar apague bloqueios.
+- [x] A01: aplicar bloqueio de modelo após qualquer default/alias/fallback.
+- [x] A02: respeitar modelos do cliente e bloqueios globais em imagem, vídeo e embeddings.
+- [x] A03/A04, proteção inicial: aplicar quota de tentativas admitidas no banco e RPM global/por cliente na instância atual.
+- [ ] A03/A04, conclusão: ledger com reconciliação/estorno e RPM distribuído/persistente e simultaneidade. Buckets de RPM atuais reiniciam com o processo.
+- [x] A05: refletir modelo padrão/RPM reais no formulário e na API; salvar parcialmente sem apagar bloqueios. Edição de cooldown legado explicitamente recusada.
 - [ ] A06/A14: atualizar hook publicado e validar cadastro/chamada/stream reais com deadline coordenado.
-- [ ] A07: retirar ou proteger caminhos legados de chat, probes e diagnóstico.
+- [x] A07: chat e probes legados da central retornam 410; diagnóstico central exige sessão; catálogo legado dos filhos não executa probes pagos.
 - [ ] A08: implementar Uso/Custos, catálogo e roteamento reais e edição de clientes/workers.
 - [ ] A09/A10: conciliar uso/logs/tentativas e testar timeout, cancelamento e failover.
 - [ ] A11: MFA/recuperação, gestão de senha/sessão, interface por perfil e cabeçalhos de proteção.
 - [ ] A12: auditoria completa, armazenamento consistente e restauração de backup externo cifrado.
 - [ ] A13: contratos de entrada, confirmação de updates e erros/revogação tratados uniformemente.
 - [ ] Revisão visual e testes de cliques, acessibilidade e responsividade quando o navegador estiver disponível.
+
+## Primeira correção implantada — 22/10/2026
+
+- Código: `48e3b429e209`, implantado como `zilong-gateway-parent:48e3b429e209`. Somente o serviço Node do gateway foi atualizado; Gator e proxy continuam saudáveis.
+- [x] 45 testes da aplicação aprovados, incluindo regressões dos achados e concorrência na última unidade de quota; 25 testes do Gator aprovados na auditoria anterior, sem mudança no Gator nesta entrega.
+- [x] Tipos, build Node, build Lovable e smoke Node aprovados; lint sem erros e com sete avisos anteriores.
+- [x] HTTPS real: quota zero bloqueia texto, Messages, imagem, vídeo e embeddings; permissões de mídia e bloqueios globais impedem encaminhamento.
+- [x] Banco real: com quota total 1, oito pedidos concorrentes resultaram em uma admissão e sete rejeições de quota; consumo persistido exatamente 1. Sem chave Lovable no pool/local, a chamada admitida terminou em indisponibilidade, sem geração paga.
+- [x] RPM global alterado pela API efetivamente bloqueou catálogo; restaurar o limite original permitiu acesso novamente.
+- [x] Alterar apenas RPM preservou a lista de modelos bloqueados; catálogo público respeitou os bloqueios; rotas legadas centrais retornaram 410.
+- [x] Clientes sintéticos removidos, configurações restauradas, logout e acesso administrativo verificados. Os 26 containers anteriores mantêm IDs; StarChef readiness HTTP 200.
+- [x] Painel: editar RPM/quota/modelos de cliente, permitir/bloquear modelos e distinguir configuração de disponibilidade não verificada. Uso/Custos e rotas avançadas agora informam pendência.
+- [ ] Concluir as demais etapas da auditoria e validar remix/inferência reais. Esta entrega não atualiza um remix antigo publicado no Lovable.
+- Detalhes de contagem e limites: [CORRECOES-POLITICAS-GATEWAY.md](docs/CORRECOES-POLITICAS-GATEWAY.md). Commit local e implantação não significam publicação no GitHub; autenticação/conector continuam pendentes.
