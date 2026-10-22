@@ -44,7 +44,7 @@ services:
       GATOR_HOST: 0.0.0.0
       GATOR_PORT: 20128
       NODE_OPTIONS: --max-old-space-size=64
-    ports: ["127.0.0.1:${GATOR_LOOPBACK_PORT:-4431}:20128"]
+    expose: ["20128"]
     restart: unless-stopped
     mem_limit: 128m
     cpus: 0.5
@@ -60,6 +60,34 @@ services:
           -e,
           "fetch('http://127.0.0.1:20128/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
         ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+  api:
+    image: zilong-gateway-api:${GATEWAY_IMAGE_TAG:-local}
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile.api
+    user: "1000:1000"
+    environment:
+      XDG_CONFIG_HOME: /tmp/config
+      XDG_DATA_HOME: /tmp/data
+    ports: ["127.0.0.1:${API_LOOPBACK_PORT:-4431}:8080"]
+    depends_on:
+      parent: { condition: service_healthy }
+      gator: { condition: service_healthy }
+    restart: unless-stopped
+    mem_limit: 64m
+    cpus: 0.25
+    read_only: true
+    tmpfs: [/tmp:size=16m]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: [CMD, wget, -q, -O, /dev/null, http://127.0.0.1:8080/health]
       interval: 30s
       timeout: 5s
       retries: 3

@@ -50,6 +50,12 @@ export const Route = createFileRoute("/api/admin/gateway")({
         if (clients.error || settings.error || logs.error)
           return json({ error: "Failed to load gateway data" }, 500);
         return json({
+          addresses: {
+            panelUrl: process.env["PARENT_PUBLIC_URL"]?.replace(/\/+$/, "") || null,
+            apiBaseUrl: process.env["API_PUBLIC_URL"]
+              ? `${process.env["API_PUBLIC_URL"].replace(/\/+$/, "")}/v1`
+              : null,
+          },
           clients: clients.data ?? [],
           settings: settings.data,
           logs: logs.data ?? [],
