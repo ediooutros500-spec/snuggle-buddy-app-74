@@ -450,6 +450,7 @@ export interface ToolUseAcc {
 }
 
 export interface Accumulated {
+  usageKnown?: boolean;
   text: string;
   toolUses: ToolUseAcc[];
   stopReason: "end_turn" | "tool_use" | "max_tokens";
@@ -569,6 +570,7 @@ export async function consumeUpstream(
         }
         const u = evt.response.usage;
         if (u) {
+          acc.usageKnown = true;
           acc.usage.input_tokens = u.input_tokens ?? 0;
           acc.usage.output_tokens = u.output_tokens ?? 0;
         }
@@ -601,6 +603,7 @@ export async function consumeUpstream(
     if (choice?.finish_reason === "length") acc.stopReason = "max_tokens";
     if (choice?.finish_reason === "tool_calls") acc.stopReason = "tool_use";
     if (evt.usage) {
+      acc.usageKnown = true;
       acc.usage.input_tokens = evt.usage.prompt_tokens ?? acc.usage.input_tokens;
       acc.usage.output_tokens = evt.usage.completion_tokens ?? acc.usage.output_tokens;
     }
@@ -610,7 +613,12 @@ export async function consumeUpstream(
   return acc;
 }
 
-export function anthropicStream(model: string, upstream: Response, isOpenAI: boolean): Response {
+export function anthropicStream(
+  model: string,
+  upstream: Response,
+  isOpenAI: boolean,
+  onComplete?: (acc: Accumulated | null, error?: boolean) => Promise<void>,
+): Response {
   const encoder = new TextEncoder();
   const messageId = `msg_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`;
 
@@ -683,8 +691,10 @@ export function anthropicStream(model: string, upstream: Response, isOpenAI: boo
           },
           usage: { output_tokens: acc.usage.output_tokens },
         });
+        await onComplete?.(acc);
         send("message_stop", { type: "message_stop" });
       } catch {
+        await onComplete?.(null, true);
         send("error", {
           type: "error",
           error: { type: "api_error", message: "Falha ao processar o stream." },

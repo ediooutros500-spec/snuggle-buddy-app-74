@@ -10,8 +10,15 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdminSectionRouteImport } from './routes/admin.$section'
+import { Route as ApiAdminClientsRouteImport } from './routes/api/admin/clients'
+import { Route as ApiAdminCredentialsRouteImport } from './routes/api/admin/credentials'
 import { Route as ApiAdminGatewayRouteImport } from './routes/api/admin/gateway'
+import { Route as ApiAdminPasswordRouteImport } from './routes/api/admin/password'
+import { Route as ApiAdminRequestsRouteImport } from './routes/api/admin/requests'
 import { Route as ApiAdminSessionRouteImport } from './routes/api/admin/session'
+import { Route as ApiAdminSystemRouteImport } from './routes/api/admin/system'
+import { Route as ApiAdminUsageRouteImport } from './routes/api/admin/usage'
 import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiPublicAiChatRouteImport } from './routes/api/public/ai-chat'
 import { Route as ApiPublicAiModelsRouteImport } from './routes/api/public/ai-models'
@@ -32,14 +39,49 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminSectionRoute = AdminSectionRouteImport.update({
+  id: '/admin/$section',
+  path: '/admin/$section',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminClientsRoute = ApiAdminClientsRouteImport.update({
+  id: '/api/admin/clients',
+  path: '/api/admin/clients',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminCredentialsRoute = ApiAdminCredentialsRouteImport.update({
+  id: '/api/admin/credentials',
+  path: '/api/admin/credentials',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminGatewayRoute = ApiAdminGatewayRouteImport.update({
   id: '/api/admin/gateway',
   path: '/api/admin/gateway',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAdminPasswordRoute = ApiAdminPasswordRouteImport.update({
+  id: '/api/admin/password',
+  path: '/api/admin/password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminRequestsRoute = ApiAdminRequestsRouteImport.update({
+  id: '/api/admin/requests',
+  path: '/api/admin/requests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAdminSessionRoute = ApiAdminSessionRouteImport.update({
   id: '/api/admin/session',
   path: '/api/admin/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminSystemRoute = ApiAdminSystemRouteImport.update({
+  id: '/api/admin/system',
+  path: '/api/admin/system',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminUsageRoute = ApiAdminUsageRouteImport.update({
+  id: '/api/admin/usage',
+  path: '/api/admin/usage',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
@@ -121,8 +163,15 @@ const ApiPublicV1WorkersRegisterRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin/$section': typeof AdminSectionRoute
+  '/api/admin/clients': typeof ApiAdminClientsRoute
+  '/api/admin/credentials': typeof ApiAdminCredentialsRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
+  '/api/admin/password': typeof ApiAdminPasswordRoute
+  '/api/admin/requests': typeof ApiAdminRequestsRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/system': typeof ApiAdminSystemRoute
+  '/api/admin/usage': typeof ApiAdminUsageRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
@@ -140,8 +189,15 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/$section': typeof AdminSectionRoute
+  '/api/admin/clients': typeof ApiAdminClientsRoute
+  '/api/admin/credentials': typeof ApiAdminCredentialsRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
+  '/api/admin/password': typeof ApiAdminPasswordRoute
+  '/api/admin/requests': typeof ApiAdminRequestsRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/system': typeof ApiAdminSystemRoute
+  '/api/admin/usage': typeof ApiAdminUsageRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
@@ -160,8 +216,15 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/admin/$section': typeof AdminSectionRoute
+  '/api/admin/clients': typeof ApiAdminClientsRoute
+  '/api/admin/credentials': typeof ApiAdminCredentialsRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
+  '/api/admin/password': typeof ApiAdminPasswordRoute
+  '/api/admin/requests': typeof ApiAdminRequestsRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/system': typeof ApiAdminSystemRoute
+  '/api/admin/usage': typeof ApiAdminUsageRoute
   '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
@@ -181,8 +244,15 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin/$section'
+    | '/api/admin/clients'
+    | '/api/admin/credentials'
     | '/api/admin/gateway'
+    | '/api/admin/password'
+    | '/api/admin/requests'
     | '/api/admin/session'
+    | '/api/admin/system'
+    | '/api/admin/usage'
     | '/api/admin/users'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
@@ -200,8 +270,15 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin/$section'
+    | '/api/admin/clients'
+    | '/api/admin/credentials'
     | '/api/admin/gateway'
+    | '/api/admin/password'
+    | '/api/admin/requests'
     | '/api/admin/session'
+    | '/api/admin/system'
+    | '/api/admin/usage'
     | '/api/admin/users'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
@@ -219,8 +296,15 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/admin/$section'
+    | '/api/admin/clients'
+    | '/api/admin/credentials'
     | '/api/admin/gateway'
+    | '/api/admin/password'
+    | '/api/admin/requests'
     | '/api/admin/session'
+    | '/api/admin/system'
+    | '/api/admin/usage'
     | '/api/admin/users'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
@@ -239,8 +323,15 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdminSectionRoute: typeof AdminSectionRoute
+  ApiAdminClientsRoute: typeof ApiAdminClientsRoute
+  ApiAdminCredentialsRoute: typeof ApiAdminCredentialsRoute
   ApiAdminGatewayRoute: typeof ApiAdminGatewayRoute
+  ApiAdminPasswordRoute: typeof ApiAdminPasswordRoute
+  ApiAdminRequestsRoute: typeof ApiAdminRequestsRoute
   ApiAdminSessionRoute: typeof ApiAdminSessionRoute
+  ApiAdminSystemRoute: typeof ApiAdminSystemRoute
+  ApiAdminUsageRoute: typeof ApiAdminUsageRoute
   ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiPublicAiChatRoute: typeof ApiPublicAiChatRoute
   ApiPublicAiModelsRoute: typeof ApiPublicAiModelsRoute
@@ -266,6 +357,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/$section': {
+      id: '/admin/$section'
+      path: '/admin/$section'
+      fullPath: '/admin/$section'
+      preLoaderRoute: typeof AdminSectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/clients': {
+      id: '/api/admin/clients'
+      path: '/api/admin/clients'
+      fullPath: '/api/admin/clients'
+      preLoaderRoute: typeof ApiAdminClientsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/credentials': {
+      id: '/api/admin/credentials'
+      path: '/api/admin/credentials'
+      fullPath: '/api/admin/credentials'
+      preLoaderRoute: typeof ApiAdminCredentialsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/gateway': {
       id: '/api/admin/gateway'
       path: '/api/admin/gateway'
@@ -273,11 +385,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAdminGatewayRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/password': {
+      id: '/api/admin/password'
+      path: '/api/admin/password'
+      fullPath: '/api/admin/password'
+      preLoaderRoute: typeof ApiAdminPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/requests': {
+      id: '/api/admin/requests'
+      path: '/api/admin/requests'
+      fullPath: '/api/admin/requests'
+      preLoaderRoute: typeof ApiAdminRequestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/admin/session': {
       id: '/api/admin/session'
       path: '/api/admin/session'
       fullPath: '/api/admin/session'
       preLoaderRoute: typeof ApiAdminSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/system': {
+      id: '/api/admin/system'
+      path: '/api/admin/system'
+      fullPath: '/api/admin/system'
+      preLoaderRoute: typeof ApiAdminSystemRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/usage': {
+      id: '/api/admin/usage'
+      path: '/api/admin/usage'
+      fullPath: '/api/admin/usage'
+      preLoaderRoute: typeof ApiAdminUsageRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/users': {
@@ -383,8 +523,15 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdminSectionRoute: AdminSectionRoute,
+  ApiAdminClientsRoute: ApiAdminClientsRoute,
+  ApiAdminCredentialsRoute: ApiAdminCredentialsRoute,
   ApiAdminGatewayRoute: ApiAdminGatewayRoute,
+  ApiAdminPasswordRoute: ApiAdminPasswordRoute,
+  ApiAdminRequestsRoute: ApiAdminRequestsRoute,
   ApiAdminSessionRoute: ApiAdminSessionRoute,
+  ApiAdminSystemRoute: ApiAdminSystemRoute,
+  ApiAdminUsageRoute: ApiAdminUsageRoute,
   ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiPublicAiChatRoute: ApiPublicAiChatRoute,
   ApiPublicAiModelsRoute: ApiPublicAiModelsRoute,

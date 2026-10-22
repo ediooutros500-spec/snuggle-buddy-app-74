@@ -66,9 +66,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Snuggle Gateway" },
-      { name: "description", content: "Painel comercial do gateway de IA Snuggle." },
-      { name: "author", content: "Snuggle Gateway" },
+      { title: "Lovable Gateway" },
+      { name: "description", content: "Administração do gateway de um único provedor Lovable." },
+      { name: "author", content: "Lovable Gateway" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

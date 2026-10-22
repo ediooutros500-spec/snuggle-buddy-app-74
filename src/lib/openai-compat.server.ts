@@ -184,7 +184,12 @@ export function toChatCompletion(model: string, acc: Accumulated) {
 }
 
 /** SSE no formato OpenAI (chat.completion.chunk), sem buffer. */
-export function openaiStream(model: string, upstream: Response, isOpenAI: boolean): Response {
+export function openaiStream(
+  model: string,
+  upstream: Response,
+  isOpenAI: boolean,
+  onComplete?: (acc: Accumulated | null, error?: boolean) => Promise<void>,
+): Response {
   const encoder = new TextEncoder();
   const id = completionId();
   const created = Math.floor(Date.now() / 1000);
@@ -227,6 +232,7 @@ export function openaiStream(model: string, upstream: Response, isOpenAI: boolea
           });
         }
 
+        await onComplete?.(acc);
         chunk({}, finishReason(acc), {
           prompt_tokens: acc.usage.input_tokens,
           completion_tokens: acc.usage.output_tokens,
@@ -234,6 +240,7 @@ export function openaiStream(model: string, upstream: Response, isOpenAI: boolea
         });
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
       } catch {
+        await onComplete?.(null, true);
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({ error: { message: "Falha ao processar o stream.", type: "api_error" } })}\n\n`,

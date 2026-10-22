@@ -1,0 +1,83 @@
+export type ModelRow = { id: string; kind: string; enabled: boolean; availability: string };
+export type ConnectionRow = {
+  id: string;
+  account_label: string | null;
+  workspace_label: string | null;
+  project_origin: string;
+  key_hint: string;
+  status: string;
+  usage_date: string;
+  requests_today: number;
+  daily_request_limit: number | null;
+  total_requests: number;
+  last_used_at: string | null;
+  last_error: string | null;
+};
+export type ClientRow = {
+  id: string;
+  name: string;
+  rate_limit_rpm: number;
+  quota_limit_requests: number | null;
+  allowed_models: string[] | null;
+  notes: string | null;
+  status: string;
+  key_hint: string;
+  total_requests: number;
+  created_at: string;
+};
+export type RequestRow = {
+  id: string;
+  request_id: string | null;
+  client_name: string | null;
+  created_at: string;
+  requested_model: string | null;
+  resolved_model: string | null;
+  endpoint: string;
+  status_code: number;
+  latency_ms: number | null;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  worker_key_hint: string | null;
+  error_message: string | null;
+};
+export type UsageGroup = {
+  name: string;
+  requests: number;
+  errors: number;
+  inputTokens: number;
+  outputTokens: number;
+};
+export type UsageData = {
+  requests: number;
+  success: number;
+  errors: number;
+  inputTokens: number;
+  outputTokens: number;
+  unknownUsage: number;
+  sampled: boolean;
+  totalMatching: number;
+  byDay: UsageGroup[];
+  byModel: UsageGroup[];
+  byClient: UsageGroup[];
+};
+export type PageData<T> = { rows: T[]; total: number; page: number; limit: number };
+export type SystemData = {
+  provider: { id: string; name: string };
+  addresses: { apiBaseUrl: string; panelUrl: string };
+  settings: {
+    default_model: string;
+    disabled_models: string[];
+    global_rate_limit_rpm: number;
+    cooldown_minutes: number;
+  };
+  catalog: ModelRow[];
+  counts: {
+    credentials: number;
+    availableCredentials: number;
+    clients: number;
+    activeClients: number;
+    admittedAttempts: number;
+  };
+  health: { ready: boolean; database: boolean; checkedAt: string };
+  limits: { rpmScope: string; quotaBasis: string };
+};
