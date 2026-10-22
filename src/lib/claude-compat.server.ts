@@ -368,8 +368,7 @@ export function toResponsesRequest(req: MessagesRequest, model: string) {
     >[];
 
     if (m.role === "assistant") {
-      if (text)
-        input.push({ role: "assistant", content: [{ type: "output_text", text }] });
+      if (text) input.push({ role: "assistant", content: [{ type: "output_text", text }] });
       for (const t of toolUses)
         input.push({
           type: "function_call",
@@ -381,7 +380,11 @@ export function toResponsesRequest(req: MessagesRequest, model: string) {
     }
 
     for (const r of toolResults)
-      input.push({ type: "function_call_output", call_id: r.tool_use_id, output: textOf(r.content) });
+      input.push({
+        type: "function_call_output",
+        call_id: r.tool_use_id,
+        output: textOf(r.content),
+      });
     if (text || toolResults.length === 0)
       input.push({ role: "user", content: [{ type: "input_text", text: text || " " }] });
   }
@@ -495,7 +498,33 @@ export async function consumeUpstream(
 
   for await (const data of sseEvents(upstream.body)) {
     if (!data || data === "[DONE]") continue;
-    let evt: any;
+    let evt: {
+      type?: string;
+      delta?: string;
+      response?: {
+        output?: {
+          type?: string;
+          call_id?: string;
+          id?: string;
+          name?: string;
+          arguments?: unknown;
+        }[];
+        usage?: { input_tokens?: number; output_tokens?: number };
+        incomplete_details?: { reason?: string };
+      };
+      choices?: {
+        finish_reason?: string;
+        delta?: {
+          content?: string;
+          tool_calls?: {
+            index?: number;
+            id?: string;
+            function?: { name?: string; arguments?: string };
+          }[];
+        };
+      }[];
+      usage?: { prompt_tokens?: number; completion_tokens?: number };
+    };
     try {
       evt = JSON.parse(data);
     } catch {
@@ -513,7 +542,10 @@ export async function consumeUpstream(
             acc.toolUses.push({
               id: item.call_id ?? item.id ?? crypto.randomUUID(),
               name: item.name ?? "",
-              args: typeof item.arguments === "string" ? item.arguments : JSON.stringify(item.arguments ?? {}),
+              args:
+                typeof item.arguments === "string"
+                  ? item.arguments
+                  : JSON.stringify(item.arguments ?? {}),
             });
           }
         }
@@ -522,7 +554,8 @@ export async function consumeUpstream(
           acc.usage.input_tokens = u.input_tokens ?? 0;
           acc.usage.output_tokens = u.output_tokens ?? 0;
         }
-        if (evt.response.incomplete_details?.reason === "max_output_tokens") acc.stopReason = "max_tokens";
+        if (evt.response.incomplete_details?.reason === "max_output_tokens")
+          acc.stopReason = "max_tokens";
       }
       continue;
     }
@@ -536,7 +569,11 @@ export async function consumeUpstream(
     if (Array.isArray(delta?.tool_calls)) {
       for (const tc of delta.tool_calls) {
         const i = tc.index ?? 0;
-        acc.toolUses[i] ??= { id: tc.id ?? `toolu_${crypto.randomUUID().slice(0, 8)}`, name: "", args: "" };
+        acc.toolUses[i] ??= {
+          id: tc.id ?? `toolu_${crypto.randomUUID().slice(0, 8)}`,
+          name: "",
+          args: "",
+        };
         const slot = acc.toolUses[i]!;
         if (tc.id) slot.id = tc.id;
         if (tc.function?.name) slot.name += tc.function.name;
@@ -630,7 +667,10 @@ export function anthropicStream(model: string, upstream: Response, isOpenAI: boo
         });
         send("message_stop", { type: "message_stop" });
       } catch {
-        send("error", { type: "error", error: { type: "api_error", message: "Falha ao processar o stream." } });
+        send("error", {
+          type: "error",
+          error: { type: "api_error", message: "Falha ao processar o stream." },
+        });
       } finally {
         controller.close();
       }

@@ -34,18 +34,26 @@ export interface OpenAIChatRequest {
   model?: string;
   messages: OpenAIMessage[];
   stream?: boolean;
-  tools?: Array<{ type?: string; function?: { name: string; description?: string; parameters?: Record<string, unknown> } }>;
+  tools?: Array<{
+    type?: string;
+    function?: { name: string; description?: string; parameters?: Record<string, unknown> };
+  }>;
   tool_choice?: unknown;
   temperature?: number;
   max_tokens?: number;
   max_completion_tokens?: number;
 }
 
-export function openaiError(status: number, message: string, code: string, extra?: Record<string, string>) {
-  return new Response(
-    JSON.stringify({ error: { message, type: code, code } }),
-    { status, headers: { "Content-Type": "application/json", ...CORS_HEADERS, ...(extra ?? {}) } },
-  );
+export function openaiError(
+  status: number,
+  message: string,
+  code: string,
+  extra?: Record<string, string>,
+) {
+  return new Response(JSON.stringify({ error: { message, type: code, code } }), {
+    status,
+    headers: { "Content-Type": "application/json", ...CORS_HEADERS, ...(extra ?? {}) },
+  });
 }
 
 const textOf = (content: unknown): string => {
@@ -115,7 +123,7 @@ export function toInternalRequest(req: OpenAIChatRequest, model: string): Messag
     model,
     ...(systemParts.length ? { system: systemParts.join("\n\n") } : {}),
     messages,
-    ...(req.max_tokens ?? req.max_completion_tokens
+    ...((req.max_tokens ?? req.max_completion_tokens)
       ? { max_tokens: req.max_tokens ?? req.max_completion_tokens }
       : {}),
     ...(typeof req.temperature === "number" ? { temperature: req.temperature } : {}),
@@ -183,7 +191,11 @@ export function openaiStream(model: string, upstream: Response, isOpenAI: boolea
 
   const stream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      const chunk = (delta: Record<string, unknown>, finish: string | null = null, usage?: unknown) =>
+      const chunk = (
+        delta: Record<string, unknown>,
+        finish: string | null = null,
+        usage?: unknown,
+      ) =>
         controller.enqueue(
           encoder.encode(
             `data: ${JSON.stringify({

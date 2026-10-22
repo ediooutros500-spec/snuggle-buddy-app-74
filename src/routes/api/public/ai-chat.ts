@@ -65,9 +65,7 @@ function isDevTestRequest(request: Request): boolean {
 
 async function hasValidSession(request: Request): Promise<boolean> {
   const authHeader = request.headers.get("authorization") ?? "";
-  const token = authHeader.toLowerCase().startsWith("bearer ")
-    ? authHeader.slice(7).trim()
-    : "";
+  const token = authHeader.toLowerCase().startsWith("bearer ") ? authHeader.slice(7).trim() : "";
   if (!token) return false;
 
   const url = process.env["SUPABASE_URL"];
@@ -181,7 +179,11 @@ export const Route = createFileRoute("/api/public/ai-chat")({
 
         const { upstream, networkError } = await fetchGatewayWithFailover(url, payload, 4);
         if (networkError) {
-          return jsonError(502, "upstream_unreachable", "Não foi possível contatar o serviço de IA.");
+          return jsonError(
+            502,
+            "upstream_unreachable",
+            "Não foi possível contatar o serviço de IA.",
+          );
         }
         if (!upstream) {
           return jsonError(500, "server_misconfigured", "Serviço de IA indisponível.");
@@ -189,7 +191,11 @@ export const Route = createFileRoute("/api/public/ai-chat")({
 
         if (!upstream.ok) {
           if (upstream.status === 429) {
-            return jsonError(429, "rate_limited", "Limite de requisições atingido em todas as chaves do pool.");
+            return jsonError(
+              429,
+              "rate_limited",
+              "Limite de requisições atingido em todas as chaves do pool.",
+            );
           }
           if (upstream.status === 402) {
             return jsonError(402, "payment_required", "Créditos de IA esgotados.");

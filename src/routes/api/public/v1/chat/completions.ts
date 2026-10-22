@@ -60,35 +60,63 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
         try {
           body = JSON.parse(raw);
         } catch {
-          return openaiError(400, "Corpo da requisição não é JSON válido.", "invalid_request_error");
+          return openaiError(
+            400,
+            "Corpo da requisição não é JSON válido.",
+            "invalid_request_error",
+          );
         }
 
         if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
-          return openaiError(400, "`messages` é obrigatório e deve ser um array não vazio.", "invalid_request_error");
+          return openaiError(
+            400,
+            "`messages` é obrigatório e deve ser um array não vazio.",
+            "invalid_request_error",
+          );
         }
         if (body.messages.length > MAX_MESSAGES) {
-          return openaiError(400, `Máximo de ${MAX_MESSAGES} mensagens por requisição.`, "invalid_request_error");
+          return openaiError(
+            400,
+            `Máximo de ${MAX_MESSAGES} mensagens por requisição.`,
+            "invalid_request_error",
+          );
         }
         if (JSON.stringify(body.messages).length > MAX_TOTAL_CHARS) {
-          return openaiError(413, `Conteúdo total excede ${MAX_TOTAL_CHARS} caracteres.`, "request_too_large");
+          return openaiError(
+            413,
+            `Conteúdo total excede ${MAX_TOTAL_CHARS} caracteres.`,
+            "request_too_large",
+          );
         }
 
         // Consultar modelos desabilitados globalmente
         const pool = getPoolAdmin();
         let disabledModels: string[] = [];
         if (pool) {
-          const { data: setRow } = await pool.from("gateway_settings").select("disabled_models").eq("id", 1).single();
+          const { data: setRow } = await pool
+            .from("gateway_settings")
+            .select("disabled_models")
+            .eq("id", 1)
+            .single();
           if (setRow?.disabled_models) disabledModels = setRow.disabled_models;
         }
 
-        const model = resolveModel(body.model, disabledModels);
+        const model = resolveModel(body["model"], disabledModels);
         if (!model) {
-          return openaiError(400, `Modelo não permitido ou desabilitado: ${String(body.model)}.`, "model_not_found");
+          return openaiError(
+            400,
+            `Modelo não permitido ou desabilitado: ${String(body["model"])}.`,
+            "model_not_found",
+          );
         }
 
         if (auth.client?.allowed_models && auth.client.allowed_models.length > 0) {
           if (!auth.client.allowed_models.includes(model)) {
-            return openaiError(403, "Seu cliente não possui permissão para usar este modelo.", "permission_denied");
+            return openaiError(
+              403,
+              "Seu cliente não possui permissão para usar este modelo.",
+              "permission_denied",
+            );
           }
         }
 
@@ -113,21 +141,32 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
         }
 
         if (pool && auth.client) {
-          pool.from("gateway_request_logs").insert({
-            client_id: auth.client.id,
-            client_name: auth.client.name,
-            endpoint: "/api/public/v1/chat/completions",
-            requested_model: body.model || "default",
-            resolved_model: model,
-            status_code: upstream.status,
-            latency_ms: latency,
-          }).catch(() => {});
+          pool
+            .from("gateway_request_logs")
+            .insert({
+              client_id: auth.client.id,
+              client_name: auth.client.name,
+              endpoint: "/api/public/v1/chat/completions",
+              requested_model: body["model"] || "default",
+              resolved_model: model,
+              status_code: upstream.status,
+              latency_ms: latency,
+            })
+            .then(
+              () => {},
+              () => {},
+            );
         }
 
         if (!upstream.ok) {
           if (upstream.status === 429)
-            return openaiError(429, "Limite de requisições do provedor atingido em todas as chaves do pool.", "rate_limit_exceeded");
-          if (upstream.status === 402) return openaiError(402, "Créditos de IA esgotados.", "insufficient_quota");
+            return openaiError(
+              429,
+              "Limite de requisições do provedor atingido em todas as chaves do pool.",
+              "rate_limit_exceeded",
+            );
+          if (upstream.status === 402)
+            return openaiError(402, "Créditos de IA esgotados.", "insufficient_quota");
           return openaiError(502, "O serviço de IA retornou um erro.", "api_error");
         }
 

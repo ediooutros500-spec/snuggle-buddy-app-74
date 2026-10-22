@@ -107,7 +107,9 @@ export async function authenticate9Router(request: Request): Promise<GatewayAuth
     try {
       const { data, error } = await pool
         .from("gateway_clients")
-        .select("id, name, status, allowed_models, rate_limit_rpm, quota_limit_requests, total_requests")
+        .select(
+          "id, name, status, allowed_models, rate_limit_rpm, quota_limit_requests, total_requests",
+        )
         .eq("client_key", token)
         .single();
 
@@ -118,13 +120,17 @@ export async function authenticate9Router(request: Request): Promise<GatewayAuth
           status: data.status,
           allowed_models: data.allowed_models,
           rate_limit_rpm: Number(data.rate_limit_rpm) || 60,
-          quota_limit_requests: data.quota_limit_requests == null ? null : Number(data.quota_limit_requests),
+          quota_limit_requests:
+            data.quota_limit_requests == null ? null : Number(data.quota_limit_requests),
           total_requests: Number(data.total_requests ?? 0),
         };
         _clientCache.set(token, { data: client, expiresAt: now + CACHE_TTL_MS });
 
         if (client.status !== "active") return { authorized: false, isAdmin: false };
-        if (client.quota_limit_requests != null && client.total_requests >= client.quota_limit_requests) {
+        if (
+          client.quota_limit_requests != null &&
+          client.total_requests >= client.quota_limit_requests
+        ) {
           return { authorized: false, isAdmin: false, quotaExceeded: true, client };
         }
         return { authorized: true, isAdmin: false, client };
@@ -204,7 +210,10 @@ export function resolve9RouterModel(
   if (!resolved) return { model: null, reason: "invalid_or_disabled" };
 
   if (client?.allowed_models && client.allowed_models.length > 0) {
-    if (!client.allowed_models.includes(resolved) && !client.allowed_models.includes(effectiveInput)) {
+    if (
+      !client.allowed_models.includes(resolved) &&
+      !client.allowed_models.includes(effectiveInput)
+    ) {
       return { model: null, reason: "forbidden_for_client" };
     }
   }
