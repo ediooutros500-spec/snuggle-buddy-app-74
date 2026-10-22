@@ -201,8 +201,8 @@ Cada unidade terá implementação, testes proporcionais ao risco e registro na 
 ## 9. Critério final de pronto
 
 - [ ] Remix real registra automaticamente sua chave após publicação/visita, sem GitHub ou segredo individual.
-- [ ] Operador administra o sistema com login próprio, sem copiar token mestre nas ações diárias.
-- [ ] Chaves de cliente são emitidas uma vez, rotacionáveis e revogáveis; listagens não revelam o valor completo.
+- [x] Operador administra o sistema com login próprio, sem copiar token mestre nas ações diárias. Implantado em 22/10/2026; detalhes e pendências no checklist administrativo.
+- [x] Chaves de cliente são emitidas uma vez, rotacionáveis e revogáveis; listagens não revelam o valor completo. Uma chave por cliente nesta etapa; múltiplas chaves e expiração continuam pendentes.
 - [ ] Cliente faz chamada real e streaming pela API pública, sem acesso administrativo.
 - [ ] Pool, modelo e políticas exibidos no painel controlam efetivamente as requisições.
 - [ ] Quotas e simultaneidade funcionam sob concorrência e reinício.

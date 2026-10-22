@@ -2,6 +2,8 @@
 
 Próxima evolução: [plano para administração completa](docs/PLANO-ADMINISTRATIVO-GATEWAY.md), com comparação OmniRoute/9Router, prioridades, telas e critérios de aceite.
 
+Andamento: [checklist administrativo](CHECKLIST-ADMINISTRATIVO-GATEWAY.md). Login, equipe e proteção das chaves já foram implantados; veja [acesso e limitações desta etapa](docs/ADMINISTRACAO-ACESSO.md).
+
 Endereços públicos ativos: [painel](https://secretsof.delvertokens.store) e API em `https://api.delvertokens.store/v1`. Foram reaproveitados os dois hosts do OmniRoute, com HTTPS existente. O template aponta novos remixes para essa API; a versão atualizada ainda precisa ser publicada no Lovable.
 
 O produto tem dois acessos: [painel administrativo e API de clientes](docs/PAINEL-E-API.md). O painel cria a chave que os aplicativos usam na API `/v1`; as chaves Lovable ficam no servidor.
