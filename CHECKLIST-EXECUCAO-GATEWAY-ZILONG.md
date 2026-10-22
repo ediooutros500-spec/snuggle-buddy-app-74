@@ -15,7 +15,7 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 - [x] Script `check` adicionado ao `package.json`.
 - [x] `.env.example` criado sem valores reais.
 - [x] `.gitattributes` criado para normalizar finais de linha.
-- [ ] `npm run lint` verde: pendente, o lint ainda acusa CRLF/Prettier em arquivos existentes.
+- [x] `npm run lint` aprovado em 22/10/2026: zero erros, sete avisos (Fast Refresh e dependência de hook).
 - [ ] `npm test` verde: pendente, ainda não existe suíte de testes configurada.
 - [ ] `src/routeTree.gen.ts` commitado após regeneração: há alteração local gerada, ainda não validada e publicada.
 
@@ -28,25 +28,38 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 - [x] `gator/src/server.mjs` criado com health check e resposta 404 segura.
 - [x] `gator/README.md` criado com instruções locais.
 - [x] `gator/npm run check` validado por `node --check`.
-- [x] Health check executado no PC: `GET http://127.0.0.1:20128/health` retornou HTTP 200.
-- [x] Health reportou configuração ausente sem expor secrets: Supabase, encryption, admin e Lovable false.
-- [ ] Supabase central vinculado: pendente de receber/configurar o Supabase.
+- [x] Health check executado no PC: HTTP 200 no registro anterior e teste HTTP local aprovado nesta etapa.
+- [x] Supabase central acessível em 22/10/2026 com as credenciais de `.env.local` e `gator/.env`: dez tabelas consultadas sem retornar registros; sete RPCs expostas no catálogo REST.
 - [ ] Gateway engine implementado: próxima etapa.
 
 ## Evidência local
 
 - Build do app Lovable: aprovado no DataFlow em 22/10/2026.
-- Lint: não aprovado; falha concentrada em finais de linha CRLF reportados pelo Prettier.
+- Lint: aprovado em 22/10/2026 após normalizar finais de linha e substituir seis tipos `any` explícitos.
+- Build local: aprovado em 22/10/2026 após corrigir importação inexistente de `REMIX_SYNC_SECRET`; agora usa `getChildConfig().remixSyncSecret`.
+- Verificação sintática do Gator: `npm --prefix gator run check` aprovado.
+- Alterações locais anteriores de funcionalidades foram preservadas; ainda não revisadas/publicadas como conjunto.
 - Instalação: concluída sem vulnerabilidades reportadas.
-- Gator: `node --check` aprovado e health HTTP 200 validado no PC.
-- Supabase: ainda não configurado, conforme a ordem definida no plano.
+- Supabase: credenciais presentes e conexão REST validada em 22/10/2026. Tabelas e RPCs principais existem; RLS, execução das RPCs, backup e restauração ainda precisam de validação.
+- Gator: scripts `start` e `dev` ajustados para carregar o `.env` local com Node.
 - Gator: scaffold criado e commitado; ainda não é um proxy de produção.
 
 ## Próxima fase autorizada
 
 1. Corrigir e publicar a normalização de formato sem tocar na lógica do app.
-2. Receber a digitalização/configuração do Supabase e criar migrations.
-3. Implementar o handshake Lovable remixável apontando para o Gator, sem enviar a key pelo browser.
-4. Implementar o gateway engine e o primeiro endpoint autenticado do Gator.
+2. Validar o schema já existente do Supabase, RLS, Vault e RPCs antes de aplicar novas migrations.
+3. Validar o handshake de um remix publicado contra o Gator.
+4. Implementar o motor unificado e o primeiro endpoint autenticado do Gator.
 
 Uma caixa só deve virar `[x]` quando existir evidência verificável.
+
+## Registro seguro no Gator — 22/10/2026
+
+- [x] Endpoint de registro implementado no serviço Gator separado.
+- [x] HMAC obrigatório, timestamp, allowlist HTTPS e nonce persistido antes do upstream.
+- [x] Falhas de banco/upstream não ativam keys; respostas não expõem credenciais.
+- [x] Testes HTTP e de segurança com serviços simulados: 19 testes aprovados.
+- [ ] Registro real de remix publicado, Vault, RLS e idempotência no banco comprovados.
+- [ ] Motor de proxy autenticado do Gator implementado.
+
+Os testes do Gator são separados do root; a ausência de suíte no app Lovable continua pendente.
