@@ -63,3 +63,14 @@ Uma caixa só deve virar `[x]` quando existir evidência verificável.
 - [ ] Motor de proxy autenticado do Gator implementado.
 
 Os testes do Gator são separados do root; a ausência de suíte no app Lovable continua pendente.
+
+## Validação do banco real — 22/10/2026
+
+- [x] 27 verificações REST aprovadas com `npm --prefix gator run db:selftest`.
+- [x] Vault configurado e acesso anônimo ao segredo recusado.
+- [x] RPC de registro executada com chave sintética desabilitada: hash, cifra armazenada e upsert idempotente verificados.
+- [x] Nonce duplicado recusado pelo banco; dados de teste removidos.
+- [ ] Auditoria SQL de RLS e grants: conector sem acesso SQL ao projeto central. Consulta somente de leitura preparada em `gator/db/verify-security.sql`.
+- [ ] Quotas concorrentes, chamada upstream real e backup/restauração comprovados.
+
+Detalhes e comandos em `gator/DB-VERIFICACAO.md`.
