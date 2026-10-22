@@ -1,418 +1,311 @@
-# Checklist de Implementação: Gateway Zilong Body F74
+# Checklist de Implementação: Projeto Lovable Remixável + Gator
 
-Marque uma caixa somente depois de executar e verificar a evidência indicada. A checklist acompanha o plano em `PLANO-IMPLEMENTACAO-GATEWAY-ZILONG.md`.
+Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, teste ou log seguro. Nunca marque porque o arquivo foi criado.
 
-## 0. Governança e baseline
+## A. Decisões e segurança do desenho
 
-- [ ] Confirmar que este é o repositório original correto.
-- [ ] Confirmar `origin` do GitHub.
-- [ ] Definir branch de produção.
-- [ ] Definir Node/npm suportados.
-- [ ] Definir que o único upstream é Lovable AI Gateway.
-- [ ] Registrar modelos/capacidades que serão suportados.
-- [ ] Registrar funcionalidades deliberadamente fora do escopo.
-- [ ] Criar `.env.example` sem valores reais.
-- [ ] Garantir `.env` fora do Git.
-- [ ] Criar scripts `dev`, `build`, `start`, `lint`, `format`, `check` e `test`.
-- [ ] Normalizar finais de linha e configuração Prettier.
-- [ ] `npm install` concluído sem vulnerabilidades críticas.
-- [ ] `npm run lint` passa.
-- [ ] `npm run build` passa.
-- [ ] `npm test` passa ou os testes pendentes estão documentados.
+- [ ] Confirmar que o root é o projeto Lovable Pai Remixável.
+- [ ] Confirmar que o Gator será executado localmente e depois poderá ir para VPS/Docker.
+- [ ] Confirmar que Lovable é o único upstream.
+- [ ] Confirmar que cada remix publicado envia a própria key pelo servidor.
+- [ ] Confirmar que o browser nunca recebe a key.
+- [ ] Confirmar que o Supabase central não entrega key ao remix.
+- [ ] Confirmar se o Supabase será local no PC ou hospedado acessível pelo Gator.
+- [ ] Registrar domínio/URL do Gator.
+- [ ] Registrar política de workspaces e créditos.
+- [ ] Registrar que workspaces diferentes podem ter cotas separadas.
+- [ ] Registrar que remixes no mesmo workspace podem compartilhar créditos.
+- [ ] Confirmar conformidade com os termos do provedor antes de uso comercial.
+
+## B. Baseline do projeto Lovable
+
+- [ ] Checkout em `C:\Users\e_dio\Desktop\Gateway` confirmado.
+- [ ] Remote do GitHub confirmado.
+- [ ] Node/npm fixados.
+- [ ] `.env.example` criado sem valores reais.
+- [ ] `.env` ignorado pelo Git.
+- [ ] Scripts do root definidos.
+- [ ] CRLF/Prettier normalizados.
+- [ ] `npm install` executado.
+- [ ] `npm run lint` aprovado.
+- [ ] `npm run build` aprovado.
+- [ ] `npm test` aprovado ou pendências documentadas.
 - [ ] `src/routeTree.gen.ts` regenerado.
-- [ ] Cada rota fonte aparece no route tree.
+- [ ] Todas as rotas fonte aparecem no route tree.
 - [ ] Home local responde.
-- [ ] Health check local responde.
+- [ ] Health local responde.
 
-## 1. Contrato público da API
+## C. Estrutura do Gator
 
-- [ ] Definir formato de autenticação.
-- [ ] Definir envelope de erro.
-- [ ] Definir headers CORS por tipo de rota.
-- [ ] Definir `X-Request-ID`.
-- [ ] Definir headers de rate limit.
-- [ ] Definir tamanho máximo de body.
-- [ ] Definir timeout padrão.
-- [ ] Definir política de retry.
-- [ ] Definir política de streaming.
-- [ ] Documentar `/chat/completions`.
-- [ ] Documentar `/messages`.
-- [ ] Documentar `/responses`.
-- [ ] Documentar `/models`.
-- [ ] Documentar imagens.
-- [ ] Documentar embeddings.
-- [ ] Documentar vídeos/jobs.
-- [ ] Documentar áudio, se suportado pelo Lovable.
-- [ ] Criar exemplos curl.
-- [ ] Criar exemplos JavaScript.
-- [ ] Criar exemplos Python.
-- [ ] Testar autenticação válida.
-- [ ] Testar autenticação inválida.
-- [ ] Testar body inválido.
-- [ ] Testar modelo inválido.
-- [ ] Testar payload grande.
+- [ ] Pasta `gator/` criada.
+- [ ] `gator/package.json` criado.
+- [ ] `gator/.env.example` criado.
+- [ ] `gator/src/server.ts` criado.
+- [ ] `gator/src/config.ts` criado.
+- [ ] `gator/src/engine/` criado.
+- [ ] `gator/src/auth/` criado.
+- [ ] `gator/src/workers/` criado.
+- [ ] `gator/src/usage/` criado.
+- [ ] `gator/src/media/` criado.
+- [ ] `gator/src/token-saver/` criado.
+- [ ] `gator/src/db/` criado.
+- [ ] `gator/tests/` criado.
+- [ ] Health do Gator responde sem banco.
+- [ ] Gator inicia sem keys e informa configuração ausente.
+- [ ] App Lovable e Gator têm comandos/documentação separados.
 
-## 2. Motor unificado
+## D. Supabase central do Gator
 
-- [ ] Criar `gateway-engine.server.ts`.
-- [ ] Centralizar extração de token.
-- [ ] Centralizar autenticação do cliente.
-- [ ] Centralizar status do cliente.
-- [ ] Centralizar allowlist de modelos.
-- [ ] Centralizar allowlist de endpoints.
-- [ ] Centralizar quota.
-- [ ] Centralizar rate limit.
-- [ ] Centralizar geração de request ID.
-- [ ] Centralizar resolução do destino Lovable.
-- [ ] Centralizar seleção da key.
-- [ ] Centralizar timeout.
-- [ ] Centralizar retry/backoff.
-- [ ] Centralizar failover.
-- [ ] Centralizar telemetria.
-- [ ] Centralizar normalização de erro.
-- [ ] Adaptar Messages API.
-- [ ] Adaptar Chat Completions.
-- [ ] Adaptar Responses API.
-- [ ] Adaptar mídia.
-- [ ] Remover lógica duplicada das rotas.
-- [ ] Testar que todas as rotas usam o motor.
+- [ ] Projeto Supabase central criado ou Supabase local definido.
+- [ ] `GATOR_SUPABASE_URL` configurado no Gator.
+- [ ] `GATOR_SUPABASE_ANON_KEY` protegido conforme o uso.
+- [ ] `GATOR_SUPABASE_SERVICE_ROLE_KEY` somente no servidor.
+- [ ] Vault/segredo de cifra definido.
+- [ ] Migration `gateway_clients` aplicada.
+- [ ] Migration `gateway_client_keys` aplicada.
+- [ ] Migration `gateway_key_pool` aplicada.
+- [ ] Migration `gateway_request_logs` aplicada.
+- [ ] Migration `gateway_usage_daily` aplicada.
+- [ ] Migration `gateway_jobs` aplicada.
+- [ ] Migration `gateway_workers` aplicada.
+- [ ] Migration `gateway_audit_logs` aplicada.
+- [ ] Migration `gateway_settings` aplicada.
+- [ ] RLS ativo.
+- [ ] RPC `register_worker_key` testada.
+- [ ] RPC `get_next_api_key` testada.
+- [ ] RPC `mark_key_status` testada.
+- [ ] RPC `consume_client_quota` testada.
+- [ ] RPC `log_request_and_increment_usage` testada.
+- [ ] Backup criado.
+- [ ] Restauração testada.
+- [ ] Nenhuma key aberta em tabela, resposta ou log.
 
-## 3. Catálogo de modelos
+## E. Handshake do remix Lovable
 
-- [ ] Criar fonte única de catálogo no backend.
-- [ ] Adicionar modelos atuais válidos.
-- [ ] Adicionar aliases.
-- [ ] Classificar texto/código.
-- [ ] Classificar visão.
-- [ ] Classificar áudio.
-- [ ] Classificar imagem.
-- [ ] Classificar vídeo.
-- [ ] Classificar embedding.
-- [ ] Definir endpoint upstream de cada modelo.
-- [ ] Definir streaming de cada modelo.
-- [ ] Definir tools de cada modelo.
-- [ ] Definir contexto de cada modelo.
-- [ ] Definir suporte a jobs.
-- [ ] Criar probe com timeout.
-- [ ] Cachear disponibilidade.
-- [ ] Não listar modelo não validado como ativo.
-- [ ] Incluir modelos de mídia no `/models`.
-- [ ] Permitir filtro por cliente.
-- [ ] Testar cada modelo configurado.
+- [ ] `GATOR_PUBLIC_URL` definido no pai/remix.
+- [ ] Secret/HMAC do filho definido no ambiente server-side.
+- [ ] `src/lib/child-handshake.server.ts` criado.
+- [ ] `src/lib/child-config.server.ts` criado.
+- [ ] `POST /api/public/v1/workers/announce` local criado.
+- [ ] Gatilho SSR em `src/server.ts` criado.
+- [ ] Gatilho client-side chama somente endpoint local.
+- [ ] Payload contém origem, timestamp e nonce.
+- [ ] Assinatura HMAC implementada.
+- [ ] Replay bloqueado.
+- [ ] Sem secret, registro é recusado com mensagem clara.
+- [ ] Filho envia HTTPS ao Gator.
+- [ ] Gator valida assinatura.
+- [ ] Gator valida origem.
+- [ ] Gator limita tentativas por origem.
+- [ ] Gator testa a key no Lovable upstream.
+- [ ] Gator grava por RPC.
+- [ ] Resposta não contém a key.
+- [ ] Repetição do handshake é idempotente.
+- [ ] Remix publicado aparece no Gator.
+- [ ] `key_hint` aparece no painel.
+- [ ] Browser não consegue ver a key.
 
-## 4. Autenticação do painel e RBAC
+## F. Motor unificado do Gator
 
-- [ ] Criar login Supabase.
-- [ ] Criar sessão segura.
-- [ ] Criar logout.
-- [ ] Criar recuperação de senha.
-- [ ] Proteger `/dashboard/*`.
-- [ ] Criar workspace/organização.
-- [ ] Criar papel proprietário.
-- [ ] Criar papel administrador.
-- [ ] Criar papel operador.
-- [ ] Criar papel leitura.
-- [ ] Aplicar autorização por ação.
-- [ ] Registrar alterações administrativas.
-- [ ] Remover dependência do token público digitado na home.
-- [ ] Testar sessão expirada.
-- [ ] Testar usuário sem permissão.
+- [ ] `gateway-engine.ts` criado.
+- [ ] Auth de cliente centralizada.
+- [ ] Quota centralizada.
+- [ ] Rate limit centralizado.
+- [ ] Request ID centralizado.
+- [ ] Catálogo centralizado.
+- [ ] Seleção de key centralizada.
+- [ ] Retry/failover centralizados.
+- [ ] Telemetria centralizada.
+- [ ] Erros centralizados.
+- [ ] Chat Completions usa o motor.
+- [ ] Messages usa o motor.
+- [ ] Responses usa o motor.
+- [ ] Imagens usa o motor.
+- [ ] Embeddings usa o motor.
+- [ ] Vídeos/jobs usam o motor.
+- [ ] Áudio usa o motor se validado.
+- [ ] Nenhuma rota mantém auth/quota/log duplicado.
 
-## 5. Clientes e API keys
+## G. Catálogo e modelos Lovable
 
-- [ ] Criar cliente.
-- [ ] Gerar key aleatória.
-- [ ] Mostrar key completa somente uma vez.
-- [ ] Armazenar somente hash.
-- [ ] Criar hint mascarado.
-- [ ] Suspender cliente.
-- [ ] Reativar cliente.
-- [ ] Revogar key.
-- [ ] Rotacionar key.
-- [ ] Expirar key.
-- [ ] Limitar modelos por cliente.
-- [ ] Limitar endpoints por cliente.
-- [ ] Definir RPM.
-- [ ] Definir quota diária.
-- [ ] Definir quota mensal.
-- [ ] Definir limite de tokens.
-- [ ] Mostrar último uso.
-- [ ] Mostrar status.
-- [ ] Criar auditoria de mudanças.
-- [ ] Nunca retornar key completa em listagem.
+- [ ] Fonte única de modelos criada.
+- [ ] Aliases definidos.
+- [ ] Endpoint upstream por modelo definido.
+- [ ] Capacidades por modelo definidas.
+- [ ] Streaming testado.
+- [ ] Tools testadas.
+- [ ] Visão testada.
+- [ ] Imagem testada.
+- [ ] Vídeo testado.
+- [ ] Embedding testado.
+- [ ] Áudio testado se disponível.
+- [ ] Probe com timeout criado.
+- [ ] Cache de disponibilidade criado.
+- [ ] `/v1/models` usa fonte única.
+- [ ] Painel usa fonte única.
+- [ ] Modelo não validado não aparece como ativo.
 
-## 6. Rate limit, quotas e uso
+## H. Clientes, proxy e quotas
 
-- [ ] Criar contador por cliente.
-- [ ] Criar contador por endpoint.
-- [ ] Criar contador por filho.
-- [ ] Criar contador diário.
-- [ ] Criar contador mensal.
-- [ ] Criar contador de tokens.
-- [ ] Aplicar bloqueio antes do upstream.
-- [ ] Implementar reset diário.
-- [ ] Implementar reset mensal.
-- [ ] Implementar rate limit distribuído.
-- [ ] Padronizar headers de limite.
-- [ ] Limitar registro de remix.
-- [ ] Limitar tamanho do payload.
-- [ ] Limitar duração da requisição.
-- [ ] Criar RPC atômica de uso.
-- [ ] Testar concorrência.
-- [ ] Testar quota excedida.
-- [ ] Testar reset.
-- [ ] Testar múltiplas instâncias.
+- [ ] Login do painel implementado.
+- [ ] RBAC implementado.
+- [ ] Cliente criado por API/painel.
+- [ ] API key mostrada uma vez.
+- [ ] Hash armazenado.
+- [ ] Rotação implementada.
+- [ ] Revogação implementada.
+- [ ] Quota RPM aplicada antes do upstream.
+- [ ] Quota diária aplicada.
+- [ ] Quota mensal aplicada.
+- [ ] Quota de tokens aplicada.
+- [ ] Allowlist de modelos aplicada.
+- [ ] Allowlist de endpoints aplicada.
+- [ ] Rate limit distribuído aplicado.
+- [ ] `X-Request-ID` retornado.
+- [ ] Headers de rate limit retornados.
+- [ ] Proxy localhost testado.
+- [ ] Proxy na LAN testado.
+- [ ] API key obrigatória fora do localhost.
+- [ ] CORS restrito.
+- [ ] Configuração Cursor documentada.
+- [ ] Configuração Claude Code documentada.
+- [ ] Configuração Cline/Continue documentada.
 
-## 7. Supabase independente e migrations
+## I. Pool e failover
 
-- [ ] Criar projeto Supabase central.
-- [ ] Guardar URL no ambiente.
-- [ ] Guardar anon key no ambiente apropriado.
-- [ ] Guardar service role somente no servidor.
-- [ ] Criar pasta de migrations.
-- [ ] Criar tabela `gateway_clients`.
-- [ ] Criar tabela `gateway_key_pool`.
-- [ ] Criar tabela `gateway_request_logs`.
-- [ ] Criar tabela `gateway_usage_daily`.
-- [ ] Criar tabela `gateway_jobs`.
-- [ ] Criar tabela `gateway_audit_logs`.
-- [ ] Criar tabela `gateway_settings`.
-- [ ] Habilitar pgcrypto.
-- [ ] Criar secret Vault.
-- [ ] Criar RPC de registro.
-- [ ] Criar RPC de seleção.
-- [ ] Criar RPC de status.
-- [ ] Criar RPC de uso.
-- [ ] Criar índices.
-- [ ] Habilitar RLS.
-- [ ] Confirmar ausência de key em texto puro.
-- [ ] Atualizar tipos Supabase.
-- [ ] Testar migration em banco vazio.
-- [ ] Testar migration em banco existente.
-- [ ] Testar backup/restauração.
+- [ ] Key selecionada com `SKIP LOCKED`.
+- [ ] Quota do worker respeitada.
+- [ ] Cooldown respeitado.
+- [ ] Contador atômico atualizado.
+- [ ] 401/403 desabilita.
+- [ ] 402/429 entra em cooldown.
+- [ ] 5xx/timeout têm retry controlado.
+- [ ] Backoff/jitter aplicado.
+- [ ] Circuit breaker testado.
+- [ ] Tentativas registradas.
+- [ ] Stream não é duplicado depois de iniciado.
+- [ ] Pool vazio retorna erro claro.
+- [ ] Fallback do pai é explícito.
+- [ ] Failover entre duas keys testado.
 
-## 8. Pool, failover e retry
+## J. Painel comercial do Gator
 
-- [ ] Selecionar key com `SKIP LOCKED`.
-- [ ] Aplicar quota do filho na seleção.
-- [ ] Aplicar cooldown na seleção.
-- [ ] Incrementar contador atomicamente.
-- [ ] Marcar 401/403 como disabled.
-- [ ] Marcar 402/429 como exhausted.
-- [ ] Reativar após cooldown.
-- [ ] Tratar 5xx com retry limitado.
-- [ ] Tratar timeout com retry limitado.
-- [ ] Adicionar backoff.
-- [ ] Adicionar jitter.
-- [ ] Adicionar circuit breaker.
-- [ ] Registrar cada tentativa.
-- [ ] Evitar retry inseguro em stream iniciado.
-- [ ] Implementar idempotência quando necessário.
-- [ ] Testar pool vazio.
-- [ ] Testar uma key.
-- [ ] Testar várias keys.
-- [ ] Testar todas esgotadas.
-- [ ] Testar fallback do pai.
+- [ ] `/dashboard` funcional.
+- [ ] `/dashboard/endpoints` funcional.
+- [ ] `/dashboard/models` funcional.
+- [ ] `/dashboard/routes` funcional.
+- [ ] `/dashboard/clients` funcional.
+- [ ] `/dashboard/workers` funcional.
+- [ ] `/dashboard/usage` funcional.
+- [ ] `/dashboard/logs` funcional.
+- [ ] `/dashboard/token-saver` funcional.
+- [ ] `/dashboard/settings` funcional.
+- [ ] `/dashboard/security` funcional.
+- [ ] Loading/empty/error/success em todas as telas.
+- [ ] Dados vêm da API, não hard-coded.
+- [ ] Busca/filtros/paginação funcionam.
+- [ ] Uso por worker aparece.
+- [ ] Uso por cliente aparece.
+- [ ] Cooldown aparece.
+- [ ] Custos são marcados como estimativa.
+- [ ] Textos revisados em PT-BR.
+- [ ] Desktop testado.
+- [ ] Mobile testado.
 
-## 9. Handshake pai/filhos
+## K. Token Saver e jobs
 
-- [ ] Definir origem configurável do pai.
-- [ ] Remover fallback inseguro de secret.
-- [ ] Criar timestamp.
-- [ ] Criar nonce.
-- [ ] Criar assinatura HMAC.
-- [ ] Validar assinatura.
-- [ ] Bloquear replay.
-- [ ] Validar origem.
-- [ ] Validar key no Lovable.
-- [ ] Registrar por RPC.
-- [ ] Responder sem ecoar key.
-- [ ] Corrigir contrato announce/dispatch.
-- [ ] Criar allowlist de domínios.
-- [ ] Bloquear localhost e IPs privados.
-- [ ] Bloquear redirect perigoso.
-- [ ] Adicionar timeout.
-- [ ] Adicionar rate limit.
-- [ ] Registrar sucesso.
-- [ ] Registrar falha.
-- [ ] Exibir filho no painel.
-- [ ] Testar primeiro request SSR.
-- [ ] Testar abertura da interface.
-- [ ] Testar disparo manual.
-- [ ] Testar key inválida.
-- [ ] Testar key esgotada.
+- [ ] Detecção de `git diff` implementada.
+- [ ] Detecção de `grep/find/ls/tree` implementada.
+- [ ] Logs repetidos detectados.
+- [ ] Código preservado.
+- [ ] JSON preservado.
+- [ ] Tool calls preservados.
+- [ ] Binários ignorados.
+- [ ] Sensíveis ignorados.
+- [ ] Ativação por Gator implementada.
+- [ ] Ativação por cliente implementada.
+- [ ] Bypass por header implementado.
+- [ ] Economia antes/depois medida.
+- [ ] Jobs de vídeo/áudio/imagem implementados quando suportados.
+- [ ] `job_id` devolvido.
+- [ ] Polling/status implementado.
+- [ ] Expiração/limpeza implementada.
 
-## 10. Jobs e mídia
+## L. Operação local e VPS
 
-- [ ] Definir quais modelos de imagem existem.
-- [ ] Definir quais modelos de vídeo existem.
-- [ ] Definir quais modelos de áudio existem.
-- [ ] Validar formato de cada upstream.
-- [ ] Criar job de mídia.
-- [ ] Criar `job_id`.
-- [ ] Criar consulta de status.
-- [ ] Criar expiração.
-- [ ] Criar timeout.
-- [ ] Registrar uso do job.
-- [ ] Tratar falha do job.
-- [ ] Limpar jobs antigos.
-- [ ] Testar imagem.
-- [ ] Testar vídeo.
-- [ ] Testar embedding.
-- [ ] Testar áudio quando disponível.
+- [ ] Scripts PowerShell de instalação criados.
+- [ ] Script de início criado.
+- [ ] Script de parada criado.
+- [ ] Script de atualização criado.
+- [ ] Supabase local por Docker documentado, se escolhido.
+- [ ] Supabase hospedado documentado, se escolhido.
+- [ ] Dockerfile do Gator criado.
+- [ ] Docker Compose criado.
+- [ ] Reverse proxy HTTPS documentado.
+- [ ] Backup automático documentado.
+- [ ] Logs com retenção.
+- [ ] Monitoramento configurado.
+- [ ] Health público mínimo.
+- [ ] Diagnóstico protegido.
+- [ ] Firewall configurado.
+- [ ] Teste em VPS realizado.
+- [ ] Teste em segundo computador realizado.
 
-## 11. Painel comercial PT-BR
+## M. Segurança e conformidade
 
-- [ ] Criar layout protegido.
-- [ ] Criar URLs próprias por tela.
-- [ ] Criar loading state.
-- [ ] Criar empty state.
-- [ ] Criar error state.
-- [ ] Criar success feedback.
-- [ ] Criar Visão geral.
-- [ ] Criar Endpoints.
-- [ ] Criar Modelos.
-- [ ] Criar Rotas e fallback.
-- [ ] Criar Clientes.
-- [ ] Criar API keys.
-- [ ] Criar Limites e quotas.
-- [ ] Criar Workers.
-- [ ] Criar Sincronização.
-- [ ] Criar Uso.
-- [ ] Criar Custos estimados.
-- [ ] Criar Logs.
-- [ ] Criar Token Saver.
-- [ ] Criar Preferências.
-- [ ] Criar Segurança.
-- [ ] Adicionar busca.
-- [ ] Adicionar filtros.
-- [ ] Adicionar paginação.
-- [ ] Adicionar atualização automática.
-- [ ] Remover dados hard-coded.
-- [ ] Testar desktop.
-- [ ] Testar mobile.
-- [ ] Revisar textos PT-BR.
+- [ ] `.env` não versionado.
+- [ ] Service role não aparece no Lovable.
+- [ ] Key do filho nunca aparece no browser.
+- [ ] Key não aparece em logs.
+- [ ] Key não aparece em GET administrativo.
+- [ ] CORS administrativo protegido.
+- [ ] HMAC/nonce/replay testados.
+- [ ] SSRF testado.
+- [ ] Redirect externo testado.
+- [ ] Brute force testado.
+- [ ] Rate limit de registro testado.
+- [ ] Rotação de secrets testada.
+- [ ] Auditoria administrativa criada.
+- [ ] Retenção de logs definida.
+- [ ] Termos do provedor revisados antes de uso comercial.
 
-## 12. Token Saver
+## N. Testes e release
 
-- [ ] Definir filtros seguros.
-- [ ] Detectar git diff.
-- [ ] Detectar grep.
-- [ ] Detectar find.
-- [ ] Detectar ls/tree.
-- [ ] Detectar logs repetidos.
-- [ ] Preservar código.
-- [ ] Preservar JSON válido.
-- [ ] Preservar tool calls.
-- [ ] Ignorar binários.
-- [ ] Ignorar sensíveis.
-- [ ] Ativar globalmente.
-- [ ] Ativar por cliente.
-- [ ] Ativar por endpoint.
-- [ ] Permitir bypass por header.
-- [ ] Medir antes/depois.
-- [ ] Mostrar economia estimada.
-- [ ] Testar não aumento do payload.
+- [ ] Testes unitários de auth.
+- [ ] Testes unitários de HMAC.
+- [ ] Testes de keys.
+- [ ] Testes de quotas.
+- [ ] Testes de rate limit.
+- [ ] Testes de seleção concorrente.
+- [ ] Testes de cooldown.
+- [ ] Testes de failover.
+- [ ] Testes de catálogo.
+- [ ] Testes de streaming.
+- [ ] Testes de tool use.
+- [ ] Testes de jobs.
+- [ ] Testes de workers.
+- [ ] Testes do painel.
+- [ ] Teste E2E: remix publicado envia key.
+- [ ] Teste E2E: key aparece cifrada no Supabase.
+- [ ] Teste E2E: Gator usa key do worker.
+- [ ] Teste E2E: 429/402 troca key.
+- [ ] Teste E2E: outro PC usa proxy.
+- [ ] CI roda lint, build e testes.
+- [ ] Release documentado.
+- [ ] Checklist atualizada com evidências.
 
-## 13. Proxy local e vários computadores
+## Critério final de pronto
 
-- [ ] Configurar host.
-- [ ] Configurar porta.
-- [ ] Escutar na rede local.
-- [ ] Exigir API key fora do localhost.
-- [ ] Restringir CORS.
-- [ ] Criar instrução Cursor.
-- [ ] Criar instrução Claude Code.
-- [ ] Criar instrução Cline.
-- [ ] Criar instrução Continue.
-- [ ] Criar instrução Codex.
-- [ ] Testar no PC principal.
-- [ ] Testar em outro PC.
-- [ ] Testar firewall.
-- [ ] Criar túnel somente após segurança.
-- [ ] Testar revogação de máquina.
+- [ ] App Lovable continua remixável.
+- [ ] Remix publicado registra automaticamente no Gator.
+- [ ] Supabase central armazena somente cifra/hash/hint.
+- [ ] Gator atende API autenticada.
+- [ ] Pool round-robin funciona.
+- [ ] Quotas funcionam de verdade.
+- [ ] Failover foi comprovado.
+- [ ] Painel comercial funciona.
+- [ ] Proxy local/VPS funciona.
+- [ ] Backup e restauração foram comprovados.
+- [ ] Documentação está atualizada.
 
-## 14. Segurança
-
-- [ ] Remover secrets do Git.
-- [ ] Ignorar `.env`.
-- [ ] Proteger CORS admin.
-- [ ] Proteger health detalhado.
-- [ ] Proteger diagnostics.
-- [ ] Validar SSRF.
-- [ ] Validar replay.
-- [ ] Validar brute force.
-- [ ] Validar payload.
-- [ ] Não logar keys.
-- [ ] Mascarar client keys.
-- [ ] Criar rotação de secrets.
-- [ ] Criar auditoria.
-- [ ] Criar retenção de logs.
-- [ ] Criar backup.
-- [ ] Testar restauração.
-- [ ] Fazer revisão de dependências.
-
-## 15. Testes e CI
-
-- [ ] Teste unitário de auth.
-- [ ] Teste de API keys.
-- [ ] Teste de quota.
-- [ ] Teste de rate limit.
-- [ ] Teste de seleção de key.
-- [ ] Teste de cooldown.
-- [ ] Teste de failover.
-- [ ] Teste de HMAC.
-- [ ] Teste de SSRF.
-- [ ] Teste de catálogo.
-- [ ] Teste de streaming.
-- [ ] Teste de tool use.
-- [ ] Teste de jobs.
-- [ ] Teste de workers.
-- [ ] Teste de painel.
-- [ ] Teste E2E local.
-- [ ] Pipeline CI para lint.
-- [ ] Pipeline CI para build.
-- [ ] Pipeline CI para testes.
-- [ ] Bloquear merge com falha.
-
-## 16. Operação e release
-
-- [ ] Criar `.env.example` final.
-- [ ] Documentar instalação.
-- [ ] Documentar start.
-- [ ] Documentar stop.
-- [ ] Documentar update.
-- [ ] Criar script Windows.
-- [ ] Criar logs locais.
-- [ ] Criar rotação de logs.
-- [ ] Criar health real.
-- [ ] Criar diagnóstico autenticado.
-- [ ] Criar monitoramento.
-- [ ] Criar backup automático.
-- [ ] Testar deploy.
-- [ ] Publicar versão.
-- [ ] Fazer teste com remix real.
-- [ ] Fazer teste em outro computador.
-- [ ] Fazer teste de quota.
-- [ ] Fazer teste de failover.
-- [ ] Fazer smoke test de cada capacidade.
-- [ ] Atualizar este checklist com evidências.
-
-## Critério final de conclusão
-
-- [ ] Build aprovado.
-- [ ] Lint aprovado.
-- [ ] Testes aprovados.
-- [ ] Painel autenticado e navegável.
-- [ ] API keys seguras.
-- [ ] Quotas aplicadas de verdade.
-- [ ] Telemetria completa.
-- [ ] Pool cifrado.
-- [ ] Failover comprovado.
-- [ ] Handshake pai/filho comprovado.
-- [ ] Proxy local comprovado.
-- [ ] Modelos realmente testados.
-- [ ] Backup e restauração comprovados.
-- [ ] Documentação atualizada.
-
-Uma caixa só deve virar `[x]` com evidência: commit, comando executado, teste, resposta HTTP, migration aplicada ou captura/registro equivalente.
+Uma caixa só vira `[x]` depois de evidência verificável.

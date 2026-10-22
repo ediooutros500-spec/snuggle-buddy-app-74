@@ -1,339 +1,405 @@
-# Plano de Implementação: Gateway Zilong Body F74
+# Plano Mestre de Implementação: Lovable Remixável + Gator Local
 
-Este documento transforma a visão do NineRouter em um plano executável para um gateway de **um único provedor**, o Lovable AI Gateway. O objetivo não é copiar funcionalidades que dependem de múltiplos provedores, e sim adaptar o que faz sentido: proxy, clientes, API keys, modelos, fallback entre modelos e chaves Lovable, quotas, uso, segurança, token saver, remixes pai/filhos e operação local.
+Este é um plano de implementação, não uma descrição de funcionalidades já prontas. O repositório terá dois papéis relacionados:
 
-## 1. Escopo e decisões
+1. **Projeto Lovable Pai Remixável**: continua sendo um app Lovable que pode ser remixado. Cada remix publicado roda no workspace do filho, lê a própria `LOVABLE_API_KEY` no servidor e envia um handshake ao Gator.
+2. **Gator**: gateway central que roda localmente no PC, na VPS ou em Docker. Recebe as chaves dos remixes, grava-as cifradas no Supabase central, escolhe a próxima chave Lovable e expõe o proxy para Cursor, Claude Code e outros computadores.
 
-### 1.1 O que será mantido
+O upstream continua sendo **um único provedor: Lovable AI Gateway**. As várias chaves pertencem a remixes/workspaces Lovable diferentes. Isso não transforma o sistema em multi-provedor; é um pool de credenciais do mesmo provedor.
 
-- Lovable AI Gateway como único upstream.
-- Compatibilidade OpenAI Chat Completions.
-- Compatibilidade Anthropic Messages para Claude Code.
-- Compatibilidade OpenAI Responses quando o upstream suportar.
-- Modelos Lovable de texto, visão, imagem, vídeo, áudio e embeddings, somente após validação real.
-- Pool de `LOVABLE_API_KEY` dos remixes filhos.
-- Round-robin, cooldown, quotas e failover entre chaves do mesmo provedor.
-- Painel comercial em português do Brasil.
-- Proxy para computadores da rede local.
-- Supabase independente como banco central de produção.
+## 0. Regras de arquitetura
 
-### 1.2 O que não será feito
+### Manter no projeto Lovable remixável
 
-- Integração direta com OpenAI, Anthropic, Google, Groq ou outros provedores.
-- OAuth de contas externas.
-- Combos entre provedores.
-- Billing real ou cobrança de cartão.
-- Promessas de que modelos existem sem teste no Lovable.
+- Home/painel que pode ser remixado.
+- Endpoint local de anúncio do filho.
+- Leitura de `LOVABLE_API_KEY` somente no servidor.
+- Registro no Gator por HTTPS.
+- Nenhuma chave enviada pelo navegador.
+- Nenhum service role do Supabase dentro do remix.
+- Configuração do endereço do Gator por variável/secret e fallback somente para desenvolvimento.
 
-### 1.3 Equivalência com o NineRouter
+### Manter no Gator
 
-| NineRouter | Gateway Zilong Body F74 |
-|---|---|
-| Muitos provedores | Um provedor: Lovable |
-| Contas por provedor | Keys de remixes/workspaces Lovable |
-| Fallback entre provedores | Fallback entre modelos e keys Lovable |
-| API proxy | `/api/public/v1/*` |
-| Combos | Sequências de modelos Lovable |
-| Quota por provedor | Quota por cliente, filho e key |
-| Usage/cost | Tokens, requests e estimativa |
-| Cloud sync | Pai/filhos e Supabase central |
-| Token saver | Compressão segura antes do Lovable |
+- API pública compatível com OpenAI e Anthropic.
+- Pool de chaves Lovable.
+- Seleção round-robin.
+- Cooldown e failover.
+- Clientes, API keys, quotas e logs.
+- Painel administrativo.
+- Proxy para a rede local e VPS.
+- Supabase central.
+- Jobs de mídia e telemetria.
 
-## 2. Fase 0: baseline e ambiente local
+### Não fazer
+
+- Não colocar `LOVABLE_API_KEY` no bundle React.
+- Não deixar service role no projeto remixável.
+- Não aceitar registro sem assinatura em produção.
+- Não confiar apenas em header fixo como segredo.
+- Não permitir que o Gator faça fetch para qualquer URL informada pelo usuário.
+- Não chamar o sistema de multi-provedor.
+- Não marcar funcionalidade apenas porque o arquivo existe.
+
+## 1. Estrutura final de arquivos
+
+O root atual continua sendo o projeto Lovable remixável. O Gator será adicionado em uma área separada para poder rodar localmente/VPS sem quebrar o Remix.
+
+```text
+/
+├─ src/                              # Projeto Lovable pai/remixável
+│  ├─ routes/
+│  │  └─ api/public/v1/workers/
+│  │     ├─ announce.ts              # Endpoint local chamado pelo frontend do filho
+│  │     └─ register.ts              # Compatibilidade quando o pai também recebe registro
+│  ├─ lib/
+│  │  ├─ child-handshake.server.ts   # Assinatura e envio para o Gator
+│  │  ├─ child-config.server.ts      # Origem do Gator e configuração do remix
+│  │  └─ lovable-error-reporting.ts
+│  ├─ server.ts                      # Disparo SSR sem bloquear a resposta
+│  └─ routes/__root.tsx              # Disparo client-side leve
+├─ gator/                            # Gateway central local/VPS
+│  ├─ src/
+│  │  ├─ server.ts                   # Inicialização HTTP
+│  │  ├─ config.ts                   # Variáveis e validação de ambiente
+│  │  ├─ engine/
+│  │  │  ├─ gateway-engine.ts        # Pipeline único de requisições
+│  │  │  ├─ upstream-lovable.ts      # Adaptador único do Lovable
+│  │  │  ├─ model-catalog.ts         # Catálogo único
+│  │  │  ├─ key-selector.ts          # Seleção de key do pool
+│  │  │  ├─ retry-policy.ts          # Retry/backoff/circuit breaker
+│  │  │  └─ request-context.ts       # Request ID e contexto
+│  │  ├─ auth/
+│  │  │  ├─ client-auth.ts           # API keys dos clientes
+│  │  │  ├─ admin-auth.ts             # Sessão/RBAC do painel
+│  │  │  └─ handshake-auth.ts         # HMAC, nonce e replay
+│  │  ├─ workers/
+│  │  │  ├─ register-worker.ts       # Recepção e validação de filho
+│  │  │  ├─ dispatch-worker.ts        # Ping manual do Gator ao filho
+│  │  │  └─ worker-policy.ts          # Allowlist, quotas e estado
+│  │  ├─ usage/
+│  │  │  ├─ quota-service.ts
+│  │  │  ├─ telemetry-service.ts
+│  │  │  └─ cost-estimator.ts
+│  │  ├─ media/
+│  │  │  ├─ job-service.ts
+│  │  │  └─ job-cleaner.ts
+│  │  ├─ token-saver/
+│  │  │  ├─ detect.ts
+│  │  │  └─ compress.ts
+│  │  └─ db/
+│  │     ├─ supabase-admin.ts
+│  │     └─ repositories/
+│  ├─ migrations/                    # Schema do Supabase central
+│  ├─ tests/
+│  ├─ Dockerfile
+│  ├─ docker-compose.yml
+│  ├─ package.json
+│  └─ .env.example
+├─ dashboard/                        # UI do Gator, se separada do app Lovable
+├─ docs/
+│  ├─ REMIX-SETUP.md
+│  ├─ GATOR-LOCAL.md
+│  ├─ GATOR-VPS.md
+│  ├─ API.md
+│  └─ SECURITY.md
+└─ CHECKLIST-IMPLEMENTACAO-GATEWAY-ZILONG.md
+```
+
+A divisão pode começar incrementalmente. Não mover o root do Lovable para monorepo antes de existir build verde; primeiro criar `gator/` isolado.
+
+## 2. Fase 0: baseline do repositório e Gator local
 
 ### Objetivo
-Garantir que o repositório original compila, pode ser executado no Windows e tem uma linha de base confiável.
+Ter uma cópia confiável do projeto e uma área reservada para o gateway central.
 
-### Trabalho
+### Implementação
 
 1. Confirmar o checkout em `C:\Users\e_dio\Desktop\Gateway`.
-2. Confirmar `origin` apontando para `ediooutros500-spec/snuggle-buddy-app-74`.
-3. Fixar versões de Node, npm e package manager.
-4. Criar `.env.example` sem secrets.
-5. Criar scripts `dev`, `build`, `start`, `lint`, `format`, `check` e `test`.
-6. Corrigir CRLF/Prettier sem mudar a lógica.
-7. Regenerar `src/routeTree.gen.ts`.
-8. Rodar lint, build e testes mínimos.
-9. Registrar warnings de bundle e runtime sem tratar warning como sucesso funcional.
+2. Confirmar remote do repositório original.
+3. Corrigir CRLF/Prettier sem alterar lógica.
+4. Regenerar `src/routeTree.gen.ts`.
+5. Garantir `npm run build` do Lovable.
+6. Criar `gator/package.json` independente.
+7. Criar `gator/.env.example` sem segredos.
+8. Criar comandos de desenvolvimento local.
+9. Criar health check separado do Gator.
+10. Documentar Node, npm, Docker e portas.
 
-### Critério de aceite
+### Aceite
 
-- `npm run check` passa.
-- O servidor local inicia.
-- A home e o health check respondem.
-- Todas as rotas implementadas aparecem no route tree.
+- App Lovable compila.
+- Gator inicia mesmo sem keys, mostrando configuração incompleta.
+- Nenhum segredo está versionado.
 
-## 3. Fase 1: contrato público da API
-
-### Objetivo
-Definir uma API estável antes de continuar o painel.
-
-### Endpoints
-
-- `POST /api/public/v1/chat/completions`
-- `POST /api/public/v1/messages`
-- `POST /api/public/v1/responses`
-- `GET /api/public/v1/models`
-- `POST /api/public/v1/images/generations`
-- `POST /api/public/v1/embeddings`
-- `POST /api/public/v1/videos/generations`
-- `GET /api/public/v1/jobs/:id`
-- `POST /api/public/v1/audio/transcriptions`
-- `POST /api/public/v1/audio/speech`
-- `GET /api/public/health`
-- Rotas administrativas autenticadas.
-- Rotas de workers pai/filhos autenticadas.
-
-### Regras
-
-- Padronizar autenticação por `Authorization: Bearer` e `x-api-key`.
-- Devolver `X-Request-ID` em todas as respostas.
-- Padronizar erros, status e headers de rate limit.
-- Validar tamanho, roles, modelo, endpoint e formato.
-- Não devolver secrets ou keys completas.
-- Documentar exemplos curl, JavaScript e Python.
-
-## 4. Fase 2: motor unificado
+## 3. Fase 1: Supabase central do Gator
 
 ### Objetivo
-Eliminar a lógica duplicada entre adaptadores.
+O Supabase central será o banco do Gator. O projeto remixável nunca recebe service role.
 
-Criar `src/lib/gateway-engine.server.ts` para centralizar:
+### Ambiente
 
-1. Extração e autenticação do cliente.
-2. Verificação de status, modelos e endpoints permitidos.
-3. Quotas e rate limit.
-4. Geração de request ID.
-5. Resolução do modelo e destino Lovable.
-6. Seleção de key do pool.
-7. Timeout, retry, backoff e jitter.
-8. Failover por key.
-9. Registro de tentativas e telemetria.
-10. Normalização de erros.
-11. Tratamento correto de streaming.
+Definir no Gator:
 
-`claude-compat`, `openai-compat`, `media-gateway` e `key-pool` ficam como adaptadores pequenos do motor, não como motores concorrentes.
+```text
+GATOR_SUPABASE_URL
+GATOR_SUPABASE_ANON_KEY       # somente quando necessário no painel
+GATOR_SUPABASE_SERVICE_ROLE_KEY
+GATOR_ENCRYPTION_KEY ou Vault
+GATOR_PUBLIC_URL
+GATOR_ADMIN_URL
+```
 
-## 5. Fase 3: catálogo e capacidades Lovable
+Se o Supabase for executado no próprio PC, usar Docker/Supabase CLI e persistência em volume. Se for Supabase hospedado, o Gator local/VPS acessa pela URL HTTPS. O plano suporta as duas formas, mas a escolha deve ser registrada antes da migration.
 
-### Objetivo
-Expor apenas modelos e capacidades que realmente funcionam.
+### Tabelas
 
-Para cada modelo:
-
-1. Registrar nome canônico e aliases.
-2. Classificar como texto, visão, áudio, imagem, vídeo ou embedding.
-3. Definir endpoint upstream.
-4. Definir streaming, tools, contexto e async job.
-5. Executar smoke test controlado.
-6. Cachear disponibilidade por período curto.
-7. Exibir no painel somente o status real.
-
-O catálogo não deve ficar duplicado em frontend, rotas e compatibilidade. Deve existir uma fonte única no backend.
-
-## 6. Fase 4: autenticação e clientes
-
-### Painel
-
-- Login Supabase.
-- Sessão segura.
-- Logout e recuperação de senha.
-- Proteção de todas as rotas admin.
-- Organizações/workspaces.
-- Papéis: proprietário, administrador, operador e leitura.
-
-### Clientes
-
-- Criar, editar, suspender, reativar e revogar.
-- API key exibida uma única vez.
-- Hash SHA-256 da key.
-- Rotação e expiração opcional.
-- Modelos e endpoints permitidos.
-- RPM, quota diária, quota mensal e limite de tokens.
-- Último uso e auditoria.
-
-## 7. Fase 5: quotas, rate limit e telemetria
-
-### Quotas
-
-Aplicar antes do upstream:
-
-- requests/minuto;
-- requests/dia;
-- requests/mês;
-- tokens de entrada;
-- tokens de saída;
-- limite por modelo;
-- limite por endpoint;
-- limite por filho.
-
-### Rate limit
-
-- Identidade por cliente, não apenas IP.
-- Buckets distribuídos para múltiplas instâncias.
-- Headers `x-ratelimit-*` consistentes.
-- Limite separado para registro de remixes.
-- Limite de payload e timeout.
-
-### Telemetria
-
-Registrar request ID, cliente, endpoint, modelo, origem, key mascarada, tentativas, status, latência, tokens, erro, fallback e timestamps. Criar RPC atômica para log e incremento de uso.
-
-## 8. Fase 6: pool de keys e Supabase independente
-
-### Banco
-
-Criar migrations versionadas para:
-
-- `gateway_clients`;
-- `gateway_key_pool`;
-- `gateway_request_logs`;
-- `gateway_usage_daily`;
-- `gateway_jobs`;
-- `gateway_audit_logs`;
-- `gateway_settings`.
-
-### Segurança
-
-- `api_key_hash` para deduplicação.
-- `api_key_enc` cifrada em repouso.
-- Vault para a chave mestra.
-- RLS ativado.
-- Service role somente no backend.
-- Nenhuma key em texto puro no painel ou no GET.
+- `gateway_clients`: clientes, status, quotas e permissões.
+- `gateway_client_keys`: hash, hint, status, expiração e último uso.
+- `gateway_key_pool`: hash da key Lovable, cifra, hint, origem, workspace informado, status e contadores.
+- `gateway_request_logs`: request ID, cliente, modelo, tentativa, status, latência e tokens.
+- `gateway_usage_daily`: agregados por cliente, worker, modelo e data.
+- `gateway_jobs`: vídeo/áudio/imagem assíncronos.
+- `gateway_workers`: origem, nonce, último handshake, status e política.
+- `gateway_audit_logs`: ações administrativas.
+- `gateway_settings`: configurações do Gator.
 
 ### RPCs
 
-- `register_worker_key`;
-- `get_next_api_key`;
-- `mark_key_status`;
-- `log_request_and_increment_usage`;
-- `increment_client_stats` ou substituta equivalente;
-- reset diário de quotas.
+- `register_worker_key`: hash, cifra e upsert atômico.
+- `get_next_api_key`: round-robin com `FOR UPDATE SKIP LOCKED`, quota e cooldown.
+- `mark_key_status`: exhausted/disabled/active.
+- `log_request_and_increment_usage`: log e contador na mesma operação.
+- `consume_client_quota`: reserva de uso antes do upstream.
+- `release_failed_quota`: libera ou ajusta reserva quando a chamada não consumiu créditos.
 
-### Seleção
+### Aceite
 
-Usar `FOR UPDATE SKIP LOCKED`, ignorar key suspensa, cooldown e quota estourada, atualizar contadores atomicamente e usar a key do pai apenas como fallback explícito.
+- Migration aplicada em banco vazio.
+- RLS ativo.
+- Service role usada somente pelo Gator.
+- Nenhuma key aberta em tabela, API administrativa ou log.
+- Backup e restauração testados.
 
-## 9. Fase 7: pai e filhos
+## 4. Fase 2: contrato de handshake remixável
 
-### Registro automático
+### Fluxo correto
 
-O filho, ao iniciar ou abrir a aplicação:
+1. O usuário faz Remix do projeto Lovable Pai.
+2. O filho é publicado no workspace desejado.
+3. O servidor do filho atende a primeira requisição.
+4. O filho lê `process.env.LOVABLE_API_KEY` no servidor.
+5. O filho cria `timestamp`, `nonce`, `project_origin` e `workspace_hint` opcional.
+6. O filho assina tudo com o segredo de handshake configurado no filho.
+7. O filho envia HTTPS para o Gator.
+8. O Gator valida assinatura, timestamp, nonce e origem.
+9. O Gator testa a key no Lovable upstream.
+10. O Gator cifra e salva no Supabase.
+11. O Gator devolve somente `registered`, `worker_id` e status.
 
-1. identifica a própria origem;
-2. lê `LOVABLE_API_KEY` no servidor;
-3. cria timestamp e nonce;
-4. assina o payload;
-5. envia ao pai;
-6. o pai valida a assinatura e a origem;
-7. valida a key no upstream;
-8. cifra e salva;
-9. responde sem ecoar a key.
+A chave nunca deve passar pelo browser, aparecer no JSON de resposta ou ser gravada em log.
 
-### Dispatch manual
+### Gatilhos no filho
 
-- Corrigir contrato de headers entre pai e filho.
-- Permitir disparo pelo painel.
-- Permitir retry controlado.
-- Registrar operador, origem, resultado e request ID.
-- Usar allowlist de domínios.
-- Bloquear localhost, loopback, IPs privados, redirects perigosos e DNS rebinding.
+- SSR em `src/server.ts`, em background.
+- `useEffect` em `src/routes/__root.tsx`, chamando apenas endpoint local.
+- `POST /api/public/v1/workers/announce` no filho.
 
-### Estado do filho
+O frontend não chama o Gator diretamente. Ele chama o endpoint local; o servidor do filho faz o envio.
 
-Mostrar origem, workspace quando disponível, key hint, status, quota, uso, cooldown, último ping, último erro e data de registro.
+### Segurança
 
-## 10. Fase 8: fallback e jobs
+- HMAC-SHA256.
+- Timestamp com janela curta.
+- Nonce de uso único.
+- Rate limit por origem.
+- Allowlist de domínios.
+- Rejeição sem secret configurado.
+- Validação upstream da key antes de salvar.
+- Resposta sem ecoar a key.
 
-### Retry
+### Aceite
 
-- 401/403: desabilitar key.
-- 402/429: cooldown e próxima key.
-- 5xx/timeout: retry limitado com backoff.
-- Validação: sem retry.
-- Stream iniciado: não trocar silenciosamente.
-- Idempotência para requests que podem ser repetidos.
+- Criar um remix e publicar.
+- Abrir a URL uma vez.
+- Ver o worker aparecer no Gator.
+- Confirmar hint e origem.
+- Confirmar que a key não aparece no browser, logs ou resposta.
+- Repetir o handshake e comprovar idempotência.
 
-### Jobs
+## 5. Fase 3: motor do Gator
 
-Para vídeo, áudio ou mídia assíncrona:
+O `gateway-engine` executará toda requisição:
 
-1. criar job;
-2. guardar status;
-3. devolver `job_id`;
-4. fazer polling ou webhook;
-5. aplicar timeout e expiração;
-6. registrar uso e erro;
-7. limpar jobs antigos.
+1. validar API key do cliente;
+2. identificar cliente e worker policy;
+3. reservar quota;
+4. validar endpoint/modelo;
+5. gerar `X-Request-ID`;
+6. selecionar key Lovable;
+7. traduzir o formato para o endpoint Lovable;
+8. aplicar timeout;
+9. chamar o upstream;
+10. marcar status da key;
+11. fazer failover quando seguro;
+12. registrar tentativa e consumo;
+13. devolver resposta normalizada.
 
-## 11. Fase 9: painel comercial PT-BR
+Todas as rotas de texto e mídia devem passar por esse motor. A rota não pode implementar sua própria autenticação, quota e logging.
 
-Criar páginas reais, com URLs próprias e estados de loading/erro/vazio/sucesso:
+## 6. Fase 4: catálogo e capacidades
 
-- Visão geral.
-- Endpoints.
-- Modelos.
-- Rotas e fallback.
-- Clientes e API keys.
-- Limites e quotas.
-- Workers.
-- Sincronização de remixes.
-- Uso e custos estimados.
-- Logs.
-- Token Saver.
-- Preferências.
-- Segurança.
+Criar uma fonte única no Gator para modelos Lovable. Cada entrada informa:
 
-Remover listas estáticas do frontend. Todas as telas devem consumir APIs reais, ter filtros, busca, paginação, ações autenticadas e feedback de resultado.
+- ID canônico;
+- aliases;
+- endpoint upstream;
+- texto/visão/áudio/imagem/vídeo/embedding;
+- streaming;
+- tools;
+- contexto;
+- job assíncrono;
+- último teste;
+- status real;
+- custo estimado, se conhecido.
 
-## 12. Fase 10: Token Saver
+O painel e `/v1/models` leem essa mesma fonte. Modelo só fica ativo depois de smoke test com timeout.
 
-Implementar compressão segura para resultados grandes de `git diff`, `grep`, `find`, `ls`, `tree` e logs repetidos. Não alterar código, JSON inválido, tool calls, binários ou conteúdo sensível. Permitir ativação global, por cliente e por endpoint, além de header para desativar e métrica antes/depois.
+## 7. Fase 5: API, proxy e clientes
 
-## 13. Fase 11: proxy local e rede
+### API
 
-- `HOST=0.0.0.0` configurável.
-- Porta configurável, padrão documentado.
+Implementar e documentar:
+
+- `/v1/chat/completions`;
+- `/v1/messages`;
+- `/v1/responses`;
+- `/v1/models`;
+- `/v1/images/generations`;
+- `/v1/embeddings`;
+- `/v1/videos/generations`;
+- `/v1/jobs/:id`;
+- áudio quando validado.
+
+### Clientes
+
+- Login no painel do Gator.
+- RBAC.
+- Criação e rotação de API keys.
+- Hash e exibição única.
+- Modelos/endpoints permitidos.
+- RPM, quota diária, mensal e tokens.
+- Auditoria.
+
+### Proxy
+
+- `GATOR_HOST=0.0.0.0` configurável.
+- Porta documentada.
 - API key obrigatória fora do localhost.
 - CORS restrito.
-- Firewall e instruções para outro PC.
-- Exemplos para Cursor, Claude Code, Cline, Continue e Codex.
-- Túnel seguro somente depois do proxy local estável.
-- Nunca deixar endpoint público sem autenticação.
+- Firewall.
+- Exemplos de configuração para Cursor, Claude Code, Cline, Continue e Codex.
 
-## 14. Fase 12: testes e operação
+## 8. Fase 6: pool, quotas e failover
 
-### Testes
+- Selecionar key com `SKIP LOCKED`.
+- Ignorar key disabled, cooldown e quota excedida.
+- Contar por worker e workspace informado.
+- `401/403`: disabled.
+- `402/429`: cooldown.
+- `5xx/timeout`: retry limitado com backoff/jitter.
+- Não trocar key depois que stream começou.
+- Registrar todas as tentativas.
+- Usar key própria do Gator somente como fallback explícito, se habilitado.
 
-Unitários para auth, keys, quotas, rate limit, fallback, HMAC, SSRF, catálogo e token saver. Integração para todos endpoints, streaming, tools, jobs, workers e painel. E2E no PC com servidor local.
+O sistema deve mostrar claramente que remixes no mesmo workspace podem compartilhar créditos; workspaces diferentes são necessários para separar cotas.
 
-### Operação
+## 9. Fase 7: painel comercial do Gator
 
-- backup do banco;
-- retenção de logs;
-- rotação de secrets;
-- health check real;
-- diagnóstico autenticado;
-- monitoramento;
-- scripts Windows;
-- documentação de start/stop/update;
-- CI para lint, build, tipos e testes.
+Criar rotas reais, não apenas estado local:
 
-## 15. Ordem de entrega
+- `/dashboard`;
+- `/dashboard/endpoints`;
+- `/dashboard/models`;
+- `/dashboard/routes`;
+- `/dashboard/clients`;
+- `/dashboard/workers`;
+- `/dashboard/usage`;
+- `/dashboard/logs`;
+- `/dashboard/token-saver`;
+- `/dashboard/settings`;
+- `/dashboard/security`.
 
-1. Baseline local, lint, build e route tree.
-2. Contrato API e request ID.
-3. Motor unificado.
-4. Auth, clientes, quotas e telemetria.
-5. Migrations e Supabase independente.
-6. Pool e failover.
-7. Handshake pai/filhos seguro.
-8. Painel comercial real.
-9. Token Saver e jobs de mídia.
-10. Proxy local e uso em vários PCs.
-11. Testes E2E, CI e produção.
+Cada tela precisa ter loading, erro, vazio, sucesso, busca, filtros, paginação e ações reais. O painel deve exibir uso por worker, key hint, quota, cooldown, erro, modelo e cliente.
+
+## 10. Fase 8: Token Saver e jobs
+
+Token Saver:
+
+- detectar `git diff`, `grep`, `find`, `ls`, `tree` e logs repetidos;
+- preservar código, JSON e tool calls;
+- ignorar binários e conteúdo sensível;
+- ativar por Gator, cliente ou endpoint;
+- permitir bypass por header;
+- medir antes/depois.
+
+Jobs:
+
+- criar job;
+- devolver `job_id`;
+- consultar status;
+- expirar;
+- limpar;
+- registrar uso e custo estimado.
+
+## 11. Fase 9: operação local, VPS e Docker
+
+### Local
+
+- `C:\Users\e_dio\Desktop\Gateway` como workspace.
+- `gator/` como serviço central.
+- Supabase local por Docker ou Supabase hospedado acessado pelo PC.
+- Scripts PowerShell para instalar, iniciar, parar, atualizar e testar.
+
+### VPS
+
+- Docker Compose.
+- Gator.
+- Reverse proxy HTTPS.
+- Redis opcional para rate limit/cache.
+- Supabase hospedado ou PostgreSQL gerenciado.
+- Backup, logs e monitoramento.
+
+### Segurança
+
+- Não expor Supabase service role.
+- Não deixar proxy sem API key.
+- TLS obrigatório fora da rede local.
+- Health público mínimo; diagnóstico protegido.
+- Limitar origem do handshake.
+
+## 12. Fase 10: testes e release
+
+Unitários: auth, HMAC, nonce, SSRF, keys, quota, seleção, cooldown, retry, catálogo e token saver.
+
+Integração: registro do remix, idempotência, `/v1/models`, chat, messages, mídia, jobs, quotas e logs.
+
+E2E: publicar remix, abrir filho, confirmar registro no Supabase, fazer chamada pelo Gator, forçar 429/402 simulado, confirmar failover e testar outro computador.
+
+## Ordem de implementação
+
+1. Baseline e build do projeto Lovable.
+2. Estrutura `gator/` e health local.
+3. Supabase central e migrations.
+4. Handshake seguro do remix.
+5. Motor unificado do Gator.
+6. Pool, quota e failover.
+7. API e proxy.
+8. Painel comercial.
+9. Token Saver e jobs.
+10. Docker/VPS.
+11. Testes E2E e release.
 
 ## Critério de pronto
 
-O gateway só é considerado pronto quando build, lint, testes, painel, auth, proxy, quotas, logs, failover, registro de filho, criptografia, smoke tests de modelos e backup estiverem comprovados. Um endpoint existir no código não significa que a funcionalidade esteja pronta.
+Só considerar pronto quando um remix publicado enviar a key ao Gator sem intervenção manual, a key aparecer cifrada no Supabase, o Gator atender uma chamada real usando a key do worker, o painel mostrar o uso, o failover funcionar e outro computador conseguir usar o proxy com API key.
