@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { CORS_HEADERS, isAuthorized } from "@/lib/claude-compat.server";
 import { isAllowedChildOrigin } from "@/lib/child-config.server";
+import { authorizeAdmin } from "@/lib/admin-auth.server";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -24,7 +25,8 @@ export const Route = createFileRoute("/api/public/v1/workers/dispatch")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
       POST: async ({ request }) => {
-        if (!isAuthorized(request)) return json({ error: "Unauthorized" }, 401);
+        const auth = await authorizeAdmin(request, "write");
+        if (!auth.ok) return json({ error: "Acesso não permitido." }, auth.status);
         const body = (await request.json().catch(() => null)) as {
           project_origin?: unknown;
         } | null;

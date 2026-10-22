@@ -9,6 +9,7 @@ function fixture(t, status = "active") {
     if (old === undefined) delete process.env.CLAUDE_CODE_GATEWAY_TOKEN;
     else process.env.CLAUDE_CODE_GATEWAY_TOKEN = old;
   });
+  const hashed = load("src/lib/client-keys.server.ts").storedClientKey("gw_test-client-key");
   const { Route } = load("src/routes/api/public/v1/models.ts", {
     "@tanstack/react-router": { createFileRoute: () => (config) => config },
     "./key-pool.server": {
@@ -17,9 +18,10 @@ function fixture(t, status = "active") {
           select: () => ({
             eq: (_column, value) => ({
               single: async () => ({
-                error: value === "gw_test-client-key" ? null : { code: "not_found" },
+                error:
+                  value === "gw_test-client-key" || value === hashed ? null : { code: "not_found" },
                 data:
-                  value === "gw_test-client-key"
+                  value === "gw_test-client-key" || value === hashed
                     ? {
                         id: "client-1",
                         name: "Test client",
@@ -64,6 +66,11 @@ for (const token of [undefined, "invalid-client-key"]) {
 
 test("suspended client key cannot access the API", async (t) => {
   assert.equal((await fixture(t, "suspended")("gw_test-client-key")).status, 401);
+});
+
+test("stored hash record cannot itself be used as an API credential", async (t) => {
+  const token = load("src/lib/client-keys.server.ts").storedClientKey("gw_test-client-key");
+  assert.equal((await fixture(t)(token)).status, 401);
 });
 
 test("client API key does not grant administrative access", async (t) => {

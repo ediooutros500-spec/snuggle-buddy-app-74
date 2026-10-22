@@ -1,34 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getPoolAdmin } from "@/lib/key-pool.server";
-import { safeEqual } from "@/lib/claude-compat.server";
+import { authorizeAdmin } from "@/lib/admin-auth.server";
+import { recordAdminAudit } from "@/lib/admin-store.server";
+import { clientKeyHint, createClientKey, storedClientKey } from "@/lib/client-keys.server";
 
 const headers = {
   "Content-Type": "application/json",
-  "Access-Control-Allow-Origin": "*",
+  "Cache-Control": "no-store",
   "Access-Control-Allow-Methods": "GET,POST,PATCH,OPTIONS",
   "Access-Control-Allow-Headers": "authorization, content-type",
 };
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers });
-function authorized(request: Request) {
-  const token =
-    request.headers
-      .get("authorization")
-      ?.replace(/^Bearer\s+/i, "")
-      .trim() ?? "";
-  const expected = process.env["CLAUDE_CODE_GATEWAY_TOKEN"] ?? "";
-  return Boolean(token && expected && safeEqual(token, expected));
-}
-function makeKey() {
-  return `gw_${crypto.randomUUID().replace(/-/g, "")}`;
-}
 
 export const Route = createFileRoute("/api/admin/gateway")({
   server: {
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers }),
       GET: async ({ request }) => {
-        if (!authorized(request)) return json({ error: "Unauthorized" }, 401);
+        const auth = await authorizeAdmin(request);
+        if (!auth.ok) return json({ error: "Acesso não permitido." }, auth.status);
         const pool = getPoolAdmin();
         if (!pool) return json({ error: "Pool unavailable" }, 503);
         const [clients, settings, logs] = await Promise.all([
@@ -56,24 +47,27 @@ export const Route = createFileRoute("/api/admin/gateway")({
               ? `${process.env["API_PUBLIC_URL"].replace(/\/+$/, "")}/v1`
               : null,
           },
-          clients: clients.data ?? [],
+          clients: (clients.data ?? []).map(({ client_key, ...client }) => ({
+            ...client,
+            key_hint: clientKeyHint(client_key),
+            legacy_key: !client_key.startsWith("gw_hash_v1:"),
+          })),
           settings: settings.data,
           logs: logs.data ?? [],
         });
       },
       POST: async ({ request }) => {
-        if (!authorized(request)) return json({ error: "Unauthorized" }, 401);
+        const auth = await authorizeAdmin(request, "write");
+        if (!auth.ok) return json({ error: "Acesso não permitido." }, auth.status);
         const pool = getPoolAdmin();
         if (!pool) return json({ error: "Pool unavailable" }, 503);
         const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
         if (!body || typeof body["name"] !== "string" || !body["name"].trim())
           return json({ error: "name is required" }, 400);
+        const key = createClientKey();
         const row = {
           name: body["name"].trim(),
-          client_key:
-            typeof body["client_key"] === "string" && body["client_key"].trim()
-              ? body["client_key"].trim()
-              : makeKey(),
+          client_key: storedClientKey(key),
           status: "active",
           allowed_models: Array.isArray(body["allowed_models"]) ? body["allowed_models"] : null,
           rate_limit_rpm: Number(body["rate_limit_rpm"]) || 60,
@@ -96,10 +90,16 @@ export const Route = createFileRoute("/api/admin/gateway")({
             },
             400,
           );
-        return json({ client: data }, 201);
+        const { client_key, ...client } = data;
+        await recordAdminAudit(auth.actorId, "client.create", client.id);
+        return json(
+          { client: { ...client, key_hint: clientKeyHint(client_key) }, api_key: key },
+          201,
+        );
       },
       PATCH: async ({ request }) => {
-        if (!authorized(request)) return json({ error: "Unauthorized" }, 401);
+        const auth = await authorizeAdmin(request, "write");
+        if (!auth.ok) return json({ error: "Acesso não permitido." }, auth.status);
         const pool = getPoolAdmin();
         if (!pool) return json({ error: "Pool unavailable" }, 503);
         const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
@@ -112,9 +112,34 @@ export const Route = createFileRoute("/api/admin/gateway")({
             cooldown_minutes: Number(body["cooldown_minutes"]) || 15,
           };
           const { error } = await pool.from("gateway_settings").update(patch).eq("id", 1);
+          if (!error) await recordAdminAudit(auth.actorId, "settings.update", "gateway");
           return error ? json({ error: "Failed to update settings" }, 400) : json({ ok: true });
         }
         if (typeof body["id"] !== "string") return json({ error: "id is required" }, 400);
+        if (body["action"] === "rotate-key") {
+          const key = createClientKey();
+          const { data, error } = await pool
+            .from("gateway_clients")
+            .update({ client_key: storedClientKey(key) })
+            .eq("id", body["id"])
+            .select("id")
+            .single();
+          if (error || !data) return json({ error: "Não foi possível rotacionar a chave." }, 400);
+          await recordAdminAudit(auth.actorId, "client.key.rotate", data.id);
+          return json({ api_key: key, key_hint: clientKeyHint(key), id: data.id });
+        }
+        if (
+          body["status"] !== undefined &&
+          !["active", "suspended"].includes(String(body["status"]))
+        )
+          return json({ error: "Status inválido." }, 400);
+        if (
+          body["rate_limit_rpm"] !== undefined &&
+          (!Number.isInteger(body["rate_limit_rpm"]) ||
+            Number(body["rate_limit_rpm"]) < 1 ||
+            Number(body["rate_limit_rpm"]) > 10000)
+        )
+          return json({ error: "RPM inválido." }, 400);
         const patch: Record<string, unknown> = {};
         for (const key of [
           "name",
@@ -126,6 +151,7 @@ export const Route = createFileRoute("/api/admin/gateway")({
         ])
           if (key in body) patch[key] = body[key];
         const { error } = await pool.from("gateway_clients").update(patch).eq("id", body["id"]);
+        if (!error) await recordAdminAudit(auth.actorId, "client.update", body["id"]);
         return error ? json({ error: "Failed to update client" }, 400) : json({ ok: true });
       },
     },

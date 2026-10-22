@@ -27,6 +27,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { AdminTeam } from "@/components/admin-team";
 
 export const Route = createFileRoute("/")({
   head: () => ({ meta: [{ title: "Snuggle Gateway | Painel" }] }),
@@ -58,7 +59,7 @@ type Client = {
   id: string;
   name: string;
   status: string;
-  client_key: string;
+  key_hint: string;
   rate_limit_rpm: number;
 };
 type Log = {
@@ -97,8 +98,12 @@ const nav = [
 function Dashboard() {
   const [screen, setScreen] = useState<Screen>("Visão geral");
   const [open, setOpen] = useState(nav.map((x) => x.label));
-  const [token, setToken] = useState("");
-  const [message, setMessage] = useState("Informe o token admin e clique em Atualizar.");
+  const [user, setUser] = useState<{ username: string; role: string } | null>(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [checkingSession, setCheckingSession] = useState(true);
+  const [oneTimeKey, setOneTimeKey] = useState("");
+  const [message, setMessage] = useState("Entre com seu usuário e senha.");
   const [mobile, setMobile] = useState(false);
   const [workers, setWorkers] = useState<Worker[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
@@ -108,12 +113,39 @@ function Dashboard() {
   const [apiBaseUrl, setApiBaseUrl] = useState<string | null>(null);
   const [rpm, setRpm] = useState("120");
   const [defaultModel, setDefaultModel] = useState(models[0]);
-  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-  async function refresh() {
-    if (!token.trim()) {
-      setMessage("Informe o token admin primeiro.");
+  const headers = { "Content-Type": "application/json" };
+  async function login(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      const r = await fetch("/api/admin/session", {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await r.json();
+      setPassword("");
+      if (!r.ok) throw new Error(data.error || "Não foi possível entrar.");
+      setUser(data.user);
+      setMessage("Sessão iniciada.");
+      await refresh();
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Falha ao entrar.");
+    }
+  }
+  async function logout() {
+    const r = await fetch("/api/admin/session", { method: "DELETE" });
+    if (!r.ok) {
+      setMessage("Não foi possível encerrar a sessão. Tente novamente.");
       return;
     }
+    setUser(null);
+    setClients([]);
+    setWorkers([]);
+    setLogs([]);
+    setOneTimeKey("");
+    setMessage("Sessão encerrada.");
+  }
+  async function refresh() {
     try {
       const [a, w] = await Promise.all([
         fetch("/api/admin/gateway", { headers }),
@@ -121,6 +153,10 @@ function Dashboard() {
       ]);
       const ad = await a.json();
       const wd = await w.json();
+      if (a.status === 401) {
+        setUser(null);
+        setOneTimeKey("");
+      }
       if (!a.ok) throw new Error(ad.error || "Token inválido.");
       setClients(ad.clients || []);
       setApiBaseUrl(ad.addresses?.apiBaseUrl || null);
@@ -138,9 +174,32 @@ function Dashboard() {
       headers,
       body: JSON.stringify({ name: clientName.trim() }),
     });
-    setMessage(r.ok ? "Cliente criado." : "Não foi possível criar o cliente.");
+    const data = await r.json();
+    setMessage(
+      r.ok
+        ? "Cliente criado. Copie a chave agora; ela não será exibida novamente."
+        : data.error || "Não foi possível criar o cliente.",
+    );
+    if (r.ok) setOneTimeKey(data.api_key || "");
     setClientName("");
     if (r.ok) refresh();
+  }
+  async function rotateClientKey(client: Client) {
+    if (
+      !window.confirm(`Substituir a chave de ${client.name}? A chave atual deixará de funcionar.`)
+    )
+      return;
+    const r = await fetch("/api/admin/gateway", {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ id: client.id, action: "rotate-key" }),
+    });
+    const data = await r.json();
+    if (r.ok) {
+      await refresh();
+      setOneTimeKey(data.api_key);
+      setMessage("Chave substituída. Copie o novo valor agora.");
+    } else setMessage(data.error || "Falha ao substituir a chave.");
   }
   async function toggleClient(c: Client) {
     const r = await fetch("/api/admin/gateway", {
@@ -183,8 +242,57 @@ function Dashboard() {
     setMobile(false);
   };
   useEffect(() => {
-    if (token) refresh();
-  }, [token]);
+    fetch("/api/admin/session")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.authenticated) {
+          setUser(data.user);
+          void refresh();
+        }
+      })
+      .catch(() => setMessage("Falha ao verificar a sessão."))
+      .finally(() => setCheckingSession(false));
+  }, []);
+  if (checkingSession)
+    return <div className="grid min-h-screen place-items-center">Verificando sessão…</div>;
+  if (!user)
+    return (
+      <div className="grid min-h-screen place-items-center bg-[#f7f8fa] p-5">
+        <Card className="w-full max-w-md space-y-5 p-8">
+          <h1 className="text-2xl font-bold">Entrar no Gateway</h1>
+          <p className="text-sm text-slate-600">
+            Use sua conta administrativa. As chaves dos aplicativos são criadas após o login.
+          </p>
+          <form onSubmit={login} className="space-y-4">
+            <label className="block">
+              Usuário
+              <Input
+                value={username}
+                autoComplete="username"
+                onChange={(e) => setUsername(e.target.value)}
+                required
+              />
+            </label>
+            <label className="block">
+              Senha
+              <Input
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+            </label>
+            <Button type="submit" className="w-full">
+              Entrar
+            </Button>
+          </form>
+          <p role="status" className="text-sm">
+            {message}
+          </p>
+        </Card>
+      </div>
+    );
   return (
     <div className="min-h-screen bg-[#f7f8fa] text-[#1b1f27]">
       <aside
@@ -205,8 +313,14 @@ function Dashboard() {
           </button>
         </div>
         <div className="mb-6 rounded-xl bg-[#f7f8fa] p-3">
-          <b className="text-sm">Edio Salvador</b>
-          <div className="text-xs text-[#8b91a0]">Workspace principal</div>
+          <b className="text-sm">{user.username}</b>
+          <div className="text-xs text-[#8b91a0]">
+            {user.role === "admin"
+              ? "Administrador"
+              : user.role === "operator"
+                ? "Operador"
+                : "Somente leitura"}
+          </div>
         </div>
         <div className="mb-3 text-[10px] font-bold uppercase tracking-widest text-[#a0a5b0]">
           Navegação
@@ -251,7 +365,7 @@ function Dashboard() {
         ))}
         <div className="absolute bottom-5 left-5 right-5 rounded-xl bg-[#f7f5ff] p-3 text-xs text-[#6046ed]">
           <CheckCircle2 size={14} className="mr-2 inline" />
-          Gateway Pai v2 operacional
+          Painel administrativo
         </div>
       </aside>
       {mobile && (
@@ -271,13 +385,9 @@ function Dashboard() {
             Painel de controle
           </span>
           <div className="flex gap-2">
-            <Input
-              className="h-9 w-44 bg-[#f7f8fa]"
-              placeholder="Token admin"
-              type="password"
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-            />
+            <Button variant="outline" onClick={logout}>
+              Sair
+            </Button>
             <Button className="h-9 bg-[#7257ff]" onClick={refresh}>
               <RefreshCw size={15} />
             </Button>
@@ -302,6 +412,18 @@ function Dashboard() {
             </Button>
           </div>
           <div className="mb-5 rounded-xl bg-[#f5f2ff] p-3 text-sm text-[#6046ed]">{message}</div>
+          {oneTimeKey && (
+            <Card className="mb-5 space-y-3 border-amber-300 p-5">
+              <b>Copie esta chave agora. Ela será exibida apenas uma vez.</b>
+              <code className="block break-all text-sm">{oneTimeKey}</code>
+              <Button onClick={() => navigator.clipboard?.writeText(oneTimeKey)}>
+                Copiar chave
+              </Button>
+              <Button variant="outline" className="ml-2" onClick={() => setOneTimeKey("")}>
+                Já salvei, ocultar
+              </Button>
+            </Card>
+          )}
           <ScreenContent
             screen={screen}
             workers={workers}
@@ -315,6 +437,7 @@ function Dashboard() {
             setClientName={setClientName}
             createClient={createClient}
             toggleClient={toggleClient}
+            rotateClientKey={rotateClientKey}
             rpm={rpm}
             setRpm={setRpm}
             defaultModel={defaultModel}
@@ -339,6 +462,7 @@ function ScreenContent({
   setClientName,
   createClient,
   toggleClient,
+  rotateClientKey,
   rpm,
   setRpm,
   defaultModel,
@@ -357,6 +481,7 @@ function ScreenContent({
   setClientName: (value: string) => void;
   createClient: () => Promise<void>;
   toggleClient: (client: Client) => Promise<void>;
+  rotateClientKey: (client: Client) => Promise<void>;
   rpm: string;
   setRpm: (value: string) => void;
   defaultModel: string;
@@ -470,10 +595,18 @@ function ScreenContent({
           render={(c: Client) => (
             <>
               <td className="p-4 font-medium">{c.name}</td>
-              <td className="p-4 font-mono text-xs">{c.client_key}</td>
+              <td className="p-4 font-mono text-xs">{c.key_hint}</td>
               <td className="p-4">{c.rate_limit_rpm}</td>
               <td className="p-4 text-[#28a879]">{c.status === "active" ? "Ativo" : "Suspenso"}</td>
               <td className="p-4">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mr-2"
+                  onClick={() => rotateClientKey(c)}
+                >
+                  Substituir chave
+                </Button>
                 <Button size="sm" variant="outline" onClick={() => toggleClient(c)}>
                   {c.status === "active" ? "Suspender" : "Ativar"}
                 </Button>
@@ -568,26 +701,7 @@ function ScreenContent({
         </Button>
       </Card>
     );
-  if (screen === "Segurança")
-    return (
-      <Card className={`${card} max-w-xl space-y-4 p-6`}>
-        <h2 className="font-bold">
-          <ShieldCheck className="mr-2 inline text-[#28a879]" />
-          Segurança
-        </h2>
-        {[
-          "Token admin obrigatório",
-          "Rate limit por cliente",
-          "Failover automático",
-          "Chaves protegidas no servidor",
-        ].map((item) => (
-          <div key={item} className="border-t pt-3 text-sm">
-            <CheckCircle2 size={16} className="mr-2 inline text-[#28a879]" />
-            {item}
-          </div>
-        ))}
-      </Card>
-    );
+  if (screen === "Segurança") return <AdminTeam />;
   const stats: [string, number, LucideIcon][] = [
     [
       "Requisições roteadas",
@@ -599,7 +713,7 @@ function ScreenContent({
       workers.filter((worker: Worker) => worker.status === "active").length,
       Server,
     ],
-    ["Clientes ativos", clients.length, Users],
+    ["Clientes ativos", clients.filter((client) => client.status === "active").length, Users],
     ["Modelos", models.length, Boxes],
   ];
   return (

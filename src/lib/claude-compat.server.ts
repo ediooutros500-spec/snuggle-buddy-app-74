@@ -5,6 +5,7 @@
  * com suporte a Autenticação por Chave de Cliente individual ou Token Admin.
  */
 import { getPoolAdmin } from "./key-pool.server";
+import { storedClientKey } from "./client-keys.server";
 
 export const EXPERIMENTAL_NOTICE =
   "Gateway experimental compatível com Claude Code. Não é a API oficial da Anthropic; " +
@@ -109,7 +110,7 @@ export async function authenticateGatewayRequest(request: Request): Promise<{
   };
 }> {
   const token = extractToken(request);
-  if (!token) return { authorized: false, isAdmin: false };
+  if (!token || token.startsWith("gw_hash_v1:")) return { authorized: false, isAdmin: false };
 
   // 1. Confere token admin
   const adminExpected = process.env["CLAUDE_CODE_GATEWAY_TOKEN"];
@@ -121,11 +122,22 @@ export async function authenticateGatewayRequest(request: Request): Promise<{
   const pool = getPoolAdmin();
   if (pool) {
     try {
-      const { data, error } = await pool
+      let { data, error } = await pool
         .from("gateway_clients")
         .select("id, name, status, allowed_models, rate_limit_rpm")
-        .eq("client_key", token)
+        .eq("client_key", storedClientKey(token))
         .single();
+
+      // Temporary compatibility for keys issued before the hash migration.
+      if (!data && process.env["GATOR_ALLOW_LEGACY_CLIENT_KEYS"] !== "false") {
+        const legacy = await pool
+          .from("gateway_clients")
+          .select("id, name, status, allowed_models, rate_limit_rpm")
+          .eq("client_key", token)
+          .single();
+        data = legacy.data;
+        error = legacy.error;
+      }
 
       if (!error && data && data.status === "active") {
         return {

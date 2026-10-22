@@ -39,6 +39,7 @@ gator/.env
 gator/.env.*
 !gator/.env.example
 backups/
+data/
 *.sql.bak
 
 # Public templates only; real .env.parent and deploy/.env.deploy stay ignored.

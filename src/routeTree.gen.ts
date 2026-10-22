@@ -11,6 +11,8 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiAdminGatewayRouteImport } from './routes/api/admin/gateway'
+import { Route as ApiAdminSessionRouteImport } from './routes/api/admin/session'
+import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
 import { Route as ApiPublicAiChatRouteImport } from './routes/api/public/ai-chat'
 import { Route as ApiPublicAiModelsRouteImport } from './routes/api/public/ai-models'
 import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
@@ -33,6 +35,16 @@ const IndexRoute = IndexRouteImport.update({
 const ApiAdminGatewayRoute = ApiAdminGatewayRouteImport.update({
   id: '/api/admin/gateway',
   path: '/api/admin/gateway',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminSessionRoute = ApiAdminSessionRouteImport.update({
+  id: '/api/admin/session',
+  path: '/api/admin/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
+  id: '/api/admin/users',
+  path: '/api/admin/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAiChatRoute = ApiPublicAiChatRouteImport.update({
@@ -110,6 +122,8 @@ const ApiPublicV1WorkersRegisterRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
+  '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -127,6 +141,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
+  '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -145,6 +161,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
+  '/api/admin/session': typeof ApiAdminSessionRoute
+  '/api/admin/users': typeof ApiAdminUsersRoute
   '/api/public/ai-chat': typeof ApiPublicAiChatRoute
   '/api/public/ai-models': typeof ApiPublicAiModelsRoute
   '/api/public/health': typeof ApiPublicHealthRoute
@@ -164,6 +182,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/api/admin/gateway'
+    | '/api/admin/session'
+    | '/api/admin/users'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
     | '/api/public/health'
@@ -181,6 +201,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/api/admin/gateway'
+    | '/api/admin/session'
+    | '/api/admin/users'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
     | '/api/public/health'
@@ -198,6 +220,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/api/admin/gateway'
+    | '/api/admin/session'
+    | '/api/admin/users'
     | '/api/public/ai-chat'
     | '/api/public/ai-models'
     | '/api/public/health'
@@ -216,6 +240,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ApiAdminGatewayRoute: typeof ApiAdminGatewayRoute
+  ApiAdminSessionRoute: typeof ApiAdminSessionRoute
+  ApiAdminUsersRoute: typeof ApiAdminUsersRoute
   ApiPublicAiChatRoute: typeof ApiPublicAiChatRoute
   ApiPublicAiModelsRoute: typeof ApiPublicAiModelsRoute
   ApiPublicHealthRoute: typeof ApiPublicHealthRoute
@@ -245,6 +271,20 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/gateway'
       fullPath: '/api/admin/gateway'
       preLoaderRoute: typeof ApiAdminGatewayRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/session': {
+      id: '/api/admin/session'
+      path: '/api/admin/session'
+      fullPath: '/api/admin/session'
+      preLoaderRoute: typeof ApiAdminSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/users': {
+      id: '/api/admin/users'
+      path: '/api/admin/users'
+      fullPath: '/api/admin/users'
+      preLoaderRoute: typeof ApiAdminUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/ai-chat': {
@@ -344,6 +384,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ApiAdminGatewayRoute: ApiAdminGatewayRoute,
+  ApiAdminSessionRoute: ApiAdminSessionRoute,
+  ApiAdminUsersRoute: ApiAdminUsersRoute,
   ApiPublicAiChatRoute: ApiPublicAiChatRoute,
   ApiPublicAiModelsRoute: ApiPublicAiModelsRoute,
   ApiPublicHealthRoute: ApiPublicHealthRoute,

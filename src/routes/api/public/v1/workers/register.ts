@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CORS_HEADERS, isAuthorized } from "@/lib/claude-compat.server";
 import { getPoolAdmin } from "@/lib/key-pool.server";
 import { verifyIncomingHandshake } from "@/lib/registration-auth.server";
+import { authorizeAdmin } from "@/lib/admin-auth.server";
 
 const HEADERS = {
   ...CORS_HEADERS,
@@ -64,7 +65,8 @@ export const Route = createFileRoute("/api/public/v1/workers/register")({
     handlers: {
       OPTIONS: async () => new Response(null, { status: 204, headers: HEADERS }),
       GET: async ({ request }) => {
-        if (!isAuthorized(request)) return json({ error: "Unauthorized" }, 401);
+        const auth = await authorizeAdmin(request);
+        if (!auth.ok) return json({ error: "Acesso não permitido." }, auth.status);
         const pool = getPoolAdmin();
         if (!pool)
           return json({
@@ -105,7 +107,8 @@ export const Route = createFileRoute("/api/public/v1/workers/register")({
         });
       },
       PATCH: async ({ request }) => {
-        if (!isAuthorized(request)) return json({ error: "Unauthorized" }, 401);
+        const auth = await authorizeAdmin(request, "write");
+        if (!auth.ok) return json({ error: "Acesso não permitido." }, auth.status);
         const body = (await request.json().catch(() => null)) as {
           id?: string;
           daily_request_limit?: number | null;
@@ -143,7 +146,8 @@ export const Route = createFileRoute("/api/public/v1/workers/register")({
         } | null;
         if (!body) return json({ success: false, message: "Invalid JSON payload" }, 400);
         if (body.action === "reactivate" && body.id) {
-          if (!isAuthorized(request)) return json({ error: "Unauthorized" }, 401);
+          const auth = await authorizeAdmin(request, "write");
+          if (!auth.ok) return json({ error: "Acesso não permitido." }, auth.status);
           const { error } = await pool
             .from("gateway_key_pool")
             .update({ status: "active", exhausted_at: null, last_error: null })

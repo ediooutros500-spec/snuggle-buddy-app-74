@@ -11,6 +11,7 @@ node_modules
 gator/.env
 gator/.env.*
 backups
+data
 work
 outputs
 *.log

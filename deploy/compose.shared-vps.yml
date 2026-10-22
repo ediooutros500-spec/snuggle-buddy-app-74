@@ -13,9 +13,11 @@ services:
       HOST: 0.0.0.0
       PORT: 3000
       GATEWAY_ROLE: central
+      GATOR_ADMIN_DATA_DIR: /app/data/admin
       NODE_OPTIONS: --max-old-space-size=192
     ports: ["127.0.0.1:${PARENT_LOOPBACK_PORT:-4430}:3000"]
     restart: unless-stopped
+    volumes: ["admin_data:/app/data"]
     mem_limit: 384m
     cpus: 0.5
     read_only: true
@@ -94,3 +96,6 @@ services:
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
+
+volumes:
+  admin_data:
