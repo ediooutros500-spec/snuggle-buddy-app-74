@@ -30,3 +30,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment secrets (NEVER commit)
+.env
+.env.*
+!.env.example
+gator/.env
+gator/.env.*
+!gator/.env.example
+backups/
+*.sql.bak
