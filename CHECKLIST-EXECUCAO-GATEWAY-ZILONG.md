@@ -4,6 +4,8 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 
 ## Decisão vigente: registro automático e projetos independentes
 
+Hospedagem escolhida em 22/10/2026: mesma VPS do StarChef. Perfil independente preparado em `deploy/compose.shared-vps.yml`; plano operacional em `deploy/STARCHEF-VPS.md`. Ainda não implantado: conector da hospedagem exige reautenticação e a capacidade real precisa ser conferida.
+
 Em 22/10/2026 o usuário definiu que qualquer projeto Lovable seu com gatilho pode fornecer a própria chave, incluindo o projeto original. Não há quantidade fixa de contas/remixes nem dependência de um pai Lovable. Painel e Gator ficam na VPS. O modo padrão passa a ser auto: validação no upstream, sem segredo compartilhado. Referências históricas abaixo a HMAC obrigatório descrevem a implementação anterior, preservada como modo signed opcional. Guia: docs/REMIX-HOOK.md.
 
 - [x] Emissor desacoplado do banco central, com três módulos copiáveis.
