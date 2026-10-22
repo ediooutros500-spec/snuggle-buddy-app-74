@@ -27,6 +27,8 @@ Recursos administrativos por finalidade: `/api/admin/system`, `/credentials`, `/
 
 O novo registro de requisições inclui erros de política autenticados, ID, duração e tokens quando o provedor os informa. Texto grava ao concluir resposta/stream; mídia acompanha o término/cancelamento do body sem carregá-lo inteiro em memória, com uso desconhecido quando não é interpretado. Não incrementa novamente o contador de quota de clientes. Prompts/respostas e segredos não são registrados nessa trilha.
 
+Compatibilidade com o banco central existente: suas colunas de tokens exigem NOT NULL. Novos registros usam -1 exclusivamente como marcador de consumo desconhecido; listagem, CSV e agregações convertem o marcador para null/desconhecido e não o somam como consumo. Um valor medido de zero permanece zero. A correção não exige alterar o esquema em produção.
+
 Troca da própria senha exige sessão, origem permitida, senha atual e nova senha mínima de 14 caracteres. Ela só altera a conta autenticada e revoga suas sessões anteriores. Gestão de outras contas permanece exclusiva de administrador.
 
 ## Limites explícitos
@@ -41,3 +43,7 @@ Troca da própria senha exige sessão, origem permitida, senha atual e nova senh
 ## Conferência
 
 Validar antes da liberação: 10 URLs; acesso anônimo negado; cadastro e edição de cliente; quota e permissões preservadas; conexão sintética sempre desabilitada; alteração de rótulo/limite; histórico, consumo e CSV com chamada rejeitada real; limpeza dos registros sintéticos; demais serviços da VPS inalterados. Verificação visual deve usar a interface real e registrar limitações caso o navegador não esteja disponível.
+
+Entrega implantada em 22/10/2026: commits locais `a66d32d33ce3` e `762c1ecb25a1`, imagem do painel `zilong-gateway-parent:762c1ecb25a1`. Os 60 testes da aplicação, tipos e builds Node/Lovable passaram; lint sem erros e seis avisos anteriores. HTTPS validou dez páginas e 404 para seção inexistente, cinco recursos protegidos, login/logout, projeção segura de credenciais, validação de entrada, cliente com quota zero, dois registros de rejeição autenticada, request ID, agregação de uso desconhecido, busca e CSV. Cliente e logs de teste removidos. Os 26 containers anteriores mantiveram IDs e StarChef respondeu readiness 200.
+
+Cadastro manual com chave Lovable válida, alteração de rótulos/limite em conexão real e inferência não foram executados em produção: o pool está vazio. A cobertura dessas alterações de conexão e da troca da própria senha é isolada; não equivale a teste com provedor real. GitHub continua pendente por autenticação local inválida.

@@ -37,13 +37,13 @@ Auditoria atual: [revisão funcional de todas as telas em 22/10/2026](docs/AUDIT
 
 ## E3 — Pool
 
-- [ ] Gestão real de projetos, credenciais, validação e estados.
+- [x] Gestão de credenciais e projetos: cadastro com validação, identificação, limite diário e ativação/desativação. Validação com credencial real ainda pendente.
 - [ ] Cooldown, prioridade e circuit breaker visíveis e efetivos.
 - [ ] Diagnóstico do cadastro automático e políticas centrais opcionais.
 
 ## E4 — Painel, modelos e rotas
 
-- [ ] Páginas administrativas com URLs próprias.
+- [x] Dez páginas administrativas com URLs próprias, dedicadas ao provedor Lovable.
 - [ ] Catálogo único persistido e capacidades verificadas.
 - [ ] Formulários distintos e políticas de roteamento com simulação.
 - [x] Substituir indicadores estáticos de segurança pela gestão de equipe/auditoria e corrigir contagem de clientes ativos.
@@ -56,7 +56,7 @@ Auditoria atual: [revisão funcional de todas as telas em 22/10/2026](docs/AUDIT
 
 ## E6/E7 — Funcionalidades adicionais e operação
 
-- [ ] Playground pela mesma API, sem ignorar permissões.
+- [x] Playground de texto pela API pública, usando chave e permissões do cliente; inferência real depende de credencial Lovable.
 - [ ] Mídia/jobs somente quando validados; isolamento e expiração.
 - [ ] Token Saver opcional e medido, sem alterar instruções/ferramentas.
 - [ ] Backup externo, restauração isolada e retorno de deploy ensaiados.
@@ -112,3 +112,22 @@ Auditoria atual: [revisão funcional de todas as telas em 22/10/2026](docs/AUDIT
 - [x] Painel: editar RPM/quota/modelos de cliente, permitir/bloquear modelos e distinguir configuração de disponibilidade não verificada. Uso/Custos e rotas avançadas agora informam pendência.
 - [ ] Concluir as demais etapas da auditoria e validar remix/inferência reais. Esta entrega não atualiza um remix antigo publicado no Lovable.
 - Detalhes de contagem e limites: [CORRECOES-POLITICAS-GATEWAY.md](docs/CORRECOES-POLITICAS-GATEWAY.md). Commit local e implantação não significam publicação no GitHub; autenticação/conector continuam pendentes.
+
+## Painel de provedor único implantado — 22/10/2026
+
+- [x] Código a66d32d33ce3 e correção 762c1ecb25a1; imagem ativa zilong-gateway-parent:762c1ecb25a1.
+- [x] Substituir menus genéricos/repetidos por resumo, conexões Lovable, clientes, catálogo, consumo, requisições, teste de API, integração, configuração e equipe.
+- [x] Busca/paginação de clientes; edição de quota/RPM/modelos/notas e ações de chaves preservadas.
+- [x] Histórico paginado, filtros, request ID e CSV; chamadas autenticadas rejeitadas também geram registro. Trilha completa de tentativas/failover permanece pendente.
+- [x] Consumo por período/modelo/cliente com limites de amostragem explícitos; tokens desconhecidos e custo financeiro desconhecido identificados. Conciliação financeira permanece pendente.
+- [x] Banco legado exige tokens NOT NULL: armazenar -1 para desconhecido e normalizar para null na API/CSV; zero medido continua zero.
+- [x] Troca da própria senha no servidor com senha atual e revogação de sessões, coberta em teste isolado; senha administrativa real preservada. MFA/recuperação continuam pendentes.
+- [x] 60 testes locais, tipos e builds Node/Lovable aprovados; lint sem erros e seis avisos anteriores.
+- [x] HTTPS real: cinco recursos administrativos negam acesso anônimo; cookie seguro; dez páginas HTTP 200 e seção desconhecida 404; listagem sem segredos; validação de entrada e registro inexistente 404.
+- [x] Cliente descartável com quota zero: chat HTTP 429 e embeddings sem permissão HTTP 403; dois logs com IDs, duração e uso desconhecido; agregação, busca mascarada e CSV conferidos. Dados removidos.
+- [x] Três serviços saudáveis, 26 containers anteriores preservados e StarChef readiness HTTP 200.
+- [x] Navegador liberado nesta etapa: login, resumo, menu em tela estreita, conexões e catálogo conferidos visualmente; busca do catálogo testada. Capturas salvas. Auditoria completa de acessibilidade e de todos os formulários ainda pendente.
+- [ ] Inferência, cadastro manual com chave real e remix real atualizados; pool permanece sem credenciais Lovable.
+- [ ] Publicar commits no GitHub: autenticação local continua inválida e conector não disponível.
+
+Detalhes: [PAINEL-PROVEDOR-UNICO.md](docs/PAINEL-PROVEDOR-UNICO.md). Os itens agrupados de A08–A13 acima continuam abertos porque ainda incluem conciliação, roteamento avançado, MFA, backups e demais requisitos não cobertos nesta entrega.
