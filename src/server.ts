@@ -2,7 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
-import { maybeAutoRegisterChild } from "./lib/key-pool.server";
+import { triggerChildHandshake } from "./lib/child-handshake.server";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -47,8 +47,8 @@ function isH3SwallowedErrorBody(body: string): boolean {
 
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
-    // Passo 3: Se este deploy/preview for um Remix (origem != Pai), auto-registra a chave no Pai
-    maybeAutoRegisterChild(request.url).catch(() => {});
+    // Await the bounded attempt so runtimes cannot discard it after returning the response.
+    await triggerChildHandshake(request.url).catch(() => {});
 
     try {
       const handler = await getServerEntry();

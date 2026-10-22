@@ -1,18 +1,13 @@
-import { timingSafeEqual } from "node:crypto";
 import {
   createSignedHandshakeHeaders,
   getChildConfig,
   isAllowedChildOrigin,
-  PARENT_ORIGIN,
-  signHandshakePayload,
 } from "./child-config.server";
-import { getPoolAdmin } from "./key-pool.server";
 
 type Result = { attempted: boolean; registered: boolean; message: string };
 const recent = new Map<string, number>();
 const inFlight = new Map<string, Promise<Result>>();
 const HANDSHAKE_TTL_MS = 10 * 60 * 1000;
-const CLOCK_SKEW_MS = 5 * 60 * 1000;
 
 function validDestination(value: string): boolean {
   try {
@@ -42,7 +37,7 @@ export async function triggerChildHandshake(requestUrl: string, force = false): 
   } catch {
     return { attempted: false, registered: false, message: "Origem inválida." };
   }
-  if ((!force && origin === PARENT_ORIGIN) || !isAllowedChildOrigin(origin))
+  if (!isAllowedChildOrigin(origin))
     return { attempted: false, registered: false, message: "Origem ignorada no auto-registro." };
   for (const [entry, at] of recent) if (Date.now() - at >= HANDSHAKE_TTL_MS) recent.delete(entry);
   if (!force && recent.has(origin))
@@ -57,12 +52,15 @@ export async function triggerChildHandshake(requestUrl: string, force = false): 
   if (inFlight.size >= 100 || recent.size >= 1000)
     return { attempted: false, registered: false, message: "Limite temporário de registros." };
   const cfg = getChildConfig();
-  if (!cfg.lovableApiKey || !cfg.remixSyncSecret || !validDestination(cfg.gatorPublicUrl))
+  if (
+    !cfg.lovableApiKey ||
+    (cfg.registrationMode === "signed" && !cfg.remixSyncSecret) ||
+    !validDestination(cfg.gatorPublicUrl)
+  )
     return {
       attempted: false,
       registered: false,
-      message:
-        "Configure LOVABLE_API_KEY, REMIX_SYNC_SECRET e uma URL segura do Gator no servidor.",
+      message: "A chave Lovable ou o endereço HTTPS da central não está disponível neste remix.",
     };
 
   const run = async (): Promise<Result> => {
@@ -71,7 +69,9 @@ export async function triggerChildHandshake(requestUrl: string, force = false): 
         method: "POST",
         headers: {
           "content-type": "application/json",
-          ...createSignedHandshakeHeaders(cfg.remixSyncSecret, origin, cfg.lovableApiKey),
+          ...(cfg.registrationMode === "signed"
+            ? createSignedHandshakeHeaders(cfg.remixSyncSecret, origin, cfg.lovableApiKey)
+            : {}),
         },
         body: JSON.stringify({
           api_key: cfg.lovableApiKey,
@@ -109,42 +109,5 @@ export async function triggerChildHandshake(requestUrl: string, force = false): 
     return await task;
   } finally {
     inFlight.delete(origin);
-  }
-}
-
-// Compatibility receiver in the Lovable app: the same mandatory HMAC contract as Gator.
-export async function verifyIncomingHandshake(
-  request: Request,
-  apiKey: string,
-  origin: string,
-): Promise<{ ok: boolean; reason?: string }> {
-  const { remixSyncSecret: secret } = getChildConfig();
-  if (!secret || !isAllowedChildOrigin(origin))
-    return { ok: false, reason: "Configuração ou origem de handshake inválida." };
-  const timestamp = request.headers.get("x-handshake-timestamp") ?? "";
-  const nonce = request.headers.get("x-handshake-nonce") ?? "";
-  const signature = request.headers.get("x-handshake-signature") ?? "";
-  if (
-    !/^\d{13}$/.test(timestamp) ||
-    Math.abs(Date.now() - Number(timestamp)) > CLOCK_SKEW_MS ||
-    !/^[a-zA-Z0-9-]{16,128}$/.test(nonce) ||
-    !/^[a-f0-9]{64}$/.test(signature)
-  )
-    return { ok: false, reason: "Assinatura, timestamp ou nonce inválido." };
-  const expected = signHandshakePayload(secret, origin, timestamp, nonce, apiKey);
-  if (!timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex")))
-    return { ok: false, reason: "Assinatura HMAC inválida." };
-  const pool = getPoolAdmin();
-  if (!pool) return { ok: false, reason: "Banco central indisponível." };
-  try {
-    const { error } = await pool.from("gateway_handshake_nonces").insert({ nonce, origin });
-    if (error)
-      return {
-        ok: false,
-        reason: error.code === "23505" ? "Replay detectado." : "Falha ao registrar nonce.",
-      };
-    return { ok: true };
-  } catch {
-    return { ok: false, reason: "Banco central indisponível." };
   }
 }

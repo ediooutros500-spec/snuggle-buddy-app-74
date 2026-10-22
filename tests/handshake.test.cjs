@@ -7,7 +7,7 @@ const key = "test-only-lovable-key";
 const origin = "https://child-test.lovable.app";
 const workerId = "11111111-1111-4111-8111-111111111111";
 
-function setup(t, fetcher, pool = null) {
+function setup(t, fetcher, pool = null, extra = {}) {
   const names = [
     "GATOR_PUBLIC_URL",
     "PARENT_GATEWAY_URL",
@@ -15,6 +15,7 @@ function setup(t, fetcher, pool = null) {
     "LOVABLE_API_KEY",
     "NODE_ENV",
     "GATEWAY_ROLE",
+    "GATOR_REGISTRATION_MODE",
   ];
   const before = Object.fromEntries(names.map((n) => [n, process.env[n]]));
   const oldFetch = global.fetch;
@@ -24,6 +25,7 @@ function setup(t, fetcher, pool = null) {
     LOVABLE_API_KEY: key,
     NODE_ENV: "production",
     GATEWAY_ROLE: "child",
+    GATOR_REGISTRATION_MODE: "signed",
   });
   delete process.env.PARENT_GATEWAY_URL;
   if (fetcher) global.fetch = fetcher;
@@ -34,9 +36,11 @@ function setup(t, fetcher, pool = null) {
       else process.env[name] = before[name];
     }
   });
-  return load("src/lib/child-handshake.server.ts", {
-    "./key-pool.server": { getPoolAdmin: () => pool },
-  });
+  const overrides = { "./key-pool.server": { getPoolAdmin: () => pool }, ...extra };
+  return {
+    ...load("src/lib/child-handshake.server.ts", overrides),
+    ...load("src/lib/registration-auth.server.ts", overrides),
+  };
 }
 function success() {
   return new Response(JSON.stringify({ registered: true, worker_id: workerId }), { status: 200 });
@@ -47,6 +51,7 @@ test("child HMAC is accepted by the actual Gator receiver without transmitting t
   const seen = new Set();
   const register = createRegistration({
     secret,
+    mode: "signed",
     store: {
       async claimNonce(nonce) {
         if (seen.has(nonce)) return false;
@@ -100,7 +105,7 @@ test("simultaneous child requests share one registration", async (t) => {
   assert.equal((await second).registered, true);
   assert.equal(calls, 1);
 });
-test("parent and local requests do not mark a child as registered", async (t) => {
+test("an existing Lovable project can register; local URLs are ignored", async (t) => {
   let calls = 0;
   const child = setup(t, async () => {
     calls++;
@@ -108,11 +113,11 @@ test("parent and local requests do not mark a child as registered", async (t) =>
   });
   assert.equal(
     (await child.triggerChildHandshake("https://snuggle-buddy-app-74.lovable.app")).registered,
-    false,
+    true,
   );
   assert.equal((await child.triggerChildHandshake("http://localhost:3000")).registered, false);
   assert.equal((await child.triggerChildHandshake(origin)).registered, true);
-  assert.equal(calls, 1);
+  assert.equal(calls, 2);
 });
 for (const destination of [
   "",
@@ -166,4 +171,36 @@ test("central parent never registers itself even when forced", async (t) => {
   });
   process.env.GATEWAY_ROLE = "central";
   assert.equal((await child.triggerChildHandshake(origin, true)).attempted, false);
+});
+
+test("automatic remix inherits the central address and registers without a secret", async (t) => {
+  const { createRegistration } = await import("../gator/src/registration.mjs");
+  let stored = 0;
+  const receive = createRegistration({
+    store: {
+      async register(receivedKey) {
+        assert.equal(receivedKey, key);
+        stored++;
+        return workerId;
+      },
+    },
+    validateKey: async () => "active",
+  });
+  const child = setup(
+    t,
+    async (url, init) => {
+      assert.equal(url, "https://gator.example.test/api/public/v1/workers/register");
+      assert.equal(init.headers["x-remix-sync-token"], undefined);
+      assert.equal(init.headers["x-handshake-signature"], undefined);
+      const result = await receive(init.headers, JSON.parse(init.body));
+      return new Response(JSON.stringify(result.body), { status: result.status });
+    },
+    null,
+    { "./central-address": { CENTRAL_REGISTRATION_ORIGIN: "https://gator.example.test" } },
+  );
+  delete process.env.REMIX_SYNC_SECRET;
+  delete process.env.GATOR_REGISTRATION_MODE;
+  delete process.env.GATOR_PUBLIC_URL;
+  assert.equal((await child.triggerChildHandshake(origin)).registered, true);
+  assert.equal(stored, 1);
 });

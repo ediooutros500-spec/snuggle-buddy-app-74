@@ -80,21 +80,23 @@ Marque `[x]` somente com evidência: commit, comando, migration, resposta HTTP, 
 - [ ] Restauração testada.
 - [ ] Nenhuma key aberta em tabela, resposta ou log.
 
-## E. Handshake do remix Lovable
+## E. Registro automático de qualquer projeto Lovable
+
+Decisão atual: auto sem segredo compartilhado; HMAC/nonce são alternativa signed. Evidência local e pendências reais em CHECKLIST-EXECUCAO-GATEWAY-ZILONG.md.
 
 - [ ] `GATOR_PUBLIC_URL` definido no pai/remix.
-- [ ] Secret/HMAC do filho definido no ambiente server-side.
+- [x] Modo auto padrão sem segredo por remix; modo signed opcional implementado.
 - [x] Emissor em `src/lib/child-handshake.server.ts` implementado e testado.
 - [x] Configuração server-side em `src/lib/child-config.server.ts` implementada e testada.
 - [ ] `POST /api/public/v1/workers/announce` local criado.
 - [ ] Gatilho SSR em `src/server.ts` criado.
 - [ ] Gatilho client-side chama somente endpoint local.
-- [ ] Payload contém origem, timestamp e nonce.
+- [x] Payload automático contém chave e origem; assinatura/nonce apenas no modo signed.
 - [ ] Assinatura HMAC implementada.
 - [ ] Replay bloqueado.
-- [ ] Sem secret, registro é recusado com mensagem clara.
+- [x] Modo auto permite registro sem secret; chave inválida ou upstream indisponível não é salvo.
 - [ ] Filho envia HTTPS ao Gator.
-- [ ] Gator valida assinatura.
+- [x] Modo signed valida assinatura; modo auto valida chave no upstream.
 - [ ] Gator valida origem.
 - [ ] Gator limita tentativas por origem.
 - [ ] Gator testa a key no Lovable upstream.

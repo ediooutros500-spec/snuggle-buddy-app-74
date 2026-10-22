@@ -1,9 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { safeEqual } from "./claude-compat.server";
-import { PARENT_ORIGIN, getChildConfig } from "./child-config.server";
+import { getChildConfig } from "./child-config.server";
 import { triggerChildHandshake } from "./child-handshake.server";
 
-export { PARENT_ORIGIN };
 export const REMIX_SYNC_SECRET = getChildConfig().remixSyncSecret;
 
 function isNewSupabaseApiKey(value: string): boolean {
