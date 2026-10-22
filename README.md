@@ -1,3 +1,9 @@
+# Pai central e Gator na VPS
+
+O pai também será executado fora do Lovable. O destino atual é pai Node.js e Gator na mesma VPS, com filhos/remixes no Lovable e dois subdomínios futuros para painel e API.
+
+Consulte [implantação e testes da VPS](deploy/README.md), [verificação do banco central](gator/DB-VERIFICACAO.md) e [registro de execução](CHECKLIST-EXECUCAO-GATEWAY-ZILONG.md). O plano completo ainda contém etapas pendentes; a base e o handshake já possuem testes.
+
 # Remix of "Oi!" Hello World
 
 oi

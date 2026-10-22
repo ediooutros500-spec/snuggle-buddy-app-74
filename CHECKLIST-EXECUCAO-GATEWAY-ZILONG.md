@@ -85,3 +85,22 @@ Detalhes e comandos em `gator/DB-VERIFICACAO.md`.
 - [ ] Remix publicado contra endereço HTTPS real do Gator: ainda pendente.
 
 Alterações funcionais anteriores de motor, painel e mídia continuam separadas da publicação desta etapa.
+
+## Pai fora do Lovable e preparação da VPS — 22/10/2026
+
+- [x] Decisão do usuário registrada: pai e Gator na VPS; filhos no Lovable.
+- [x] Build `node-server` do pai aprovado; home e health HTTP 200, administração sem token HTTP 401.
+- [x] `GATEWAY_ROLE=central` bloqueia auto-registro do pai, inclusive em disparo forçado.
+- [x] Dockerfiles do pai e Gator construídos em Linux com dependências instaladas do zero.
+- [x] Lockfile npm multiplataforma e dependência de desenvolvimento AJV 8 fixados para instalação reproduzível.
+- [x] Containers Linux com raiz somente leitura: health do pai e Gator HTTP 200, administração sem token HTTP 401.
+- [x] Perfil por IP publica apenas health; acesso autenticado HTTP permanece bloqueado (503).
+- [x] Docker Compose e proxy HTTPS para dois subdomínios validados localmente.
+- [x] 19 testes do app e 19 do Gator aprovados; workflow de CI criado.
+- [ ] Resultado do workflow no GitHub confirmado.
+- [ ] Instalação na VPS, DNS e certificados públicos executados.
+- [ ] Desativação do deploy antigo do pai após validação de migração.
+
+`deploy/README.md` descreve a operação. O proxy usa rotas existentes do pai como ponte; o motor unificado no Gator e as quotas concorrentes ainda não estão concluídos.
+
+- Evidência adicional desta etapa: ambiente Linux limpo aprovado em `npm ci`, lint (zero erros/sete avisos), TypeScript, 19 testes do app, 19 testes do Gator e build Node. Teste de inicialização do pai aprovado fora do Lovable.

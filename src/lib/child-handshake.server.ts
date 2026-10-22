@@ -30,6 +30,12 @@ function validDestination(value: string): boolean {
 }
 
 export async function triggerChildHandshake(requestUrl: string, force = false): Promise<Result> {
+  if (process.env["GATEWAY_ROLE"] === "central")
+    return {
+      attempted: false,
+      registered: false,
+      message: "Pai central: auto-registro desativado.",
+    };
   let origin: string;
   try {
     origin = new URL(requestUrl).origin;
