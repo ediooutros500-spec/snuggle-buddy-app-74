@@ -1,202 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { Activity, ArrowUpRight, Boxes, Cable, Check, ChevronRight, CircleDollarSign, Gauge, KeyRound, LayoutDashboard, Play, Plus, RefreshCw, Server, Settings2, ShieldCheck, Sparkles, Terminal, Users, WandSparkles, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Gateway Admin Console" },
-      { name: "description", content: "Gestão de clientes, modelos, limites e observabilidade do gateway." },
-    ],
-  }),
-  component: Admin,
-});
+export const Route = createFileRoute("/")({ head: () => ({ meta: [{ title: "Snuggle Control Plane" }, { name: "description", content: "Commercial AI gateway control plane for models, endpoints, workers and usage." }] }), component: Dashboard });
 
-type Client = {
-  id: string;
-  name: string;
-  client_key: string;
-  status: string;
-  allowed_models: string[] | null;
-  rate_limit_rpm: number;
-  quota_limit_requests: number | null;
-  total_requests: number;
-  total_input_tokens: number;
-  total_output_tokens: number;
-  last_used_at: string | null;
-};
+type Worker = { id: string; name: string; project_origin: string; key_hint?: string; status: string; requests_today?: number; daily_request_limit?: number | null; total_requests: number };
+type Client = { id: string; name: string; status: string; client_key: string; rate_limit_rpm: number; total_requests: number };
+type Log = { id: string; client_name: string | null; endpoint: string; resolved_model: string | null; status_code: number; latency_ms: number; created_at: string };
+const nav = [{ label: "Overview", icon: LayoutDashboard }, { label: "Endpoints", icon: Cable }, { label: "Models", icon: Boxes }, { label: "Workers", icon: Server }, { label: "Clients", icon: Users }, { label: "Usage", icon: Activity }];
+const modelRows = ["google/gemini-3.6-flash", "openai/gpt-5.6-sol", "openai/gpt-5.5-pro", "openai/gpt-image-2.5-sunburst", "openai/text-embedding-3-small", "google/veo-3.1-fast"];
 
-type Log = {
-  id: string;
-  client_name: string | null;
-  endpoint: string;
-  requested_model: string | null;
-  resolved_model: string | null;
-  status_code: number;
-  latency_ms: number;
-  created_at: string;
-};
-
-const models = ["google/gemini-3.6-flash", "google/gemini-2.5-pro", "openai/gpt-5.6-sol", "openai/gpt-5.5-pro"];
-
-function Admin() {
-  const [token, setToken] = useState("");
-  const [data, setData] = useState<{ clients: Client[]; settings: any; logs: Log[] }>({ clients: [], settings: {}, logs: [] });
-  const [name, setName] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-
-  const auth = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
-
-  async function load() {
-    if (!token) return;
-    setBusy(true);
-    setError("");
-    try {
-      const r = await fetch("/api/admin/gateway", { headers: auth });
-      const d = await r.json();
-      if (!r.ok) throw Error(d.error);
-      setData(d);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Falha ao carregar");
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function create() {
-    if (!name.trim()) return;
-    const r = await fetch("/api/admin/gateway", { method: "POST", headers: auth, body: JSON.stringify({ name }) });
-    const d = await r.json();
-    if (!r.ok) {
-      setError(d.error);
-      return;
-    }
-    setName("");
-    await load();
-  }
-
-  async function updateClient(id: string, status: string) {
-    await fetch("/api/admin/gateway", { method: "PATCH", headers: auth, body: JSON.stringify({ id, status }) });
-    await load();
-  }
-
-  useEffect(() => {
-    if (token) load();
-  }, [token]);
-
-  const totals = useMemo(
-    () =>
-      data.clients.reduce(
-        (a, c) => ({
-          requests: a.requests + (c.total_requests || 0),
-          inTok: a.inTok + (c.total_input_tokens || 0),
-          outTok: a.outTok + (c.total_output_tokens || 0),
-        }),
-        { requests: 0, inTok: 0, outTok: 0 }
-      ),
-    [data.clients]
-  );
-
-  return (
-    <main className="p-8 max-w-6xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold">Gateway Control Plane</h1>
-          <p className="text-muted-foreground">Admin Console: Gestão de clientes, quotas e observabilidade</p>
-        </div>
-        <div className="flex gap-2">
-          <Input placeholder="CLAUDE_CODE_GATEWAY_TOKEN" value={token} onChange={(e) => setToken(e.target.value)} type="password" />
-          <Button onClick={load} disabled={busy}>{busy ? "..." : "Atualizar"}</Button>
-        </div>
-      </div>
-
-      {error && <div className="p-3 bg-destructive/10 text-destructive rounded-md">{error}</div>}
-
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="p-4"><div className="text-sm text-muted-foreground">Total Requests</div><div className="text-2xl font-bold">{totals.requests.toLocaleString()}</div></Card>
-        <Card className="p-4"><div className="text-sm text-muted-foreground">Input Tokens</div><div className="text-2xl font-bold">{totals.inTok.toLocaleString()}</div></Card>
-        <Card className="p-4"><div className="text-sm text-muted-foreground">Output Tokens</div><div className="text-2xl font-bold">{totals.outTok.toLocaleString()}</div></Card>
-      </div>
-
-      <Card className="p-6 space-y-4">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Clientes & Chaves</h2>
-          <div className="flex gap-2">
-            <Input placeholder="Nome do cliente" value={name} onChange={(e) => setName(e.target.value)} />
-            <Button onClick={create}>Criar Cliente</Button>
-          </div>
-        </div>
-
-        <div className="border rounded-md overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr className="text-left border-b">
-                <th className="p-3">Nome</th>
-                <th className="p-3">Client Key</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">RPM</th>
-                <th className="p-3">Requests</th>
-                <th className="p-3">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.clients.map((c) => (
-                <tr key={c.id} className="border-b">
-                  <td className="p-3 font-medium">{c.name}</td>
-                  <td className="p-3 font-mono text-xs">{c.client_key}</td>
-                  <td className="p-3">{c.status}</td>
-                  <td className="p-3">{c.rate_limit_rpm}</td>
-                  <td className="p-3">{c.total_requests || 0}</td>
-                  <td className="p-3">
-                    <Button variant="outline" size="sm" onClick={() => updateClient(c.id, c.status === "active" ? "suspended" : "active")}>
-                      {c.status === "active" ? "Suspender" : "Ativar"}
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-              {!data.clients.length && (
-                <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">Nenhum cliente cadastrado ainda.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <Card className="p-6 space-y-4">
-        <h2 className="text-lg font-semibold">Logs Recentes (Telemetria)</h2>
-        <div className="border rounded-md overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr className="text-left border-b">
-                <th className="p-3">Cliente</th>
-                <th className="p-3">Endpoint</th>
-                <th className="p-3">Modelo</th>
-                <th className="p-3">Status</th>
-                <th className="p-3">Latência</th>
-                <th className="p-3">Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.logs.map((l) => (
-                <tr key={l.id} className="border-b">
-                  <td className="p-3">{l.client_name || "Admin"}</td>
-                  <td className="p-3 font-mono text-xs">{l.endpoint}</td>
-                  <td className="p-3">{l.resolved_model || l.requested_model || "-"}</td>
-                  <td className="p-3">{l.status_code}</td>
-                  <td className="p-3">{l.latency_ms}ms</td>
-                  <td className="p-3 text-xs text-muted-foreground">{new Date(l.created_at).toLocaleTimeString()}</td>
-                </tr>
-              ))}
-              {!data.logs.length && (
-                <tr><td colSpan={6} className="p-4 text-center text-muted-foreground">Nenhum log registrado ainda.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-    </main>
-  );
+function Dashboard() {
+  const [tab, setTab] = useState("Overview"); const [token, setToken] = useState(""); const [data, setData] = useState<{ clients: Client[]; logs: Log[]; workers: Worker[] }>({ clients: [], logs: [], workers: [] }); const [busy, setBusy] = useState(false); const [notice, setNotice] = useState(""); const [origin, setOrigin] = useState("");
+  const headers = { Authorization: `Bearer ${token}`, "Content-Type": "application/json" };
+  async function load() { if (!token) return; setBusy(true); setNotice(""); try { const [g, w] = await Promise.all([fetch("/api/admin/gateway", { headers }), fetch("/api/public/v1/workers/register", { headers })]); const gd = await g.json(); const wd = await w.json(); if (!g.ok) throw Error(gd.error || "Invalid token"); setData({ clients: gd.clients ?? [], logs: gd.logs ?? [], workers: wd.workers ?? [] }); } catch (e) { setNotice(e instanceof Error ? e.message : "Could not load control plane"); } finally { setBusy(false); } }
+  async function dispatch() { if (!origin) return; setNotice("Dispatching child sync…"); const r = await fetch("/api/public/v1/workers/dispatch", { method: "POST", headers, body: JSON.stringify({ project_origin: origin }) }); const d = await r.json(); setNotice(d.ok ? `Sync sent to ${origin}` : d.error || "Child did not respond"); await load(); }
+  useEffect(() => { if (token) load(); }, [token]);
+  const totalRequests = useMemo(() => data.clients.reduce((n, c) => n + (c.total_requests || 0), 0) + data.workers.reduce((n, w) => n + (w.total_requests || 0), 0), [data]);
+  return <div className="min-h-screen bg-[#0b0d12] text-[#f5f2ea] selection:bg-[#d5f36a] selection:text-[#0b0d12]">
+    <aside className="fixed inset-y-0 left-0 w-64 border-r border-white/10 bg-[#10131a] p-6 hidden lg:flex flex-col"><div className="flex items-center gap-3 mb-12"><div className="h-9 w-9 rounded-xl bg-[#d5f36a] text-[#10131a] grid place-items-center font-black">S</div><div><div className="font-semibold tracking-tight">snuggle</div><div className="text-[10px] uppercase tracking-[.24em] text-white/40">control plane</div></div></div><div className="text-[10px] uppercase tracking-[.22em] text-white/35 mb-3">Workspace</div><div className="space-y-1">{nav.map(({ label, icon: Icon }) => <button key={label} onClick={() => setTab(label)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition ${tab === label ? "bg-white/10 text-[#d5f36a]" : "text-white/55 hover:bg-white/5 hover:text-white"}`}><Icon size={17} />{label}{label === "Workers" && <span className="ml-auto text-[10px] rounded-full bg-[#d5f36a]/15 text-[#d5f36a] px-2 py-0.5">{data.workers.length}</span>}</button>)}</div><div className="mt-auto border-t border-white/10 pt-4 text-xs text-white/40"><div className="flex items-center gap-2 text-[#d5f36a]"><span className="h-2 w-2 rounded-full bg-[#d5f36a] animate-pulse" /> Gateway online</div><div className="mt-2">Parent network v2</div></div></aside>
+    <main className="lg:ml-64 p-5 sm:p-8 max-w-[1500px]"><header className="flex flex-col md:flex-row md:items-center justify-between gap-5 mb-10"><div><div className="text-xs uppercase tracking-[.28em] text-[#d5f36a] mb-3">Commercial gateway</div><h1 className="text-3xl sm:text-5xl font-semibold tracking-[-.04em]">Route every model.<br /><span className="text-white/35">Own every request.</span></h1><p className="text-white/45 mt-4 max-w-xl">One control plane for endpoints, model access, workers, quotas and the remixes that power your network.</p></div><div className="flex gap-2"><Input className="bg-white/5 border-white/10 w-56" placeholder="Admin token" type="password" value={token} onChange={e => setToken(e.target.value)} /><Button className="bg-[#d5f36a] text-[#10131a] hover:bg-[#e4ff98]" onClick={load}><RefreshCw size={16} className={busy ? "animate-spin" : ""} /></Button></div></header>
+      {notice && <div className="mb-6 px-4 py-3 rounded-xl border border-[#d5f36a]/30 bg-[#d5f36a]/10 text-[#d5f36a] text-sm">{notice}</div>}
+      <div className="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">{[["Requests routed", totalRequests.toLocaleString(), Gauge], ["Active workers", data.workers.filter(w => w.status === "active").length, Server], ["Clients", data.clients.length, Users], ["Model surfaces", modelRows.length, Sparkles]].map(([label, value, Icon]: any) => <Card key={label as string} className="bg-white/[.035] border-white/10 p-5"><div className="flex justify-between text-white/45 text-sm"><span>{label as string}</span><Icon size={17} className="text-[#d5f36a]" /></div><div className="text-3xl font-semibold mt-5 tracking-tight">{value as string}</div><div className="text-xs text-white/30 mt-2">live from gateway telemetry</div></Card>)}</div>
+      <div className="grid xl:grid-cols-[1.35fr_.65fr] gap-6"><Card className="bg-white/[.035] border-white/10 p-6"><div className="flex justify-between items-center mb-6"><div><h2 className="text-lg font-semibold">{tab === "Workers" ? "Worker network" : tab === "Models" ? "Model catalog" : tab === "Clients" ? "API clients" : "Recent traffic"}</h2><p className="text-sm text-white/35 mt-1">{tab === "Workers" ? "Parent dispatch and child key handshakes" : "A clean view of what your gateway is doing"}</p></div><Button variant="outline" className="border-white/10 bg-transparent" onClick={load}><RefreshCw size={15} /></Button></div>{tab === "Workers" ? <div className="space-y-3">{data.workers.map(w => <div key={w.id} className="flex items-center gap-4 rounded-xl bg-black/20 border border-white/5 p-4"><div className="h-9 w-9 rounded-lg bg-[#d5f36a]/10 grid place-items-center"><Server size={17} className="text-[#d5f36a]" /></div><div className="flex-1"><div className="font-medium">{w.name}</div><div className="text-xs text-white/35 truncate max-w-sm">{w.project_origin}</div></div><div className="text-right text-xs"><div className={w.status === "active" ? "text-[#d5f36a]" : "text-orange-300"}>{w.status}</div><div className="text-white/35 mt-1">{w.requests_today ?? 0} / {w.daily_request_limit ?? "∞"} today</div></div></div>)}{!data.workers.length && <Empty text="No children registered yet" />}</div> : tab === "Models" ? <div className="grid sm:grid-cols-2 gap-3">{modelRows.map(m => <div key={m} className="flex items-center gap-3 p-4 rounded-xl border border-white/5 bg-black/20"><div className="h-2 w-2 rounded-full bg-[#d5f36a]" /><span className="font-mono text-xs text-white/75">{m}</span><ChevronRight className="ml-auto text-white/20" size={15} /></div>)}</div> : tab === "Clients" ? <div className="space-y-3">{data.clients.map(c => <div key={c.id} className="flex items-center gap-4 rounded-xl bg-black/20 border border-white/5 p-4"><KeyRound size={17} className="text-[#d5f36a]" /><div className="flex-1"><div className="font-medium">{c.name}</div><div className="text-xs text-white/35">{c.rate_limit_rpm} rpm · {c.client_key}</div></div><span className="text-xs text-[#d5f36a]">{c.status}</span></div>)}{!data.clients.length && <Empty text="Create a client to start issuing endpoint keys" />}</div> : <div className="space-y-2">{data.logs.slice(0, 8).map(l => <div key={l.id} className="flex items-center gap-4 p-3 rounded-lg hover:bg-white/5"><div className={`h-2 w-2 rounded-full ${l.status_code < 400 ? "bg-[#d5f36a]" : "bg-red-400"}`} /><div className="flex-1"><div className="text-sm">{l.endpoint}</div><div className="text-xs text-white/35">{l.client_name || "Admin"} · {l.resolved_model || "default"}</div></div><div className="text-xs text-white/35">{l.latency_ms}ms</div></div>)}{!data.logs.length && <Empty text="No traffic yet. Your first request will show up here." />}</div>}</Card>
+        <div className="space-y-6"><Card className="bg-[#d5f36a] text-[#10131a] border-0 p-6"><div className="flex items-center justify-between"><WandSparkles size={22} /><span className="text-xs uppercase tracking-[.18em] font-semibold">Parent network</span></div><h3 className="text-2xl font-semibold mt-8 tracking-tight">Send the signal.</h3><p className="text-sm mt-2 text-[#10131a]/70">Dispatch a sync pulse to a published remix so it sends its key back to the parent.</p><div className="flex gap-2 mt-5"><Input className="bg-[#10131a]/10 border-[#10131a]/20 placeholder:text-[#10131a]/45" placeholder="https://child.lovable.app" value={origin} onChange={e => setOrigin(e.target.value)} /><Button className="bg-[#10131a] text-white hover:bg-[#20242d]" onClick={dispatch}><Play size={15} /></Button></div></Card><Card className="bg-white/[.035] border-white/10 p-6"><div className="flex items-center gap-3 mb-5"><ShieldCheck className="text-[#d5f36a]" size={19} /><h3 className="font-semibold">Gateway surfaces</h3></div>{[["OpenAI compatible", "/v1/chat/completions"], ["Anthropic native", "/v1/messages"], ["Media", "/v1/images · embeddings · video"], ["Developer access", "client keys + quotas"]].map(([a,b]) => <div key={a} className="flex items-center justify-between py-3 border-b border-white/5 last:border-0"><span className="text-sm text-white/60">{a}</span><span className="text-xs font-mono text-white/30">{b}</span></div>)}<Button variant="outline" className="w-full mt-5 border-white/10 bg-transparent" onClick={() => setTab("Endpoints")}>Explore endpoints <ArrowUpRight size={14} /></Button></Card></div></div>
+    </main></div>;
 }
+function Empty({ text }: { text: string }) { return <div className="py-16 text-center text-white/30"><CircleDollarSign className="mx-auto mb-3 text-white/15" size={28} /><div>{text}</div></div>; }
