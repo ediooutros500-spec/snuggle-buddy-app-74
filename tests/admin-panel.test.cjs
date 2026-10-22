@@ -200,6 +200,17 @@ test("request filters and CSV export use safe metadata and escape spreadsheet fo
   assert.ok(f.calls[0].filters.some((x) => x[1] === "status_code" && x[2] === 400));
   assert.deepEqual(f.calls[0].range, [0, 999]);
 });
+test("legacy NOT NULL storage sentinel is exposed as unknown usage in requests and totals", async () => {
+  const row = { input_tokens: -1, output_tokens: -1, status_code: 429, created_at: "2026-10-22" };
+  const f = resources({ tables: { gateway_request_logs: [row] } });
+  const requests = await (await f.send("requests", "GET")).json();
+  assert.equal(requests.rows[0].input_tokens, null);
+  assert.equal(requests.rows[0].output_tokens, null);
+  const usage = f.summarizeUsage([row, { ...row, input_tokens: 0, output_tokens: 0 }]);
+  assert.equal(usage.unknownUsage, 1);
+  assert.equal(usage.inputTokens, 0);
+  assert.equal(usage.outputTokens, 0);
+});
 for (const status of [401, 403, 500])
   test(`manual credential registration never persists an upstream HTTP ${status}`, async (t) => {
     const old = global.fetch;
@@ -245,7 +256,7 @@ test("telemetry records rejected authenticated calls once with unknown usage and
   assert.equal(r.status, 429);
   assert.ok(r.headers.get("x-request-id"));
   assert.equal(records.length, 1);
-  assert.equal(records[0].input_tokens, null);
+  assert.equal(records[0].input_tokens, -1);
   assert.equal(records[0].status_code, 429);
   assert.equal(JSON.stringify(records).includes("private-client-key"), false);
 });
@@ -275,7 +286,7 @@ test("media pass-through telemetry waits for end without buffering the provider 
   assert.equal(rows.length, 0);
   assert.equal(await r.text(), "opaque-provider-response");
   assert.equal(rows.length, 1);
-  assert.equal(rows[0].output_tokens, null);
+  assert.equal(rows[0].output_tokens, -1);
 });
 test("stream completion writes measured usage after provider completion", async () => {
   const { openaiStream } = load("src/lib/openai-compat.server.ts", {

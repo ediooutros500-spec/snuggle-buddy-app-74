@@ -1,4 +1,6 @@
 .gateway-admin {
+  box-sizing: border-box;
+  min-width: 0;
   --p: #7157eb;
   --border: #e7e9f0;
   --muted: #8792a7;
@@ -768,12 +770,14 @@
   color: #9d8cbd;
 }
 .ag-login {
+  grid-template-columns: minmax(0, 1fr);
   display: grid;
   place-items: center;
   padding: 28px;
   background: radial-gradient(ellipse at 20% 10%, #e9e3ff, transparent 65%), #f7f8fc;
 }
 .ag-login-card {
+  justify-self: center;
   background: white;
   border: 1px solid var(--border);
   border-radius: 18px;

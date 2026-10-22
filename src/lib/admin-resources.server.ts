@@ -66,8 +66,8 @@ export function summarizeUsage(rows: UsageLog[]) {
   for (const r of rows) {
     const failed = Number(r.status_code) >= 400 || Boolean(r.error_message);
     total[failed ? "errors" : "success"]++;
-    const input = r.input_tokens == null ? null : Number(r.input_tokens),
-      output = r.output_tokens == null ? null : Number(r.output_tokens);
+    const input = r.input_tokens == null || r.input_tokens < 0 ? null : Number(r.input_tokens),
+      output = r.output_tokens == null || r.output_tokens < 0 ? null : Number(r.output_tokens);
     if (input === null || output === null) total.unknownUsage++;
     total.inputTokens += input || 0;
     total.outputTokens += output || 0;
@@ -195,6 +195,17 @@ export async function handleAdminResource(request: Request, resource: string): P
         .order("created_at", { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
       if (error) throw error;
+      const rows = (data as Record<string, unknown>[]).map((row) => ({
+        ...row,
+        input_tokens:
+          row["input_tokens"] == null || Number(row["input_tokens"]) < 0
+            ? null
+            : row["input_tokens"],
+        output_tokens:
+          row["output_tokens"] == null || Number(row["output_tokens"]) < 0
+            ? null
+            : row["output_tokens"],
+      }));
       if (url.searchParams.get("export") === "csv") {
         const fields = [
           "created_at",
@@ -216,8 +227,8 @@ export async function handleAdminResource(request: Request, resource: string): P
         return new Response(
           [
             fields.join(","),
-            ...(data as Record<string, unknown>[]).map((r) =>
-              fields.map((f) => cell(r[f])).join(","),
+            ...rows.map((r) =>
+              fields.map((f) => cell((r as Record<string, unknown>)[f])).join(","),
             ),
           ].join("\r\n"),
           {
@@ -229,7 +240,7 @@ export async function handleAdminResource(request: Request, resource: string): P
           },
         );
       }
-      return adminJson({ rows: data, total: count, page, limit });
+      return adminJson({ rows, total: count, page, limit });
     }
     if (resource === "usage" && request.method === "GET") {
       const rows: UsageLog[] = [];

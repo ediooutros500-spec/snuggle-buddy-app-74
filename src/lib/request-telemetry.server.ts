@@ -38,8 +38,9 @@ export async function withRequestTelemetry(
           resolved_model: trace.model || null,
           status_code: status,
           latency_ms: Date.now() - start,
-          input_tokens: acc?.usageKnown ? acc.usage.input_tokens : null,
-          output_tokens: acc?.usageKnown ? acc.usage.output_tokens : null,
+          // Older installations require NOT NULL; -1 explicitly represents unknown usage.
+          input_tokens: acc?.usageKnown ? acc.usage.input_tokens : -1,
+          output_tokens: acc?.usageKnown ? acc.usage.output_tokens : -1,
           worker_key_hint: trace.workerKeyHint || null,
           error_message: error
             ? "Falha ao concluir resposta ou stream"
