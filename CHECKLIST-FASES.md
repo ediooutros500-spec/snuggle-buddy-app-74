@@ -6,9 +6,12 @@
 - [x] Painel administrativo autenticado
 - [x] Quotas e fallback auditado
 - [x] Health check público em `/api/public/health`
-- [ ] Build e lint verdes
-- [ ] Modelos extras e compatibilidade Claude Code revisados
-- [ ] Endpoints de imagem, embedding e vídeo
+- [ ] Build e lint verdes no Lovable
+- [ ] Modelos Claude Code extras e Anthropic pass-through revisados
+- [x] Endpoint `/api/public/v1/images/generations`
+- [x] Endpoint `/api/public/v1/embeddings`
+- [x] Endpoint `/api/public/v1/videos/generations`
+- [ ] Smoke test dos endpoints com gateway configurado
 
 ## SUPABASE E SECRETS, POR ÚLTIMO
 - [ ] Criar segredo Vault `pool_keys_key` no 2o Supabase
