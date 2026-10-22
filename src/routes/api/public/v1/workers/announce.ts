@@ -2,11 +2,15 @@ import { createFileRoute } from "@tanstack/react-router";
 import { maybeAutoRegisterChild } from "@/lib/key-pool.server";
 import { CORS_HEADERS } from "@/lib/claude-compat.server";
 
+const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+
 export const Route = createFileRoute("/api/public/v1/workers/announce")({ server: { handlers: {
   OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
   POST: async ({ request }) => {
-    if (request.headers.get("x-parent-dispatch") !== "snuggle-buddy-app-74") return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+    // This is intentionally local-only: the child never receives the parent's secret.
+    if (request.headers.get("x-child-auto-dispatch") !== "1") return json({ error: "Unauthorized" }, 401);
     await maybeAutoRegisterChild(request.url);
-    return new Response(JSON.stringify({ ok: true, message: "Child sync dispatched" }), { status: 200, headers: { "Content-Type": "application/json", ...CORS_HEADERS } });
+    const configured = Boolean(process.env["LOVABLE_API_KEY"] && process.env["REMIX_SYNC_SECRET"]);
+    return json({ ok: true, registered: configured, message: configured ? "Sincronização do filho disparada." : "Configure LOVABLE_API_KEY e REMIX_SYNC_SECRET neste remix para registrar no pai." });
   },
 } } });

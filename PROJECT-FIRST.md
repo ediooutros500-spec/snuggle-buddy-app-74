@@ -1,22 +1,13 @@
 # Execução projeto-primeiro
 
-O desenvolvimento do código vem antes da configuração do Supabase. Assim conseguimos validar build, rotas, autenticação, failover e contrato do gateway sem misturar erro de infraestrutura com erro de aplicação.
+O painel agora está em português do Brasil e cada tela do menu tem uma função real: endpoints, modelos, rotas/fallback, clientes/API keys, quotas, workers, sincronização de remixes, uso, logs, preferências e segurança.
 
-## Já feito no código
+## Auto-disparo seguro do filho
 
-- Pool pai/filhos v2 commitado.
-- Registro de filho com validação upstream e rate limit.
-- Painel administrativo autenticado.
-- Quotas diárias por filho e fallback auditado.
-- Health check público em `/api/public/health`.
+Ao abrir qualquer página publicada, o shell chama `/api/public/v1/workers/announce`. No servidor, o filho tenta registrar sua própria `LOVABLE_API_KEY` no pai. O pai nunca entrega segredo ao filho.
 
-## Ordem atual
+Por segurança, o remix precisa ter `REMIX_SYNC_SECRET` configurado com o mesmo valor do pai. Não usamos token padrão compartilhado: isso transformaria qualquer cópia pública em um registrador autorizado.
 
-1. Rodar build e lint do projeto.
-2. Testar o health check publicado.
-3. Completar modelos, compatibilidade Claude Code e endpoints de mídia.
-4. Revisar exposição de chaves e respostas de erro.
-5. Só então criar o segredo do Vault, executar o SQL e configurar os secrets do pai.
-6. Publicar um remix e executar o teste ponta a ponta.
+## Supabase por último
 
-O health check não expõe valores de secrets. Ele retorna apenas se cada capacidade está configurada.
+Depois de o build e os testes de código passarem: criar o segredo Vault, executar `pool-setup.sql`, configurar as secrets e validar o fluxo ponta a ponta.
