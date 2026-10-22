@@ -28,7 +28,8 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 - [x] `gator/src/server.mjs` criado com health check e resposta 404 segura.
 - [x] `gator/README.md` criado com instruções locais.
 - [x] `gator/npm run check` validado por `node --check`.
-- [ ] Health check executado no PC: pendente de iniciar o Gator local.
+- [x] Health check executado no PC: `GET http://127.0.0.1:20128/health` retornou HTTP 200.
+- [x] Health reportou configuração ausente sem expor secrets: Supabase, encryption, admin e Lovable false.
 - [ ] Supabase central vinculado: pendente de receber/configurar o Supabase.
 - [ ] Gateway engine implementado: próxima etapa.
 
@@ -37,14 +38,15 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 - Build do app Lovable: aprovado no DataFlow em 22/10/2026.
 - Lint: não aprovado; falha concentrada em finais de linha CRLF reportados pelo Prettier.
 - Instalação: concluída sem vulnerabilidades reportadas.
+- Gator: `node --check` aprovado e health HTTP 200 validado no PC.
 - Supabase: ainda não configurado, conforme a ordem definida no plano.
 - Gator: scaffold criado e commitado; ainda não é um proxy de produção.
 
 ## Próxima fase autorizada
 
 1. Corrigir e publicar a normalização de formato sem tocar na lógica do app.
-2. Iniciar o Gator local e validar `GET /health`.
-3. Receber a digitalização/configuração do Supabase e criar migrations.
-4. Implementar o handshake Lovable remixável apontando para o Gator, sem enviar a key pelo browser.
+2. Receber a digitalização/configuração do Supabase e criar migrations.
+3. Implementar o handshake Lovable remixável apontando para o Gator, sem enviar a key pelo browser.
+4. Implementar o gateway engine e o primeiro endpoint autenticado do Gator.
 
 Uma caixa só deve virar `[x]` quando existir evidência verificável.
