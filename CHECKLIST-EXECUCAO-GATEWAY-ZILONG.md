@@ -4,6 +4,8 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 
 ## Decisão vigente: registro automático e projetos independentes
 
+**Painel e API separados, verificados em 22/10/2026:** painel em loopback 4430, entrada de API em 4431 e Gator somente interno. Chave criada no painel aceita pela API; suspensão bloqueia; cliente não administra; API não publica rotas administrativas. Cliente temporário removido. Fonte e testes em `docs/PAINEL-E-API.md` e `deploy/STARCHEF-VPS.md`. Testes automatizados: 26 do app e 25 do Gator; builds aprovados no GitHub. URL pública HTTPS e inferência real permanecem pendentes.
+
 Hospedagem escolhida em 22/10/2026: mesma VPS do StarChef, por SSH direto com chave existente no computador. Usuário esclareceu: Hostinger somente para o site, sem dependência do conector para acessar esta VPS. **Gateway instalado e rodando por autorização do usuário**, com perfil independente `zilong-gateway-shared`, portas loopback 4430/4431 e imagens `ea2e83fbb037`. Health, home, administração autenticada e banco aprovados; acesso administrativo anônimo recusado. StarChef HTTP 200 e IDs dos 26 containers anteriores preservados. Acesso local por túnel SSH e detalhes em `deploy/STARCHEF-VPS.md`. HTTPS público, remix real e motor completo continuam pendentes.
 
 Em 22/10/2026 o usuário definiu que qualquer projeto Lovable seu com gatilho pode fornecer a própria chave, incluindo o projeto original. Não há quantidade fixa de contas/remixes nem dependência de um pai Lovable. Painel e Gator ficam na VPS. O modo padrão passa a ser auto: validação no upstream, sem segredo compartilhado. Referências históricas abaixo a HMAC obrigatório descrevem a implementação anterior, preservada como modo signed opcional. Guia: docs/REMIX-HOOK.md.
