@@ -31,7 +31,6 @@ const ALLOWED_MODELS = [
   "openai/gpt-5.5-pro",
 ] as const;
 
-
 const jsonResponse = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), {
     status,
@@ -100,8 +99,7 @@ async function probeModel(
     if (isOpenAI) {
       // Consome o SSE até o fim: sucesso quando houver texto ou `response.completed`.
       const raw = await upstream.text();
-      const ok =
-        raw.includes("response.output_text.delta") || raw.includes("response.completed");
+      const ok = raw.includes("response.output_text.delta") || raw.includes("response.completed");
       if (!ok) {
         return { status: "unavailable", error: "Stream do gateway sem resposta final." };
       }
@@ -124,7 +122,6 @@ async function probeModel(
     };
   }
 }
-
 
 export const Route = createFileRoute("/api/public/ai-models")({
   server: {

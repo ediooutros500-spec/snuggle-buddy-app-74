@@ -16,8 +16,8 @@ Este arquivo registra o avanço real da implementação. A checklist detalhada c
 - [x] `.env.example` criado sem valores reais.
 - [x] `.gitattributes` criado para normalizar finais de linha.
 - [x] `npm run lint` aprovado em 22/10/2026: zero erros, sete avisos (Fast Refresh e dependência de hook).
-- [ ] `npm test` verde: pendente, ainda não existe suíte de testes configurada.
-- [ ] `src/routeTree.gen.ts` commitado após regeneração: há alteração local gerada, ainda não validada e publicada.
+- [x] `npm test`: 18 testes do handshake e da rota de registro aprovados.
+- [x] Route tree regenerado e incluído na etapa de handshake; build verificado em cópia isolada do índice Git.
 
 ## Fase 1: estrutura inicial do Gator
 
@@ -74,3 +74,14 @@ Os testes do Gator são separados do root; a ausência de suíte no app Lovable 
 - [ ] Quotas concorrentes, chamada upstream real e backup/restauração comprovados.
 
 Detalhes e comandos em `gator/DB-VERIFICACAO.md`.
+
+## Emissor e baseline verificados — 22/10/2026
+
+- [x] Emissor do remix compatível com o HMAC do Gator, sem enviar o segredo compartilhado.
+- [x] Cache de registro somente após confirmação do Gator; solicitações simultâneas compartilham a tentativa.
+- [x] Receptor de compatibilidade exige HMAC e persistência de nonce; não aceita apenas token fixo.
+- [x] Falha de rede/5xx não ativa chave no registro do app.
+- [x] Snapshot isolado do commit: TypeScript aprovado, lint com zero erros e sete avisos, build aprovado; 18 testes do app e 19 testes do Gator aprovados.
+- [ ] Remix publicado contra endereço HTTPS real do Gator: ainda pendente.
+
+Alterações funcionais anteriores de motor, painel e mídia continuam separadas da publicação desta etapa.

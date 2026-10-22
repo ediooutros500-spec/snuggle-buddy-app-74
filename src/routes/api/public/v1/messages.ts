@@ -52,55 +52,91 @@ export const Route = createFileRoute("/api/public/v1/messages")({
 
         const raw = await request.text();
         if (raw.length > MAX_BODY_BYTES) {
-          return anthropicError(413, "request_too_large", `Payload excede ${MAX_BODY_BYTES} bytes.`);
+          return anthropicError(
+            413,
+            "request_too_large",
+            `Payload excede ${MAX_BODY_BYTES} bytes.`,
+          );
         }
 
         let body: MessagesRequest;
         try {
           body = JSON.parse(raw);
         } catch {
-          return anthropicError(400, "invalid_request_error", "Corpo da requisição não é JSON válido.");
+          return anthropicError(
+            400,
+            "invalid_request_error",
+            "Corpo da requisição não é JSON válido.",
+          );
         }
 
         if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
-          return anthropicError(400, "invalid_request_error", "`messages` é obrigatório e deve ser um array não vazio.");
+          return anthropicError(
+            400,
+            "invalid_request_error",
+            "`messages` é obrigatório e deve ser um array não vazio.",
+          );
         }
         if (body.messages.length > MAX_MESSAGES) {
-          return anthropicError(400, "invalid_request_error", `Máximo de ${MAX_MESSAGES} mensagens por requisição.`);
+          return anthropicError(
+            400,
+            "invalid_request_error",
+            `Máximo de ${MAX_MESSAGES} mensagens por requisição.`,
+          );
         }
         for (const m of body.messages) {
           if (!m || (m.role !== "user" && m.role !== "assistant")) {
-            return anthropicError(400, "invalid_request_error", "Cada mensagem precisa de role 'user' ou 'assistant'.");
+            return anthropicError(
+              400,
+              "invalid_request_error",
+              "Cada mensagem precisa de role 'user' ou 'assistant'.",
+            );
           }
           if (typeof m.content !== "string" && !Array.isArray(m.content)) {
-            return anthropicError(400, "invalid_request_error", "`content` deve ser string ou array de blocos.");
+            return anthropicError(
+              400,
+              "invalid_request_error",
+              "`content` deve ser string ou array de blocos.",
+            );
           }
         }
         if (JSON.stringify(body.messages).length > MAX_TOTAL_CHARS) {
-          return anthropicError(413, "request_too_large", `Conteúdo total excede ${MAX_TOTAL_CHARS} caracteres.`);
+          return anthropicError(
+            413,
+            "request_too_large",
+            `Conteúdo total excede ${MAX_TOTAL_CHARS} caracteres.`,
+          );
         }
 
         // Consultar modelos desabilitados globalmente
         const pool = getPoolAdmin();
         let disabledModels: string[] = [];
         if (pool) {
-          const { data: setRow } = await pool.from("gateway_settings").select("disabled_models").eq("id", 1).single();
+          const { data: setRow } = await pool
+            .from("gateway_settings")
+            .select("disabled_models")
+            .eq("id", 1)
+            .single();
           if (setRow?.disabled_models) disabledModels = setRow.disabled_models;
         }
 
-        const model = resolveModel(body.model, disabledModels);
+        const model = resolveModel(body["model"], disabledModels);
         if (!model) {
           return anthropicError(
             400,
             "invalid_request_error",
-            `Modelo não permitido ou desabilitado pelo administrador: ${String(body.model)}.`,
+            `Modelo não permitido ou desabilitado pelo administrador: ${String(body["model"])}.`,
           );
         }
 
         // Confere permissão do cliente
         if (auth.client?.allowed_models && auth.client.allowed_models.length > 0) {
           if (!auth.client.allowed_models.includes(model)) {
-            return anthropicError(403, "permission_error", "Seu cliente não tem permissão para usar este modelo.");
+            return anthropicError(
+              403,
+              "permission_error",
+              "Seu cliente não tem permissão para usar este modelo.",
+            );
           }
         }
 
@@ -118,32 +154,51 @@ export const Route = createFileRoute("/api/public/v1/messages")({
           return anthropicError(502, "api_error", "Não foi possível contatar o serviço de IA.");
         }
         if (!upstream) {
-          return anthropicError(500, "api_error", "Serviço de IA indisponível (sem chaves ativas no pool).");
+          return anthropicError(
+            500,
+            "api_error",
+            "Serviço de IA indisponível (sem chaves ativas no pool).",
+          );
         }
 
         // Registrar métricas de telemetria se houver cliente
         if (pool && auth.client) {
-          pool.rpc("increment_client_stats", {
-            p_client_id: auth.client.id,
-            p_reqs: 1,
-            p_in_tok: 0,
-            p_out_tok: 0,
-          }).catch(() => {});
+          pool
+            .rpc("increment_client_stats", {
+              p_client_id: auth.client.id,
+              p_reqs: 1,
+              p_in_tok: 0,
+              p_out_tok: 0,
+            })
+            .then(
+              () => {},
+              () => {},
+            );
 
-          pool.from("gateway_request_logs").insert({
-            client_id: auth.client.id,
-            client_name: auth.client.name,
-            endpoint: "/api/public/v1/messages",
-            requested_model: body.model || "default",
-            resolved_model: model,
-            status_code: upstream.status,
-            latency_ms: latency,
-          }).catch(() => {});
+          pool
+            .from("gateway_request_logs")
+            .insert({
+              client_id: auth.client.id,
+              client_name: auth.client.name,
+              endpoint: "/api/public/v1/messages",
+              requested_model: body["model"] || "default",
+              resolved_model: model,
+              status_code: upstream.status,
+              latency_ms: latency,
+            })
+            .then(
+              () => {},
+              () => {},
+            );
         }
 
         if (!upstream.ok) {
           if (upstream.status === 429)
-            return anthropicError(429, "rate_limit_error", "Limite de requisições do provedor atingido em todas as chaves do pool.");
+            return anthropicError(
+              429,
+              "rate_limit_error",
+              "Limite de requisições do provedor atingido em todas as chaves do pool.",
+            );
           if (upstream.status === 402)
             return anthropicError(402, "billing_error", "Créditos de IA esgotados.");
           return anthropicError(502, "api_error", "O serviço de IA retornou um erro.");
