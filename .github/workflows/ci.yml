@@ -19,6 +19,8 @@ jobs:
       - run: npm test
       - run: npm --prefix gator run check
       - run: npm --prefix gator test
+      - run: docker build -f deploy/Dockerfile.api -t gateway-api-check .
+      - run: docker run --rm --read-only --cap-drop ALL --security-opt no-new-privileges:true --tmpfs /tmp:size=16m gateway-api-check caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
       - run: npm run build
       - run: npm run build:parent
       - run: node scripts/smoke-parent.mjs

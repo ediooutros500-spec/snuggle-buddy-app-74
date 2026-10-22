@@ -10,7 +10,7 @@ Use exclusivamente `deploy/compose.shared-vps.yml` para esta implantação. Ele 
 
 Inspeção de leitura: aproximadamente 2 GiB de memória disponível e 15 GiB de disco livre, com 85% de ocupação e uso de swap. É capacidade inicial para avaliar o runtime limitado, não garantia sob carga. Construir as imagens fora da VPS e transferir somente os artefatos necessários; não executar limpeza global do Docker.
 
-O runtime proposto é `/opt/zilong-gateway/runtime`, separado do StarChef. Os dois containers usam usuário sem privilégios das imagens, sistema de arquivos somente leitura, limites de memória/CPU e logs limitados. O limite de memória total de 512 MiB é uma configuração inicial; não comprova capacidade livre na VPS. Builds devem ser feitos fora da VPS se a memória disponível não comportar a compilação.
+O runtime é `/opt/zilong-gateway/runtime`, separado do StarChef. Os três containers usam usuário sem privilégios, sistema de arquivos somente leitura, limites de memória/CPU e logs limitados. O limite de memória total é 576 MiB; não comprova capacidade livre sob carga. As imagens foram construídas fora da VPS.
 
 Não execute os perfis Caddy `https` ou `ip-check` do Compose de hospedagem dedicada nessa VPS: o proxy existente já ocupa as portas públicas. Não altere o Compose, banco, credenciais ou certificados do StarChef para implantar o gateway.
 
@@ -31,7 +31,7 @@ docker compose -f deploy/compose.shared-vps.yml config --quiet
 8. Configurar a URL HTTPS pública uma vez no template Lovable, publicar e visitar um projeto real. Conferir cadastro, cifra e uma chamada upstream.
 9. Conferir novamente a saúde do StarChef e dos demais serviços. Para retorno, remover somente os vhosts e containers deste projeto; não executar operações de limpeza global do Docker.
 
-## Estado real
+## Instalação inicial (histórico)
 
 **Instalado e rodando na VPS em 22/10/2026**, por autorização do usuário. Projeto `zilong-gateway-shared` no runtime `/opt/zilong-gateway/runtime`. Imagens Linux construídas no computador e transferidas por SSH: `zilong-gateway-parent:ea2e83fbb037` e `zilong-gator:ea2e83fbb037`. Código equivalente publicado no commit `edff5af7811924501be1fc9f087cb997d0ed70f1`. Arquivo de imagens verificado por SHA-256 antes do carregamento; preservado em `/opt/zilong-gateway/releases/ea2e83fbb037`.
 
@@ -49,3 +49,15 @@ Verificações reais aprovadas:
 Acesso provisório neste computador por túnel SSH: painel em `http://127.0.0.1:34430` e health do Gator em `http://127.0.0.1:34431/health`. O transporte até a VPS é cifrado pelo SSH; essas URLs são locais, não acessíveis pelos remixes. O túnel dura enquanto o processo SSH e este computador estiverem ativos.
 
 Continuam pendentes os dois subdomínios, DNS/certificados/rotas no proxy compartilhado, URL HTTPS herdada no template e registro de um projeto Lovable real. O motor unificado e as quotas concorrentes do gateway são pendências separadas da hospedagem. Instalação e health aprovados não significam plano completo nem validação de tráfego de IA real.
+
+## Estado atual: painel e API separados — 22/10/2026
+
+Atualização `fedcdf418cb6` ativa e verificada. Código publicado em `5850a9969e292431ec0e7be00702d0eac413364a`. O painel continua em loopback 4430; a nova entrada da API ocupa loopback 4431. O Gator passou a ficar somente na rede interna Docker. O túnel existente fornece painel em `http://127.0.0.1:34430` e base da API em `http://127.0.0.1:34431/v1`.
+
+O painel mostra a URL base em **Endpoints** e gera chaves de cliente em **Clientes e API keys**. `PARENT_PUBLIC_URL` e `API_PUBLIC_URL` apontam provisoriamente para os acessos do túnel. Isso não configura um endereço público para os remixes.
+
+Teste real aprovado: criação de chave pelo painel, consulta autenticada de modelos pela entrada da API, recusa de chave inválida/ausente, acesso administrativo com chave de cliente recusado, caminhos administrativos no host da API retornando 404, suspensão bloqueando a chave. Chat e Messages aceitaram a autenticação e recusaram o payload de teste vazio com 400 antes de chamar o upstream. O cliente temporário foi removido e a remoção foi conferida no banco. Nenhuma inferência de IA foi executada.
+
+Os três containers estão saudáveis. StarChef readiness permaneceu HTTP 200. A primeira tentativa do proxy retornou automaticamente à versão anterior por uma capacidade Linux incompatível com a restrição do container; a imagem foi corrigida removendo a capacidade de porta privilegiada, mantendo usuário sem privilégios, `cap_drop: ALL` e `no-new-privileges`. Validação local nessas mesmas condições aprovada e incluída no CI.
+
+Backups da configuração anterior e scripts privados de ativação/verificação estão em `/opt/zilong-gateway/releases/fedcdf418cb6`. A versão anterior permanece disponível. A ponte de compatibilidade continua no pai; isso não conclui o motor unificado, quotas concorrentes, HTTPS público ou cadastro real de remixes. Fluxo de uso em [PAINEL-E-API.md](../docs/PAINEL-E-API.md).
