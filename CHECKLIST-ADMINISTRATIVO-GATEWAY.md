@@ -165,3 +165,12 @@ Contrato e checklist detalhado: [ORIGEM-LOVABLE-E-CATALOGO-16.md](docs/ORIGEM-LO
 - [x] Registrar que orçamento inicial de 8 tokens retornou texto vazio; repetir com 128 retornou OK. Não considerar somente HTTP 200 como resposta útil.
 - [ ] Identificar endereço da nova prévia/remix e relacioná-lo ao cadastro; usuário excluiu o remix anterior, agora 404. Cadastro da origem e da prévia não comprovam sozinho a identidade do novo remix nem duas chaves distintas.
 - [ ] Validar todos os modelos, streaming/tools e conciliação financeira; esta execução comprova apenas o fluxo de inferência testado.
+
+## Matriz de testes de texto — 22/10/2026
+
+- [x] Testar os 11 modelos de texto configurados pela API pública, uma chamada curta por modelo: todos HTTP 200 com texto OK/OK.
+- [x] Conferir oito IDs novos solicitados: cinco Claude, GPT-6 Astra, GPT-6.1 Sol e Gemini 4 Argon retornaram HTTP 400 model_not_found na política da nossa API, sem teste direto no provedor.
+- [x] Não chamar geração de imagem/vídeo nem embeddings; lista de exclusão explícita.
+- [x] Conferir 19 request IDs no histórico, preservar logs e remover cliente/chave temporários. As 11 respostas úteis informaram 632 tokens no total.
+- [x] Registrar matriz individual: [TESTES-MODELOS-TEXTO-2026-10-22.md](docs/TESTES-MODELOS-TEXTO-2026-10-22.md).
+- [ ] Configurar os oito modelos adicionais, conforme solicitação seguinte do usuário; Anthropic nativo precisa de adaptação real, não somente inclusão de IDs no catálogo.
