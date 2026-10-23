@@ -3,6 +3,7 @@ import path from "node:path";
 import os from "node:os";
 import { createRequire } from "node:module";
 import { googleDefinitions } from "./google-desktop-mcp.mjs";
+import { githubDefinitions } from "./github-desktop-mcp.mjs";
 const registry = createRequire(import.meta.url)("../backend/mcp/registry.json").connectors;
 
 // Changes only the active third-party profile, with a private backup and an atomic rename.
@@ -11,13 +12,16 @@ export function configureDesktopMcp(
   apply = false,
   connector = "context7",
   googleOauth = null,
+  githubClientId = null,
 ) {
   const choices =
     connector === "google"
       ? googleDefinitions(googleOauth)
-      : connector === "all"
-        ? registry.filter((x) => x.entry)
-        : registry.filter((x) => x.id === connector && x.entry);
+      : connector === "github"
+        ? githubDefinitions(githubClientId)
+        : connector === "all"
+          ? registry.filter((x) => x.entry)
+          : registry.filter((x) => x.id === connector && x.entry);
   if (!choices.length) throw Error("Conector fora do piloto aprovado ou com requisitos pendentes.");
   const entry = choices[0].entry;
   const library = path.join(root, "configLibrary");
@@ -39,7 +43,10 @@ export function configureDesktopMcp(
     .filter(
       (entry) =>
         !servers.some(
-          (x) => x.name?.toLowerCase() === entry.name.toLowerCase() || x.url === entry.url,
+          (x) =>
+            x.name?.toLowerCase() === entry.name.toLowerCase() ||
+            (entry.url && x.url === entry.url) ||
+            (entry.server && x.server === entry.server),
         ),
     );
   if (!additions.length)
@@ -100,7 +107,15 @@ if (
     }
     console.log(
       JSON.stringify(
-        configureDesktopMcp(root, process.argv.includes("--apply"), connector, googleOauth),
+        configureDesktopMcp(
+          root,
+          process.argv.includes("--apply"),
+          connector,
+          googleOauth,
+          process.argv.includes("--github-client-id")
+            ? process.argv[process.argv.indexOf("--github-client-id") + 1]
+            : null,
+        ),
       ),
     );
   } catch (error) {

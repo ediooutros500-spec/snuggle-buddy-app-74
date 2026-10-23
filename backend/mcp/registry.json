@@ -7,7 +7,7 @@
       "id": "github",
       "name": "GitHub",
       "source": "https://github.com/github/github-mcp-server",
-      "requirement": "GitHub OAuth App com device flow habilitado e Client ID próprio; ou credencial individual. Não reutilizar ID de outro aplicativo.",
+      "requirement": "Configurador --connector github --github-client-id pronto. Pendente Client ID público de OAuth App próprio com Device Flow habilitado; cada cliente autoriza sua conta.",
       "entry": null
     },
     {
@@ -695,42 +695,42 @@
     {
       "id": "google-drive",
       "name": "Google Drive",
-      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
+      "requirement": "Configurado no perfil local com OAuth próprio. Confirmar APIs e MCP APIs habilitadas, acesso do projeto e execução por serviço; credenciais não estão no registro.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "gmail",
       "name": "Gmail",
-      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
+      "requirement": "Configurado no perfil local com OAuth próprio. Confirmar APIs e MCP APIs habilitadas, acesso do projeto e execução por serviço; credenciais não estão no registro.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-calendar",
       "name": "Google Calendar",
-      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
+      "requirement": "Configurado no perfil local com OAuth próprio. Confirmar APIs e MCP APIs habilitadas, acesso do projeto e execução por serviço; credenciais não estão no registro.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-docs",
       "name": "Google Docs",
-      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
+      "requirement": "Configurado no perfil local com OAuth próprio. Confirmar APIs e MCP APIs habilitadas, acesso do projeto e execução por serviço; credenciais não estão no registro.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-sheets",
       "name": "Google Sheets",
-      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
+      "requirement": "Configurado no perfil local com OAuth próprio. Confirmar APIs e MCP APIs habilitadas, acesso do projeto e execução por serviço; credenciais não estão no registro.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-slides",
       "name": "Google Slides",
-      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
+      "requirement": "Configurado no perfil local com OAuth próprio. Confirmar APIs e MCP APIs habilitadas, acesso do projeto e execução por serviço; credenciais não estão no registro.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
@@ -754,6 +754,23 @@
       "requirement": "URL do servidor e OAuth do ambiente Salesforce do cliente.",
       "entry": null,
       "source": "https://developer.salesforce.com/docs/platform/hosted-mcp-servers/guide/client-connection-overview.html"
+    },
+    {
+      "id": "shopify",
+      "name": "Shopify",
+      "source": "https://claude.com/marketplace/connectors/shopify",
+      "requirement": "Descoberta pública sem login; acesso à loja depende de login e aprovação individual no Shopify. Não confundir configuração com loja autorizada.",
+      "entry": {
+        "name": "Shopify",
+        "transport": "http",
+        "url": "https://setup.shopify.com/mcp"
+      },
+      "validation": {
+        "http": 200,
+        "initialize": true,
+        "tools": 37,
+        "checkedAt": "2026-10-23T14:52:18.879238+00:00"
+      }
     }
   ]
 }

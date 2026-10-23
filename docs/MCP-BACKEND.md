@@ -77,3 +77,19 @@ A configuração fica no computador do cliente. Apenas mudar o backend na VPS n�
 ## Atualização posterior
 
 31 definições instaláveis após acrescentar Atlassian v2. Google tem configurador implementado, porém permanece sem ativação: ainda faltam acesso ao Developer Preview e OAuth próprio. Supabase e Lovable conferidos no perfil ativo. Os números anteriores representam a etapa anterior.
+
+## Estado atual após Google e Shopify
+
+57 serviços no registro: 32 definições remotas sem parâmetros locais adicionais; seis Google configurados por JSON privado; 19 restantes dependem de aplicativo OAuth, ambiente, instalação local ou liberação. Perfil deste computador: 38 definições após Shopify. Esses totais representam configuração, não execução validada de todos os serviços.
+
+Google OAuth já foi criado e aplicado. Usuário confirmou ter identificado a pendência de habilitação do Drive após o 403; consultas individuais continuam pendentes. GitHub tem configurador com `--connector github --github-client-id CLIENT_ID_PUBLICO`; instruções completas em GITHUB-MCP-ATIVACAO.md. Nenhum identificador fictício aplicado ao perfil real.
+
+### Shopify
+
+Endereço confirmado no diretório oficial: https://claude.com/marketplace/connectors/shopify → `https://setup.shopify.com/mcp`. Sondagem em 23/10/2026: initialize e tools/list HTTP 200, 37 ferramentas. Entrada sem OAuth na descoberta pública, conforme o diretório; acessar uma loja existente exige login e aprovação do titular no fluxo Shopify. Isso não comprova que o fluxo de loja funcionará no cliente 3P até executá-lo. Não executar criação, alteração ou compra no teste.
+
+Prompt de validação:
+
+> Use o conector Shopify para identificar se existe uma loja minha vinculada. Se houver, consulte somente o nome da loja e até três produtos e mostre a ferramenta executada. Se não houver, informe como iniciar o vínculo pelo fluxo oficial. Não crie loja, produto, desconto, pedido ou qualquer alteração e não peça credenciais no chat.
+
+Pendências restantes: GitHub, Microsoft 365, Asana e Salesforce exigem configuração própria; Adobe e QuickBooks exigem esclarecer a recusa de acesso; Playwright, Chrome DevTools, Serena, Azure, Brave Search, Browserbase, MongoDB, Redis, Elasticsearch, Filesystem, Git, Memory e Fetch exigem configuração local, recurso ou chave do cliente. Não transformar nomes pendentes em entradas funcionais sem atender aos requisitos.

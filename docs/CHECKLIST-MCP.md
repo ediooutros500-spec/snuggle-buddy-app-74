@@ -98,3 +98,16 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [ ] Confirmar no projeto `gateway-mcp-512513` as APIs `drive.googleapis.com` e `drivemcp.googleapis.com` habilitadas e o acesso ao Google Workspace Developer Preview. Não foi possível confirmar essa configuração pela conta proprietária nesta sessão.
 - [ ] Repetir conexão e consulta somente leitura depois de confirmar os requisitos. O motivo específico do 403 não veio no registro observado; habilitação e preview são hipóteses a verificar, não causa comprovada.
 
+## Próximo lote: Shopify e GitHub — 23/10/2026
+
+- [x] Usuário confirmou que o problema do Drive era a habilitação indicada. Não houve nova consulta observada pelo agente.
+- [x] Corrigir omissão do Shopify das imagens originais: endereço oficial `https://setup.shopify.com/mcp`, initialize e tools/list HTTP 200, 37 ferramentas anunciadas sem login.
+- [x] Shopify acrescentado ao perfil ativo: 38 definições no total; repetição sem duplicação. Reabrir Claude para carregar. Acesso à loja ainda não validado.
+- [x] Configurador GitHub nativo implementado, sem tokens/segredos no registro. Correção da comparação entre conectores sem URL.
+- [x] Três testes focados passaram; lint dos dois scripts aprovado.
+- [x] Instruções e prompt somente leitura em GITHUB-MCP-ATIVACAO.md e MCP-BACKEND.md.
+- [ ] Usuário criar OAuth App GitHub e fornecer Client ID público (informou ainda não ter aplicativo).
+- [ ] Aplicar GitHub real, concluir autorização e executar leitura do README.
+- [ ] Shopify: aparecer no Claude, autorizar loja própria e executar consulta somente leitura.
+- [ ] Próximos serviços com credenciais externas: Microsoft 365, Asana e Salesforce; Adobe/QuickBooks continuam com recusa no teste anterior.
+

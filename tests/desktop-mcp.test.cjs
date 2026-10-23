@@ -47,11 +47,31 @@ test("Desktop pilot preserves credentials, backups, other connectors and is idem
     const allResult = configureDesktopMcp(root, true, "all");
     assert.equal(allResult.applied, true);
     const allProfile = JSON.parse(fs.readFileSync(file));
-    assert.equal(allProfile.managedMcpServers.length, 32);
-    assert.equal(new Set(allProfile.managedMcpServers.map((x) => x.name)).size, 32);
+    assert.equal(allProfile.managedMcpServers.length, 33);
+    assert.equal(new Set(allProfile.managedMcpServers.map((x) => x.name)).size, 33);
     assert.equal(allProfile.inferenceGatewayApiKey, original.inferenceGatewayApiKey);
     assert.ok(allResult.pending.some((x) => x.name === "Gmail"));
     assert.equal(configureDesktopMcp(root, true, "all").alreadyPresent, true);
+    // Native entries have no URL; another native connector must not hide GitHub.
+    allProfile.managedMcpServers.push({ name: "Other native", server: "websearch" });
+    fs.writeFileSync(file, JSON.stringify(allProfile));
+    assert.throws(() => configureDesktopMcp(root, true, "github"), /Client ID/);
+    assert.equal(
+      configureDesktopMcp(root, true, "github", null, "0123456789abcdef0123").applied,
+      true,
+    );
+    const githubProfile = JSON.parse(fs.readFileSync(file));
+    assert.deepEqual(githubProfile.managedMcpServers.at(-1), {
+      name: "GitHub",
+      server: "github",
+      clientId: "0123456789abcdef0123",
+    });
+    assert.equal(githubProfile.inferenceGatewayApiKey, original.inferenceGatewayApiKey);
+    assert.deepEqual(githubProfile.managedMcpServers.slice(0, -1), allProfile.managedMcpServers);
+    assert.equal(
+      configureDesktopMcp(root, true, "github", null, "0123456789abcdef0123").alreadyPresent,
+      true,
+    );
     changed.inferenceGatewayBaseUrl = "https://different.test";
     fs.writeFileSync(file, JSON.stringify(changed));
     assert.throws(() => configureDesktopMcp(root, true), /não usa o nosso gateway/);
