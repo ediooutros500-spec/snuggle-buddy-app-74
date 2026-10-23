@@ -1,0 +1,10 @@
+{
+  "before": {
+    "registered": false,
+    "outboundRequests": 0
+  },
+  "fixed": {
+    "registered": true,
+    "outboundRequests": 1
+  }
+}

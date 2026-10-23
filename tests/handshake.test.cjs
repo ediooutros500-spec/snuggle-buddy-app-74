@@ -105,7 +105,7 @@ test("child HMAC is accepted by the actual Gator receiver without transmitting t
     assert.equal(url, "https://gator.example.test/api/public/v1/workers/register");
     assert.equal(init.headers["x-remix-sync-token"], undefined);
     assert.equal(Object.values(init.headers).includes(secret), false);
-    assert.equal(init.redirect, "error");
+    assert.equal(init.redirect, "manual");
     const result = await register(init.headers, JSON.parse(init.body));
     assert.equal(result.status, 200);
     return new Response(JSON.stringify(result.body), { status: result.status });
@@ -255,4 +255,47 @@ test("blank environment URLs do not hide the inherited central address", async (
   process.env.PARENT_GATEWAY_URL = "";
   delete process.env.REMIX_SYNC_SECRET;
   assert.equal((await child.triggerChildHandshake(origin)).registered, true);
+});
+
+test("registration refuses redirects without forwarding a credential or caching success", async (t) => {
+  let calls = 0;
+  const child = setup(t, async (url, init) => {
+    assert.equal(url, "https://gator.example.test/api/public/v1/workers/register");
+    assert.equal(init.redirect, "manual");
+    calls++;
+    return calls === 1
+      ? new Response(null, {
+          status: 307,
+          headers: { location: "https://untrusted.example/collect" },
+        })
+      : success();
+  });
+  const rejected = await child.triggerChildHandshake(origin);
+  assert.equal(rejected.registered, false);
+  assert.match(rejected.message, /redirecionamento/);
+  assert.equal(calls, 1);
+  assert.equal((await child.triggerChildHandshake(origin)).registered, true);
+  assert.equal(calls, 2);
+});
+
+test("registration reports receiver failures without reflecting arbitrary sensitive response text", async (t) => {
+  let calls = 0;
+  const child = setup(
+    t,
+    async () =>
+      new Response(
+        JSON.stringify({
+          error: ++calls === 1 ? "upstream_validation_unavailable" : key,
+          details: secret,
+        }),
+        { status: 503 },
+      ),
+  );
+  const known = await child.triggerChildHandshake(origin);
+  assert.match(known.message, /HTTP 503/);
+  assert.match(known.message, /validar a chave/);
+  const unknown = await child.triggerChildHandshake(origin);
+  assert.equal(unknown.registered, false);
+  assert.equal(JSON.stringify(unknown).includes(key), false);
+  assert.equal(JSON.stringify(unknown).includes(secret), false);
 });

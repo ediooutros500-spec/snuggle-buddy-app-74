@@ -62,7 +62,7 @@ function ProjectConnector({ initial }: { initial: ProjectStatus }) {
       const r = await fetch(STATUS_URL, {
         method: "POST",
         headers: { "x-child-auto-dispatch": "1" },
-        signal: AbortSignal.timeout(15000),
+        signal: AbortSignal.timeout(35000),
       });
       if (!r.ok) throw new Error();
       const data: RegistrationResult = await r.json();

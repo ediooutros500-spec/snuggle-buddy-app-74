@@ -116,9 +116,20 @@ export async function triggerChildHandshake(requestUrl: string, force = false): 
           workspace_label: cfg.workspaceLabel,
           account_label: cfg.accountLabel,
         }),
-        redirect: "error",
-        signal: AbortSignal.timeout(8000),
+        // Workers only accepts follow/manual. Never forward a credential to a redirected host.
+        redirect: "manual",
+        // Receiver may spend 8s validating upstream plus database calls; give it a full budget.
+        signal: AbortSignal.timeout(25000),
       });
+      if (response.status >= 300 && response.status < 400) {
+        await response.body?.cancel();
+        return {
+          attempted: true,
+          registered: false,
+          message:
+            "A central respondeu com redirecionamento. O envio não foi repetido em outro destino.",
+        };
+      }
       const result: unknown = await response.json().catch(() => null);
       if (
         !response.ok ||
@@ -128,12 +139,29 @@ export async function triggerChildHandshake(requestUrl: string, force = false): 
         result.registered !== true ||
         !("worker_id" in result) ||
         typeof result.worker_id !== "string"
-      )
+      ) {
+        const reasons: Record<string, string> = {
+          invalid_upstream_key: "O provedor recusou a credencial deste projeto.",
+          upstream_validation_unavailable: "A central não conseguiu validar a chave no provedor.",
+          registration_unavailable: "A central não conseguiu salvar o cadastro no banco.",
+          registration_not_configured: "O receptor da central não está configurado.",
+          registration_rate_limit: "Limite temporário de cadastros na central; aguarde um minuto.",
+          origin_registration_rate_limit:
+            "Este projeto atingiu o limite temporário; aguarde um minuto.",
+        };
+        const errorCode =
+          result &&
+          typeof result === "object" &&
+          "error" in result &&
+          typeof result.error === "string"
+            ? result.error
+            : "";
         return {
           attempted: true,
           registered: false,
-          message: "Registro não confirmado pelo Gator.",
+          message: `Registro não confirmado pela central (HTTP ${response.status}). ${reasons[errorCode] || "Tente novamente e confira o receptor."}`,
         };
+      }
       recent.set(origin, Date.now());
       return { attempted: true, registered: true, message: "Remix registrado no Gator." };
     } catch {

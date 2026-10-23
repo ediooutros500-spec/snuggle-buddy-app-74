@@ -146,3 +146,12 @@ Detalhes: [PAINEL-PROVEDOR-UNICO.md](docs/PAINEL-PROVEDOR-UNICO.md). Os itens ag
 - [ ] Ativar catálogo novo e aliases somente após implementar Anthropic nativo, novos IDs, Responses público e ciclo de jobs de vídeo com os testes necessários.
 
 Contrato e checklist detalhado: [ORIGEM-LOVABLE-E-CATALOGO-16.md](docs/ORIGEM-LOVABLE-E-CATALOGO-16.md). Esta preparação não alterou a versão da central rodando na VPS nem o remix antigo publicado.
+
+## Correção do gatilho no runtime Lovable — 22/10/2026
+
+- [x] Conferir remix oi-bright-idea-lab: código atualizado e credencial no servidor; tentativa de envio falha antes de alcançar a central.
+- [x] Reproduzir TypeError de redirect:error em workerd; executar módulo de handshake com dados sintéticos: antes zero envios, corrigido um envio e confirmação do receptor de teste.
+- [x] Trocar para redirect:manual e rejeitar HTTP 3xx, sem encaminhar credencial a outro destino.
+- [x] Ajustar orçamentos de espera e apresentar erros conhecidos do receptor sem expor resposta arbitrária ou segredos.
+- [x] 64 testes, tipos e builds Lovable/Node aprovados; lint sem erros e seis avisos anteriores.
+- [ ] Confirmar republicação do remix existente com a correção, registered:true e credencial no pool da central. Não exige criar outro remix.

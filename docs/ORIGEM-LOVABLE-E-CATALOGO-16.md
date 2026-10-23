@@ -70,3 +70,13 @@ Esses são alvos da próxima implementação, ainda não ativados. A versão atu
 - [ ] Validar tools, SSE, cancelamento, erros, uso e dimensões de embeddings com provedor real.
 
 A central na VPS não precisa ser reiniciada para preparar esta origem. Alterações de UI/catálogo no código local não atualizam projetos já publicados nem remixes antigos automaticamente.
+
+## Correção após teste do remix real — 22/10/2026
+
+Remix informado: `https://oi-bright-idea-lab.lovable.app`. A consulta pública de diagnóstico confirmou código atualizado, papel child, credencial presente, origem permitida e destino `https://api.delvertokens.store`. O POST de anúncio retornou `attempted: true`, `registered: false`, "Falha ao contatar o Gator". A central respondeu aos testes HTTP públicos; logs não mostraram esse envio chegando à VPS. Nenhuma credencial do remix foi extraída.
+
+Causa reproduzida no runtime workerd/Miniflare: `fetch` rejeita `redirect: "error"` com TypeError antes de executar a conexão. O mesmo teste com `redirect: "manual"` chegou ao receptor. O módulo real de handshake foi executado nesse runtime com configuração/chave sintéticas e receptor de teste: antes, zero pedidos e cadastro falso; corrigido, um pedido e cadastro confirmado. Isso comprova a regressão de runtime, não o cadastro real do remix ainda publicado com o código antigo.
+
+Correção: usar `manual`, recusar explicitamente qualquer HTTP 3xx e nunca repetir a credencial no endereço do redirecionamento; orçamento de envio de 25 segundos e espera da interface de 35 segundos para abranger validação e banco. Erros conhecidos do receptor ganham mensagens específicas, sem refletir texto arbitrário ou segredos. 64 testes da aplicação, tipos, builds Lovable/Node passaram; lint sem erros e seis avisos anteriores.
+
+Próxima validação: sincronizar a correção no projeto de origem e no remix existente, republicar o remix e abrir uma vez. Não é necessário criar outro remix. Só marcar concluído após `registered: true` e registro correspondente no pool central; presença de chave no diagnóstico não comprova cadastro nem saldo.
