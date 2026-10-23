@@ -55,3 +55,12 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [x] Usuário confirmou que os novos nomes apareceram e relatou teste funcional.
 - [x] Usuário deu OK geral para prosseguir com o lote.
 - [ ] Execução individual dos 30: não foram informados quais conectores tiveram ferramentas executadas; o aceite geral não substitui evidência técnica por conector.
+
+## Google, Supabase, Lovable e Atlassian — 23/10/2026
+
+- [x] Confirmado no perfil ativo: Supabase e Lovable já presentes; sem duplicação.
+- [x] Atlassian v2 sondado (401) e acrescentado ao perfil; total atual 31 definições.
+- [x] Configurador dos seis serviços Google implementado com arquivo OAuth local, validação e backup.
+- [x] Regressões do perfil e validação Google aprovadas.
+- [ ] Google: usuário informou não ter OAuth App; criar projeto/app e confirmar acesso ao Developer Preview antes da ativação. Ver GOOGLE-MCP-ATIVACAO.md.
+- [ ] Google: autorizar seis contas/serviços e testar ferramentas depois de atender aos requisitos.

@@ -177,8 +177,19 @@
       "id": "atlassian",
       "name": "Atlassian",
       "source": "https://support.atlassian.com/atlassian-ai-gateway/docs/get-started-with-the-atlassian-remote-mcp-server/",
-      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
-      "entry": null
+      "requirement": "Login OAuth individual; endpoint v2 respondeu HTTP 401 com desafio de autenticação. Login e execução ainda pendentes.",
+      "entry": {
+        "name": "Atlassian",
+        "transport": "http",
+        "url": "https://mcp.atlassian.com/v2/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:48:30.286Z"
+      }
     },
     {
       "id": "slack",
@@ -684,42 +695,42 @@
     {
       "id": "google-drive",
       "name": "Google Drive",
-      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "gmail",
       "name": "Gmail",
-      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-calendar",
       "name": "Google Calendar",
-      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-docs",
       "name": "Google Docs",
-      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-sheets",
       "name": "Google Sheets",
-      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },
     {
       "id": "google-slides",
       "name": "Google Slides",
-      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "requirement": "Configurador implementado. Pendente: acesso Google Workspace Developer Preview, APIs habilitadas e JSON OAuth próprio.",
       "entry": null,
       "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
     },

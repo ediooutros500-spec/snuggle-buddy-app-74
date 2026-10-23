@@ -2,14 +2,22 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 import { createRequire } from "node:module";
+import { googleDefinitions } from "./google-desktop-mcp.mjs";
 const registry = createRequire(import.meta.url)("../backend/mcp/registry.json").connectors;
 
 // Changes only the active third-party profile, with a private backup and an atomic rename.
-export function configureDesktopMcp(root, apply = false, connector = "context7") {
+export function configureDesktopMcp(
+  root,
+  apply = false,
+  connector = "context7",
+  googleOauth = null,
+) {
   const choices =
-    connector === "all"
-      ? registry.filter((x) => x.entry)
-      : registry.filter((x) => x.id === connector && x.entry);
+    connector === "google"
+      ? googleDefinitions(googleOauth)
+      : connector === "all"
+        ? registry.filter((x) => x.entry)
+        : registry.filter((x) => x.id === connector && x.entry);
   if (!choices.length) throw Error("Conector fora do piloto aprovado ou com requisitos pendentes.");
   const entry = choices[0].entry;
   const library = path.join(root, "configLibrary");
@@ -81,8 +89,19 @@ if (
         : path.join(os.homedir(), "Library/Application Support/Claude-3p");
     const option = process.argv.indexOf("--connector");
     const connector = option < 0 ? "context7" : process.argv[option + 1];
+    let googleOauth = null;
+    if (connector === "google") {
+      const fileOption = process.argv.indexOf("--google-oauth-file");
+      if (fileOption < 0 || !process.argv[fileOption + 1])
+        throw Error(
+          "Informe --google-oauth-file com o JSON privado do Google Cloud. Não envie a credencial no chat.",
+        );
+      googleOauth = JSON.parse(fs.readFileSync(process.argv[fileOption + 1], "utf8"));
+    }
     console.log(
-      JSON.stringify(configureDesktopMcp(root, process.argv.includes("--apply"), connector)),
+      JSON.stringify(
+        configureDesktopMcp(root, process.argv.includes("--apply"), connector, googleOauth),
+      ),
     );
   } catch (error) {
     console.error(error.message);

@@ -47,8 +47,8 @@ test("Desktop pilot preserves credentials, backups, other connectors and is idem
     const allResult = configureDesktopMcp(root, true, "all");
     assert.equal(allResult.applied, true);
     const allProfile = JSON.parse(fs.readFileSync(file));
-    assert.equal(allProfile.managedMcpServers.length, 31);
-    assert.equal(new Set(allProfile.managedMcpServers.map((x) => x.name)).size, 31);
+    assert.equal(allProfile.managedMcpServers.length, 32);
+    assert.equal(new Set(allProfile.managedMcpServers.map((x) => x.name)).size, 32);
     assert.equal(allProfile.inferenceGatewayApiKey, original.inferenceGatewayApiKey);
     assert.ok(allResult.pending.some((x) => x.name === "Gmail"));
     assert.equal(configureDesktopMcp(root, true, "all").alreadyPresent, true);

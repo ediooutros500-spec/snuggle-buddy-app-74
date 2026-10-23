@@ -73,3 +73,7 @@ A configuração fica no computador do cliente. Apenas mudar o backend na VPS n�
 ## Limites dos testes
 
 32 endpoints sondados, sem credenciais: quatro initialize/tools-list aprovados; 26 exigem login; dois negaram acesso (Adobe e QuickBooks, retirados da instalação automática). Spotify exigiu autenticação apesar da descrição do diretório. AWS e Cloudflare neste lote são servidores de documentação pública, não administração das contas. Nenhuma ferramenta de pagamento, imagem ou vídeo foi executada. Os logins devem ser testados individualmente no aplicativo.
+
+## Atualização posterior
+
+31 definições instaláveis após acrescentar Atlassian v2. Google tem configurador implementado, porém permanece sem ativação: ainda faltam acesso ao Developer Preview e OAuth próprio. Supabase e Lovable conferidos no perfil ativo. Os números anteriores representam a etapa anterior.
