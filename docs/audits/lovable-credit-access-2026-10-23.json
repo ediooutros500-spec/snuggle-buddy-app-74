@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-23T18:17:17.042Z",
+  "credentialSource": "same existing active project AI credential for all three probes; value omitted",
+  "rows": [
+    {
+      "endpoint": "https://ai.gateway.lovable.dev/v1/chat/completions",
+      "status": 402,
+      "hasAuthChallenge": false
+    },
+    {
+      "endpoint": "https://mcp.lovable.dev",
+      "status": 401,
+      "hasAuthChallenge": true
+    },
+    {
+      "endpoint": "https://api.lovable.dev/v1/workspaces",
+      "status": 401,
+      "hasAuthChallenge": true
+    }
+  ],
+  "balanceDataObserved": false,
+  "renewalDataObserved": false,
+  "modelTest": "one minimal text request, max_tokens=1; no image/video/embeddings"
+}

@@ -2,6 +2,34 @@
 
 Investigação em 23/10/2026. Não implementado; nenhum saldo real foi consultado nesta etapa.
 
+## Resultado da investigação no repositório remixável
+
+Repositório confirmado: ediooutros500-spec/snuggle-buddy-app-74. O cadastro atual está em src/lib/child-handshake.server.ts e lê as configurações de src/lib/child-config.server.ts. Envia somente a chave de inferência, origem e rótulos. Os arquivos locais de ambiente contêm nomes de chave, mas nenhum valor local utilizável de LOVABLE_API_KEY; por isso a prova utilizou uma credencial já cadastrada no pool central, sem exibir nem salvar seu valor.
+
+Teste em 23/10/2026 com a MESMA credencial de projeto nos três serviços:
+
+| Operação | HTTP | Resultado observado |
+| --- | --- | --- |
+| Uma chamada mínima de texto ao AI Gateway | 402 | Recusa por pagamento/créditos; corpo descartado, não foi possível quantificar saldo ou identificar renovação |
+| initialize do MCP Lovable com a chave como Bearer | 401 | Exige outra autorização; não retornou saldo |
+| GET /v1/workspaces da API pública com Lovable-API-Key | 401 | Chave do projeto não autorizou consulta administrativa |
+
+A situação “active” no cadastro não é prova de crédito disponível. O resultado 402 também não demonstra saldo numérico zero ou próxima data de reposição. A listagem pública de modelos retornou 200 até sem uma chave válida e, portanto, não serve para validar acesso de faturamento.
+
+Conclusão de viabilidade: não foi encontrado um caminho oficial funcional de saldo/renovação automático usando apenas o segredo de inferência herdado pelo remix. As respostas acima comprovam a recusa da credencial testada, não a impossibilidade de toda integração futura. Não acrescentar ao gatilho campos fictícios, um total calculado a partir de quotas locais ou uma data universal de reset.
+
+O próximo desbloqueio é uma autorização OAuth de usuário para executar list_workspaces/get_workspace no MCP oficial. Não havia ferramenta Lovable autenticada disponível nesta sessão. Conexão configurada em outro aplicativo não fornece automaticamente autorização ao backend da central ou do remix. Ainda é necessário observar o retorno real, verificar os campos de créditos e descobrir se há dados de ciclo de cobrança; a documentação confirma saldo em get_workspace, mas não confirma uma data de renovação nessa resposta.
+
+- [x] Inspecionar gatilho, configuração, planos e cadastro do repositório remixável.
+- [x] Testar uma credencial real do pool central contra MCP e API administrativa, sem exposição de segredo.
+- [x] Executar um teste mínimo de texto; sem imagem, vídeo ou embeddings.
+- [x] Conferir a limitação explícita da API REST para saldo/consumo na documentação oficial.
+- [ ] Autorizar consulta MCP no contexto que poderá executar a integração e obter um saldo real.
+- [ ] Validar campo oficial de renovação; se ausente, não inventar data.
+- [ ] Implementar envio periódico pelo remix, persistência e soma por workspace somente após validar a fonte real.
+
+Evidência resumida, sem credenciais: docs/audits/lovable-credit-access-2026-10-23.json.
+
 ## O que foi confirmado
 
 - O remix atual registra LOVABLE_API_KEY, origem e rótulos na central. Não consulta saldo nem ciclo de faturamento.

@@ -128,3 +128,9 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [x] Ícones aplicados ao perfil local; conferência posterior: 39 entradas, nenhum remoto sem ícone, GitHub nativo preservado e nenhuma atualização adicional necessária.
 - [ ] Reabrir Claude e conferir visualmente os 38 ícones remotos. GitHub preserva aparência nativa do aplicativo.
 
+## Viabilidade de saldo automático pelo remix — 23/10/2026
+
+- [x] Investigar repositório e documentação oficial; detalhamento em PLANO-CREDITOS-LOVABLE.md.
+- [x] Uma credencial real de projeto: AI Gateway 402, MCP initialize 401 e API administrativa /v1/workspaces 401. Nenhum saldo ou renovação retornado; chave não exposta.
+- [ ] Integração ainda não entregue: depende de autorização apropriada e prova de leitura real de saldo; API REST documenta ausência de endpoints de créditos.
+
