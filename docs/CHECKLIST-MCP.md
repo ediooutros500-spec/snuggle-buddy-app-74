@@ -91,3 +91,10 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [ ] Próxima etapa: validar uma consulta somente leitura por serviço (Drive, Docs, Agenda, Gmail, Sheets e Slides), seguida do ciclo ferramenta → modelo nas famílias Claude, OpenAI e Gemini. Não marcar aprovação individual sem resposta observada.
 - [ ] Distribuição para outros clientes: preparar configuração por cliente sem credenciais pessoais do administrador; instalação neste computador não equivale a distribuição pela VPS.
 
+## Diagnóstico Google Drive — 23/10/2026
+
+- [x] Conferir log local do Claude: login Drive em 11:25:53 concluiu e salvou tokens; em 11:25:54, conexão autenticada ao MCP retornou HTTP 403. Valores privados omitidos.
+- [x] Sondagem sem credenciais: initialize e tools/list retornaram 200, com oito ferramentas anunciadas. Descoberta pública não comprova acesso autenticado aos dados.
+- [ ] Confirmar no projeto `gateway-mcp-512513` as APIs `drive.googleapis.com` e `drivemcp.googleapis.com` habilitadas e o acesso ao Google Workspace Developer Preview. Não foi possível confirmar essa configuração pela conta proprietária nesta sessão.
+- [ ] Repetir conexão e consulta somente leitura depois de confirmar os requisitos. O motivo específico do 403 não veio no registro observado; habilitação e preview são hipóteses a verificar, não causa comprovada.
+
