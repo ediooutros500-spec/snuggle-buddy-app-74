@@ -64,3 +64,12 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [x] Regressões do perfil e validação Google aprovadas.
 - [ ] Google: usuário informou não ter OAuth App; criar projeto/app e confirmar acesso ao Developer Preview antes da ativação. Ver GOOGLE-MCP-ATIVACAO.md.
 - [ ] Google: autorizar seis contas/serviços e testar ferramentas depois de atender aos requisitos.
+
+## Configuração Google aplicada — 23/10/2026
+
+- [x] JSON OAuth fornecido pelo usuário validado localmente; seis callbacks web conferidos.
+- [x] Seis conectores acrescentados ao perfil ativo: Gmail, Drive, Calendar, Docs, Sheets, Slides. Total: 37 definições.
+- [x] Reaplicação confirmou que todos já estão presentes, sem duplicação.
+- [ ] Login individual e execução de ferramenta por serviço; APIs e acesso ao preview ainda dependem da validação no Google.
+- [x] Credenciais mantidas apenas nos arquivos privados locais; não incluídas no repositório.
+
