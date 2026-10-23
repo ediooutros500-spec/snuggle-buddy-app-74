@@ -10,7 +10,9 @@ Atualizado em 23/10/2026. Arquitetura: cliente configura MCP na própria IDE/CLI
 - [x] Identificar servidores de referência e validações pendentes.
 - [x] Auditar encaminhamento nativo Anthropic: corpo preservado por spread; campos de ferramentas não removidos.
 - [x] 91 regressões passaram, incluindo preservação de campos MCP no caminho nativo Anthropic.
-- [ ] Publicar catálogo na VPS e verificar endereço público.
+- [x] Publicado na VPS em 23/10/2026: /admin/mcp e /mcp/guias.md retornam HTTP 200; 30 prompts conferidos.
+- [x] TypeScript e lint dos novos módulos aprovados; compilação Node e imagem Linux aprovadas.
+- [x] Três serviços do gateway saudáveis, 26 outros contêineres preservados e StarChef HTTP 200.
 - [ ] Validar cada um dos 30 serviços em IDE real, com credenciais próprias autorizadas para esse teste.
 - [ ] Validar ciclo completo por família/modelo (Claude, OpenAI, Gemini), streaming, chamadas paralelas e erros.
 - [ ] Validar suporte upstream a busca dinâmica de ferramentas do Claude Code (`defer_loading`, `tool_reference`). Preservar campos no gateway não comprova aceitação pelo provedor.
