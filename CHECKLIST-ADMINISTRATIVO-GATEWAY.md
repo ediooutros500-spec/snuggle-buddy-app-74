@@ -190,3 +190,15 @@ Contrato e checklist detalhado: [ORIGEM-LOVABLE-E-CATALOGO-16.md](docs/ORIGEM-LO
 - [ ] Prosseguir separadamente com Responses público, jobs de vídeo e os demais requisitos ainda abertos; não declarar todo o plano concluído por essa entrega.
 
 Relatório e evidências: [CONFIGURACAO-MODELOS-TEXTO.md](docs/CONFIGURACAO-MODELOS-TEXTO.md).
+
+## Correção de compatibilidade Claude/Cowork — 22/10/2026
+
+- [x] Reproduzir HTTP 400 com o texto da imagem usando uma mensagem system intermediária em Opus 5.5.
+- [x] Confirmar suporte no contrato atual da Anthropic e no Lovable real; aceitar system sem mover, apagar ou rebaixar instruções.
+- [x] Manter a recusa de papéis desconhecidos e impedir conversão desse recurso para outros provedores como texto de usuário.
+- [x] 80 testes, tipos, builds Lovable/Node, smoke e GitHub Actions aprovados. Lint sem erros e seis avisos anteriores.
+- [x] Implantar dfb9ccca68ed na VPS; mesmo pedido agora HTTP 200 e OK em JSON e SSE. Pedido comum preservado; entradas inválidas e conversão incompatível retornam HTTP 400.
+- [x] Conferir cinco IDs no histórico e remover clientes/chaves temporários, mantendo os logs reais. 26 containers anteriores intactos e StarChef readiness HTTP 200.
+- [ ] Confirmar o botão Tentar novamente na conversa real do Claude/Cowork; teste HTTP reproduzido não equivale a clique no aplicativo.
+
+Detalhes e fontes: [CORRECAO-SYSTEM-MESSAGES.md](docs/CORRECAO-SYSTEM-MESSAGES.md).
