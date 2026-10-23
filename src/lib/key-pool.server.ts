@@ -114,6 +114,15 @@ export async function fetchGatewayWithFailover(
   let lastKeyHint: string | undefined;
   let lastFailure: ProviderFailure | undefined;
   const triedKeys = new Set<string>();
+  // Lovable rejects this client marker. Keep all feature betas and the native body intact.
+  const beta =
+    new URL(url).origin === "https://ai.gateway.lovable.dev"
+      ? protocolHeaders.beta
+          ?.split(",")
+          .map((value) => value.trim())
+          .filter((value) => value && value !== "claude-code-20250219")
+          .join(",")
+      : protocolHeaders.beta;
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const apiKey = await getNextApiKey(triedKeys);
@@ -131,7 +140,7 @@ export async function fetchGatewayWithFailover(
           ...(url.endsWith("/messages")
             ? {
                 "anthropic-version": protocolHeaders.version || "2023-06-01",
-                ...(protocolHeaders.beta ? { "anthropic-beta": protocolHeaders.beta } : {}),
+                ...(beta ? { "anthropic-beta": beta } : {}),
               }
             : {}),
         },

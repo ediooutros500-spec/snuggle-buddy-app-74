@@ -474,4 +474,24 @@ test("pool forwarding attaches provider credentials and native protocol headers 
   assert.equal(calls[0].init.headers["anthropic-beta"], "test-beta");
   assert.equal(calls[0].init.headers.authorization, undefined);
   assert.equal(calls[0].init.redirect, "manual");
+  const payload = {
+    model: "anthropic/claude-fable-5-1",
+    tools: [{ name: "test", input_schema: { type: "object" } }],
+    thinking: { type: "adaptive" },
+    messages: [{ role: "user", content: "test" }],
+  };
+  for (const [url, beta, expected] of [
+    ["https://ai.gateway.lovable.dev/v1/messages", "claude-code-20250219", undefined],
+    [
+      "https://ai.gateway.lovable.dev/v1/messages",
+      "claude-code-20250219, interleaved-thinking-2025-05-14,inline-tools-2026-09-15",
+      "interleaved-thinking-2025-05-14,inline-tools-2026-09-15",
+    ],
+    ["https://api.anthropic.com/v1/messages", "claude-code-20250219", "claude-code-20250219"],
+  ]) {
+    await fetchGatewayWithFailover(url, payload, 1, { beta });
+    const sent = calls.at(-1).init;
+    assert.equal(sent.headers["anthropic-beta"], expected);
+    assert.deepEqual(JSON.parse(sent.body), payload);
+  }
 });
