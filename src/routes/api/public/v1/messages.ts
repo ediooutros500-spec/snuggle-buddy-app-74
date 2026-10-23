@@ -160,12 +160,8 @@ export const Route = createFileRoute("/api/public/v1/messages")({
           if (isAnthropic && (!/^\d{4}-\d{2}-\d{2}$/.test(version) || beta.length > 2048))
             return anthropicError(400, "invalid_request_error", "Cabeçalhos Anthropic inválidos.");
 
-          const { upstream, networkError, workerKeyHint } = await fetchGatewayWithFailover(
-            url,
-            payload,
-            3,
-            isAnthropic ? { version, beta } : {},
-          );
+          const { upstream, networkError, workerKeyHint, providerFailure } =
+            await fetchGatewayWithFailover(url, payload, 3, isAnthropic ? { version, beta } : {});
 
           trace.workerKeyHint = workerKeyHint;
 
@@ -183,6 +179,13 @@ export const Route = createFileRoute("/api/public/v1/messages")({
 
           // Registrar métricas de telemetria se houver cliente
           if (!upstream.ok) {
+            trace.errorDiagnostic = providerFailure?.diagnostic;
+            if ([400, 404, 409, 413, 422].includes(upstream.status))
+              return anthropicError(
+                upstream.status,
+                providerFailure?.type || "invalid_request_error",
+                providerFailure?.message || "O provedor recusou os parâmetros da solicitação.",
+              );
             if (upstream.status === 429)
               return anthropicError(
                 429,

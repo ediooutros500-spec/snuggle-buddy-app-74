@@ -2,6 +2,7 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { safeEqual } from "./claude-compat.server";
 import { getChildConfig } from "./child-config.server";
 import { triggerChildHandshake } from "./child-handshake.server";
+import { readProviderFailure, type ProviderFailure } from "./provider-errors.server";
 
 export const REMIX_SYNC_SECRET = getChildConfig().remixSyncSecret;
 
@@ -106,10 +107,12 @@ export async function fetchGatewayWithFailover(
   networkError: boolean;
   workerKeyHint?: string | undefined;
   attemptsCount: number;
+  providerFailure?: ProviderFailure | undefined;
 }> {
   let lastUpstream: Response | null = null;
   let sawNetworkError = false;
   let lastKeyHint: string | undefined;
+  let lastFailure: ProviderFailure | undefined;
   const triedKeys = new Set<string>();
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -136,6 +139,10 @@ export async function fetchGatewayWithFailover(
         body: JSON.stringify(payload),
       });
       lastUpstream = res;
+      lastFailure =
+        !res.ok && /\/v1\/(messages|responses|chat\/completions)$/.test(url)
+          ? await readProviderFailure(res, apiKey)
+          : undefined;
       sawNetworkError = false;
 
       if (res.status === 429 || res.status === 402) {
@@ -159,6 +166,7 @@ export async function fetchGatewayWithFailover(
         networkError: false,
         workerKeyHint: lastKeyHint,
         attemptsCount: attempt,
+        providerFailure: lastFailure,
       };
     } catch {
       sawNetworkError = true;
@@ -169,6 +177,7 @@ export async function fetchGatewayWithFailover(
     networkError: !lastUpstream && sawNetworkError,
     workerKeyHint: lastKeyHint,
     attemptsCount: triedKeys.size,
+    providerFailure: lastFailure,
   };
 }
 

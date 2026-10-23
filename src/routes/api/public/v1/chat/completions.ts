@@ -123,11 +123,8 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
             );
           }
 
-          const { upstream, networkError, workerKeyHint } = await fetchGatewayWithFailover(
-            url,
-            payload,
-            3,
-          );
+          const { upstream, networkError, workerKeyHint, providerFailure } =
+            await fetchGatewayWithFailover(url, payload, 3);
 
           trace.workerKeyHint = workerKeyHint;
 
@@ -140,6 +137,13 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           }
 
           if (!upstream.ok) {
+            trace.errorDiagnostic = providerFailure?.diagnostic;
+            if ([400, 404, 409, 413, 422].includes(upstream.status))
+              return openaiError(
+                upstream.status,
+                providerFailure?.message || "O provedor recusou os parâmetros da solicitação.",
+                providerFailure?.type || "invalid_request_error",
+              );
             if (upstream.status === 429)
               return openaiError(
                 429,

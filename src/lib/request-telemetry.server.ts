@@ -10,6 +10,7 @@ export type RequestTrace = {
   streaming?: boolean;
   passThrough?: boolean;
   usage?: Accumulated;
+  errorDiagnostic?: string | undefined;
   finish: (acc: Accumulated | null, error?: boolean) => Promise<void>;
 };
 export async function withRequestTelemetry(
@@ -45,7 +46,7 @@ export async function withRequestTelemetry(
           error_message: error
             ? "Falha ao concluir resposta ou stream"
             : status >= 400
-              ? `HTTP ${status}`
+              ? trace.errorDiagnostic || `HTTP ${status}`
               : null,
         });
         if (result.error) console.warn("[gateway] request_log_write_failed", { requestId: id });
