@@ -1,5 +1,11 @@
 export const ADMIN_SECTIONS = [
   {
+    id: "mcp",
+    label: "Conectores MCP",
+    description: "Guias e prompts para conectar suas próprias contas na IDE ou CLI.",
+    group: "Ferramentas",
+  },
+  {
     id: "overview",
     label: "Dashboard",
     description: "Disponibilidade das conexões e atividade do gateway.",
