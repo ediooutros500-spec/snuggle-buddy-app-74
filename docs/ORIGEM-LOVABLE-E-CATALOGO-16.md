@@ -59,7 +59,9 @@ Esses são alvos da próxima implementação, ainda não ativados. A versão atu
 - [x] Manter envio servidor → central no nosso subdomínio HTTPS e modo automático existente.
 - [x] 62 testes, tipos e build Lovable aprovados; lint sem erros e seis avisos anteriores.
 - [x] Registrar os 16 modelos desejados, contratos, aliases e diferenças da versão publicada.
-- [ ] Sincronizar commits com GitHub e publicar a origem no Lovable: autenticação GitHub local inválida.
+- [x] Sincronizar os 40 commits com GitHub: em 22/10/2026, após nova autenticação `gh`, `gh auth setup-git` corrigiu o helper e `git fetch origin main` confirmou 0 atrás/40 à frente, com fast-forward seguro. `git push origin main` concluiu (exit 0), de `f0d5b508aaa76089e3e97d1c22d0452ffae328cc` para `c186100ef632bb6b0a5de70417a66474a0055cd1`. `git ls-remote origin refs/heads/main` confirmou o SHA; GitHub Actions workflow `Validate gateway` concluiu `success` nesse SHA (criado em 2026-10-23T00:14:47Z). Alterações locais não commitadas preservadas; nenhum force push ou reset.
+- [ ] Confirmar sincronização no editor Lovable e publicar a origem: GitHub conectado deveria receber alterações via Git sync, mas nenhum acesso autenticado ao editor/publicação Lovable foi confirmado nesta sessão. Push não equivale à publicação. GitHub API `deployments` retornou lista vazia (isso não determina o estado de hospedagem Lovable). Exigir confirmação da versão no Lovable e publicação manual/autorizada antes de marcar concluído.
+- [x] Validar cópia isolada do commit `c186100` em worktree destacado: `npm test` 62/62; `npm run typecheck`, `npm run build` (Lovable/Vite) e `npm run build:parent` (Node) com exit 0. Na pasta original não limpa, `npm test` resultou 59/62, indicando interferência das alterações não commitadas; preservadas sem `git add .`.
 - [ ] Validar um remix real com chave própria, confirmação na central e teste de geração.
 - [ ] Implementar e testar Anthropic nativo e os modelos novos; depois ativar catálogo/aliases no painel e `/v1/models`.
 - [ ] Implementar `/v1/responses` público e ciclo completo de jobs de vídeo, com propriedade do job, consulta e expiração.
