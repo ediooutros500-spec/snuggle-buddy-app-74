@@ -2,15 +2,15 @@
  * GET /api/public/v1/models
  *
  * Descoberta de modelos no formato OpenAI/Anthropic:
- * Inclui tanto os modelos nativos do gateway quanto os aliases do Claude Code.
+ * Uma opção por modelo real; aliases continuam aceitos nas requisições.
  */
 import { createFileRoute } from "@tanstack/react-router";
 import {
   anthropicError,
   CORS_HEADERS,
   authenticateGatewayRequest,
-  MODEL_ALIASES,
 } from "@/lib/claude-compat.server";
+import { MODEL_DISPLAY_NAMES } from "@/lib/model-names";
 import {
   enforcePolicyRate,
   MODEL_CATALOG,
@@ -38,10 +38,16 @@ export const Route = createFileRoute("/api/public/v1/models")({
         try {
           const settings = await readGatewaySettings();
           enforcePolicyRate(auth, settings);
-          const ids = [...MODEL_CATALOG.map((x) => x.id), ...Object.keys(MODEL_ALIASES)];
+          const ids = [...new Set(MODEL_CATALOG.map((x) => x.id))];
           data = ids
             .filter((id) => modelPermitted(id, auth, settings))
-            .map((id) => ({ id, object: "model" }));
+            .map((id) => ({
+              id,
+              object: "model",
+              name: MODEL_DISPLAY_NAMES[id] ?? id,
+              display_name: MODEL_DISPLAY_NAMES[id] ?? id,
+              owned_by: id.split("/")[0],
+            }));
         } catch (error) {
           return policyErrorResponse(error);
         }
