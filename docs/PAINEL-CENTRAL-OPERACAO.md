@@ -32,10 +32,12 @@ O backup deve incluir todo o volume administrativo, além do banco central. A tr
 - [x] Implementar persistência, expiração e limite por ID de dispositivo, sem alteração de schema no Supabase.
 - [x] Reorganizar histórico, configurações, senha, testes e tutoriais.
 - [x] 90 testes, tipos, builds Lovable/Node e smoke aprovados; lint sem erros e seis avisos anteriores. Prévia revisada em largura de celular e desktop, com dados reais e seleção por famílias.
-- [ ] Commit revisado e envio ao GitHub.
-- [ ] Backup do volume administrativo, publicação e verificações HTTPS na VPS.
-- [ ] Verificar cliente temporário com trava, identidade no teste, edição de prazo e persistência após reinício; removê-lo e preservar logs reais.
-- [ ] Confirmar os outros projetos da VPS e o registro automático existentes.
+- [x] Código b280a9390747 enviado ao GitHub; GitHub Actions aprovado.
+- [x] Volume administrativo copiado para o release privado antes da implantação. Imagem b280a9390747 saudável na VPS; oito páginas e redirecionamentos legados conferidos por HTTPS.
+- [x] Doze verificações HTTPS aprovadas: exclusão de conta descartável desativada, rejeição de origem indevida, trava/ausência de ID, Claude nativo, teste OpenAI por cliente, renovação de prazo, liberação de vagas, consumo detalhado e persistência depois de reiniciar o parent. Cliente/chave temporários removidos e dois logs reais preservados.
+- [x] Gator/proxy preservados e saudáveis; os 26 containers anteriores permaneceram intactos e StarChef readiness respondeu HTTP 200. Cadastro automático permanece inalterado e seus testes passaram; não foi criado um novo remix para esta revisão.
 - [ ] Tratar o painel remixável em uma próxima etapa, conforme a ordem pedida.
 
 Fontes dos tutoriais: [Claude Code](https://code.claude.com/docs/en/llm-gateway), [Cline](https://docs.cline.bot/provider-config/openai-compatible), [Continue](https://docs.continue.dev/customize/model-providers/top-level/openai), [Cursor](https://cursor.com/help/models-and-usage/api-keys). Ícones locais: Simple Icons, arquivos Anthropic e Google Gemini da revisão develop; OpenAI da versão 13.21.0, preservando os paths SVG publicados. Não são buscados por CDN no navegador.
+
+Evidência: [verificação HTTPS](audits/central-panel-redesign-2026-10-22.json). A expiração no instante limite e a concorrência de dispositivos foram verificadas com relógio controlado nos testes locais; a VPS confirmou renovação e persistência de prazo, sem esperar dias artificiais.

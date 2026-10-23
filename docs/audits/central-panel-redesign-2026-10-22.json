@@ -1,0 +1,24 @@
+{
+  "checkedAt": "2026-10-23T02:20:06.066Z",
+  "checks": [
+    "Eight pages and legacy redirects",
+    "Automatic account labels without workspace",
+    "Account deletion rejects cross-origin writes",
+    "Disposable disabled account deleted through admin API",
+    "Device missing and second device blocked; first device accepted",
+    "Native Claude alias and beta compatibility preserved",
+    "Playground checks selected client and returns real OpenAI response",
+    "Device slots reset and validity renewed",
+    "Consumption details reflect both real requests",
+    "Expiry and device policy survive parent restart",
+    "Account numbering survives deletion and restart",
+    "Temporary client removed; real logs retained"
+  ],
+  "readyForRestart": true,
+  "requestIds": [
+    "1e5673b0-7d3e-4951-9d65-6a949983dd5c",
+    "58d9b473-f541-4315-8485-937e6989ed7a"
+  ],
+  "temporaryClientRemoved": true,
+  "logsRetained": true
+}

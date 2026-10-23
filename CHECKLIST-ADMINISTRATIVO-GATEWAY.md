@@ -221,3 +221,18 @@ Detalhes e evidências: [CORRECAO-CLAUDE-CODE-BETA.md](docs/CORRECAO-CLAUDE-CODE
 - [ ] Confirmar o seletor do aplicativo do usuário depois de atualizar a descoberta; a API fornece nomes amigáveis, mas a apresentação final depende do cliente.
 
 Detalhes: [CATALOGO-NOMES-AMIGAVEIS.md](docs/CATALOGO-NOMES-AMIGAVEIS.md).
+
+## Revisão do painel central — 22/10/2026
+
+- [x] Dashboard com gráficos de tráfego, ranking, sucesso, latência e consumo; remover o onboarding e elementos promocionais indicados.
+- [x] Contas no lugar de Conexões Lovable; numeração automática persistente sem workspace, exclusão, ativação e limites diários.
+- [x] Clientes com validade de 1, 7, 15 ou 30 dias; seleção de modelos por família/ícones/checkbox e todos quando vazio. Clientes existentes mantêm os prazos até edição explícita.
+- [x] Trava por X-Device-ID, contagem de identificadores, últimos acessos e liberação de vagas; expiração/limites validados no servidor e guardados no volume persistente. Identificação declarada pelo aplicativo, sem inferir aparelhos por IP.
+- [x] Histórico centralizado em Modelos; consumo com filtros por cliente/modelo, entrada/saída, erros, sucesso e latência. Controles globais e senha em Configurações; retirar Equipe/auditoria da navegação.
+- [x] Testar API com seleção de cliente/família e conferência da chave no servidor. Tutoriais separados por ferramenta/família, com fontes oficiais.
+- [x] 90 testes, tipos, lint sem erros e seis avisos anteriores, builds Lovable/Node, smoke e GitHub Actions aprovados. Revisão visual em celular e desktop.
+- [x] Commit b280a9390747 implantado na VPS após backup do volume administrativo. Doze verificações HTTPS aprovadas, incluindo Claude/OpenAI reais, exclusão descartável e persistência de prazo/dispositivos depois de reiniciar o parent. Cliente temporário removido, logs preservados.
+- [x] Gator, proxy, 26 containers anteriores e StarChef preservados; gatilho de cadastro automático sem alteração, coberto pela bateria local. Nenhuma inferência de imagem, vídeo ou embeddings executada.
+- [ ] Próxima etapa: revisar o painel remixável, conforme a ordem solicitada. Um novo remix não foi criado nesta entrega.
+
+Detalhes, limites da identificação e evidências: [PAINEL-CENTRAL-OPERACAO.md](docs/PAINEL-CENTRAL-OPERACAO.md).
