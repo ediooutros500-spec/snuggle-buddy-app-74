@@ -118,3 +118,13 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [ ] Reabrir o Claude e confirmar GitHub na seção Conectores.
 - [ ] Concluir autorização por Device Flow e executar o prompt somente leitura em GITHUB-MCP-ATIVACAO.md. Receber o Client ID não comprova que o Device Flow foi habilitado no GitHub.
 
+## Ícones dos conectores — 23/10/2026
+
+- [x] Conferir as 39 definições locais: 38 remotas sem ícone explícito e GitHub nativo.
+- [x] Confirmar campo `icon` documentado no Claude para conectores remotos; PNG incorporado, até 4.096 caracteres.
+- [x] Obter e conferir 38 ícones dos sites dos fornecedores; corrigir Docs para ter ícone próprio, distinto do Drive.
+- [x] Atualizador de ícones com backup privado, preservação dos campos e repetição sem duplicação; configurador principal inclui ícones em novas entradas.
+- [x] Cinco testes focados aprovados: formatos/tamanhos, seis ícones Google distintos, preservação do perfil/OAuth e configuradores existentes.
+- [x] Ícones aplicados ao perfil local; conferência posterior: 39 entradas, nenhum remoto sem ícone, GitHub nativo preservado e nenhuma atualização adicional necessária.
+- [ ] Reabrir Claude e conferir visualmente os 38 ícones remotos. GitHub preserva aparência nativa do aplicativo.
+

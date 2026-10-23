@@ -4,6 +4,7 @@ import os from "node:os";
 import { createRequire } from "node:module";
 import { googleDefinitions } from "./google-desktop-mcp.mjs";
 import { githubDefinitions } from "./github-desktop-mcp.mjs";
+import { withConnectorIcon } from "./desktop-mcp-icons.mjs";
 const registry = createRequire(import.meta.url)("../backend/mcp/registry.json").connectors;
 
 // Changes only the active third-party profile, with a private backup and an atomic rename.
@@ -39,7 +40,7 @@ export function configureDesktopMcp(
     throw Error("Lista MCP existente inválida. Nenhum arquivo foi alterado.");
   const servers = profile.managedMcpServers || [];
   const additions = choices
-    .map((x) => x.entry)
+    .map((x) => withConnectorIcon(x.entry))
     .filter(
       (entry) =>
         !servers.some(
