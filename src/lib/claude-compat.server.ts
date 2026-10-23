@@ -9,12 +9,20 @@ import { storedClientKey } from "./client-keys.server";
 
 export const EXPERIMENTAL_NOTICE =
   "Gateway experimental compatível com Claude Code. Não é a API oficial da Anthropic; " +
-  "as requisições são traduzidas para o Lovable AI Gateway.";
+  "modelos Anthropic usam Messages nativo no Lovable; outros modelos usam conversão de formato.";
 
 export const DEFAULT_MODEL = "google/gemini-3.6-flash";
 
 /** Allowlist configurável no backend. */
 export const ALLOWED_MODELS = [
+  "anthropic/claude-opus-5-5",
+  "anthropic/claude-opus-5",
+  "anthropic/claude-sonnet-5",
+  "anthropic/claude-haiku-4-5",
+  "anthropic/claude-fable-5-1",
+  "openai/gpt-6-astra",
+  "openai/gpt-6.1-sol",
+  "google/gemini-4-argon",
   "google/gemini-3.6-flash",
   "google/gemini-3.5-flash",
   "google/gemini-3.1-flash-lite",
@@ -30,25 +38,29 @@ export const ALLOWED_MODELS = [
 
 /** Nomes estilo Claude Code e OpenAI mapeados para modelos reais do gateway. */
 export const MODEL_ALIASES: Record<string, string> = {
-  "claude-3-5-haiku": "google/gemini-3.6-flash",
-  "claude-3-5-haiku-latest": "google/gemini-3.6-flash",
-  "claude-3-5-haiku-20241022": "google/gemini-3.6-flash",
-  "claude-haiku-4-5": "google/gemini-3.6-flash",
-  "claude-haiku-4-5-20251001": "google/gemini-3.6-flash",
-  "claude-3-5-sonnet": "openai/gpt-5.6-terra",
-  "claude-3-5-sonnet-latest": "openai/gpt-5.6-terra",
-  "claude-3-5-sonnet-20241022": "openai/gpt-5.6-terra",
-  "claude-3-7-sonnet-latest": "openai/gpt-5.6-sol",
-  "claude-3-7-sonnet-20250219": "openai/gpt-5.6-sol",
-  "claude-sonnet-4": "openai/gpt-5.6-sol",
-  "claude-sonnet-4-latest": "openai/gpt-5.6-sol",
-  "claude-sonnet-4-20250514": "openai/gpt-5.6-sol",
-  "claude-sonnet-4-5": "openai/gpt-5.6-sol",
-  "claude-sonnet-4-5-20250929": "openai/gpt-5.6-sol",
-  "claude-opus-4": "openai/gpt-5.5",
-  "claude-opus-4-latest": "openai/gpt-5.5",
-  "claude-opus-4-20250514": "openai/gpt-5.5",
-  "claude-opus-4-1": "openai/gpt-5.5-pro",
+  "claude-opus-5-5": "anthropic/claude-opus-5-5",
+  "claude-opus-5": "anthropic/claude-opus-5",
+  "claude-sonnet-5": "anthropic/claude-sonnet-5",
+  "claude-fable-5-1": "anthropic/claude-fable-5-1",
+  "claude-3-5-haiku": "anthropic/claude-haiku-4-5",
+  "claude-3-5-haiku-latest": "anthropic/claude-haiku-4-5",
+  "claude-3-5-haiku-20241022": "anthropic/claude-haiku-4-5",
+  "claude-haiku-4-5": "anthropic/claude-haiku-4-5",
+  "claude-haiku-4-5-20251001": "anthropic/claude-haiku-4-5",
+  "claude-3-5-sonnet": "anthropic/claude-sonnet-5",
+  "claude-3-5-sonnet-latest": "anthropic/claude-sonnet-5",
+  "claude-3-5-sonnet-20241022": "anthropic/claude-sonnet-5",
+  "claude-3-7-sonnet-latest": "anthropic/claude-sonnet-5",
+  "claude-3-7-sonnet-20250219": "anthropic/claude-sonnet-5",
+  "claude-sonnet-4": "anthropic/claude-sonnet-5",
+  "claude-sonnet-4-latest": "anthropic/claude-sonnet-5",
+  "claude-sonnet-4-20250514": "anthropic/claude-sonnet-5",
+  "claude-sonnet-4-5": "anthropic/claude-sonnet-5",
+  "claude-sonnet-4-5-20250929": "anthropic/claude-sonnet-5",
+  "claude-opus-4": "anthropic/claude-opus-5-5",
+  "claude-opus-4-latest": "anthropic/claude-opus-5-5",
+  "claude-opus-4-20250514": "anthropic/claude-opus-5-5",
+  "claude-opus-4-1": "anthropic/claude-opus-5-5",
   "gpt-4o": "openai/gpt-5.6-sol",
   "gpt-4o-mini": "google/gemini-3.6-flash",
   "gpt-4.1": "openai/gpt-5.6-sol",
@@ -67,11 +79,7 @@ export function resolveModel(
   let candidate = alias ?? trimmed;
   if (!(ALLOWED_MODELS as readonly string[]).includes(candidate)) {
     if (/^claude[-.]/i.test(trimmed)) {
-      candidate = /haiku/i.test(trimmed)
-        ? "google/gemini-3.6-flash"
-        : /opus/i.test(trimmed)
-          ? "openai/gpt-5.5"
-          : "openai/gpt-5.6-sol";
+      return null; // Unknown Claude names never silently select another model/provider.
     } else if (/^(gpt-|o1|o3|o4|gemini-)/i.test(trimmed)) {
       candidate = defaultModel;
     } else return null;

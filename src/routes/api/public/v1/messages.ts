@@ -30,6 +30,11 @@ import {
 } from "@/lib/gateway-policy.server";
 
 import { withRequestTelemetry } from "@/lib/request-telemetry.server";
+import {
+  nativeAnthropicPayload,
+  nativeAnthropicStream,
+  nativeMessageUsage,
+} from "@/lib/anthropic-native.server";
 
 export const Route = createFileRoute("/api/public/v1/messages")({
   server: {
@@ -118,18 +123,37 @@ export const Route = createFileRoute("/api/public/v1/messages")({
             return policyErrorResponse(error);
           }
 
+          const isAnthropic = model.startsWith("anthropic/");
           const isOpenAI = model.startsWith("openai/");
-          const url = isOpenAI
-            ? "https://ai.gateway.lovable.dev/v1/responses"
-            : "https://ai.gateway.lovable.dev/v1/chat/completions";
-          const payload = isOpenAI
-            ? toResponsesRequest(body, model)
-            : toChatCompletions(body, model);
+          const url = isAnthropic
+            ? "https://ai.gateway.lovable.dev/v1/messages"
+            : isOpenAI
+              ? "https://ai.gateway.lovable.dev/v1/responses"
+              : "https://ai.gateway.lovable.dev/v1/chat/completions";
+          let payload;
+          try {
+            payload = isAnthropic
+              ? nativeAnthropicPayload(body, model)
+              : isOpenAI
+                ? toResponsesRequest(body, model)
+                : toChatCompletions(body, model);
+          } catch {
+            return anthropicError(
+              400,
+              "invalid_request_error",
+              "max_tokens deve ser inteiro positivo.",
+            );
+          }
+          const version = request.headers.get("anthropic-version") || "2023-06-01";
+          const beta = request.headers.get("anthropic-beta") || "";
+          if (isAnthropic && (!/^\d{4}-\d{2}-\d{2}$/.test(version) || beta.length > 2048))
+            return anthropicError(400, "invalid_request_error", "Cabeçalhos Anthropic inválidos.");
 
           const { upstream, networkError, workerKeyHint } = await fetchGatewayWithFailover(
             url,
             payload,
             3,
+            isAnthropic ? { version, beta } : {},
           );
 
           trace.workerKeyHint = workerKeyHint;
@@ -157,6 +181,19 @@ export const Route = createFileRoute("/api/public/v1/messages")({
             if (upstream.status === 402)
               return anthropicError(402, "billing_error", "Créditos de IA esgotados.");
             return anthropicError(502, "api_error", "O serviço de IA retornou um erro.");
+          }
+
+          if (isAnthropic) {
+            if (body.stream) {
+              trace.streaming = true;
+              return nativeAnthropicStream(upstream, trace.finish);
+            }
+            const data = await upstream.text();
+            trace.usage = nativeMessageUsage(JSON.parse(data));
+            return new Response(data, {
+              status: upstream.status,
+              headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+            });
           }
 
           if (body.stream) {

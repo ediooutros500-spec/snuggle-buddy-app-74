@@ -31,6 +31,7 @@ import {
 } from "@/lib/gateway-policy.server";
 
 import { withRequestTelemetry } from "@/lib/request-telemetry.server";
+import { nativeAnthropicPayload, consumeNativeAnthropic } from "@/lib/anthropic-native.server";
 
 export const Route = createFileRoute("/api/public/v1/chat/completions")({
   server: {
@@ -100,13 +101,27 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
           }
 
           const internal = toInternalRequest(body, model);
+          const isAnthropic = model.startsWith("anthropic/");
           const isOpenAI = model.startsWith("openai/");
-          const url = isOpenAI
-            ? "https://ai.gateway.lovable.dev/v1/responses"
-            : "https://ai.gateway.lovable.dev/v1/chat/completions";
-          const payload = isOpenAI
-            ? toResponsesRequest(internal, model)
-            : toChatCompletions(internal, model);
+          const url = isAnthropic
+            ? "https://ai.gateway.lovable.dev/v1/messages"
+            : isOpenAI
+              ? "https://ai.gateway.lovable.dev/v1/responses"
+              : "https://ai.gateway.lovable.dev/v1/chat/completions";
+          let payload;
+          try {
+            payload = isAnthropic
+              ? nativeAnthropicPayload(internal, model, true)
+              : isOpenAI
+                ? toResponsesRequest(internal, model)
+                : toChatCompletions(internal, model);
+          } catch {
+            return openaiError(
+              400,
+              "max_tokens deve ser inteiro positivo.",
+              "invalid_request_error",
+            );
+          }
 
           const { upstream, networkError, workerKeyHint } = await fetchGatewayWithFailover(
             url,
@@ -138,10 +153,17 @@ export const Route = createFileRoute("/api/public/v1/chat/completions")({
 
           if (body.stream) {
             trace.streaming = true;
-            return openaiStream(model, upstream, isOpenAI, trace.finish);
+            return openaiStream(
+              model,
+              upstream,
+              isAnthropic ? "anthropic" : isOpenAI,
+              trace.finish,
+            );
           }
 
-          const acc = await consumeUpstream(upstream, isOpenAI);
+          const acc = isAnthropic
+            ? await consumeNativeAnthropic(upstream)
+            : await consumeUpstream(upstream, isOpenAI);
           trace.usage = acc;
           return new Response(JSON.stringify(toChatCompletion(model, acc)), {
             status: 200,

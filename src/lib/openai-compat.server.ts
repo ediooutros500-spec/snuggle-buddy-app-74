@@ -1,3 +1,4 @@
+import { consumeNativeAnthropic } from "./anthropic-native.server";
 /**
  * Camada de compatibilidade com a OpenAI Chat Completions API.
  *
@@ -112,7 +113,7 @@ export function toInternalRequest(req: OpenAIChatRequest, model: string): Messag
 
   let tool_choice: MessagesRequest["tool_choice"];
   const tc = req.tool_choice;
-  if (tc === "auto" || tc === "none") tool_choice = { type: "auto" };
+  if (tc === "auto" || tc === "none") tool_choice = { type: tc };
   else if (tc === "required") tool_choice = { type: "any" };
   else if (tc && typeof tc === "object") {
     const name = (tc as { function?: { name?: string } }).function?.name;
@@ -123,7 +124,7 @@ export function toInternalRequest(req: OpenAIChatRequest, model: string): Messag
     model,
     ...(systemParts.length ? { system: systemParts.join("\n\n") } : {}),
     messages,
-    ...((req.max_tokens ?? req.max_completion_tokens)
+    ...((req.max_tokens ?? req.max_completion_tokens) !== undefined
       ? { max_tokens: req.max_tokens ?? req.max_completion_tokens }
       : {}),
     ...(typeof req.temperature === "number" ? { temperature: req.temperature } : {}),
@@ -187,7 +188,7 @@ export function toChatCompletion(model: string, acc: Accumulated) {
 export function openaiStream(
   model: string,
   upstream: Response,
-  isOpenAI: boolean,
+  isOpenAI: boolean | "anthropic",
   onComplete?: (acc: Accumulated | null, error?: boolean) => Promise<void>,
 ): Response {
   const encoder = new TextEncoder();
@@ -217,9 +218,11 @@ export function openaiStream(
       try {
         chunk({ role: "assistant", content: "" });
 
-        const acc = await consumeUpstream(upstream, isOpenAI, (text) => {
-          chunk({ content: text });
-        });
+        const onText = (text: string) => chunk({ content: text });
+        const acc =
+          isOpenAI === "anthropic"
+            ? await consumeNativeAnthropic(upstream, onText)
+            : await consumeUpstream(upstream, isOpenAI, onText);
 
         if (acc.toolUses.length) {
           chunk({

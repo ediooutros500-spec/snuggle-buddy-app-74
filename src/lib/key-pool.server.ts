@@ -100,6 +100,7 @@ export async function fetchGatewayWithFailover(
   url: string,
   payload: unknown,
   maxAttempts = 4,
+  protocolHeaders: { version?: string; beta?: string } = {},
 ): Promise<{
   upstream: Response | null;
   networkError: boolean;
@@ -124,7 +125,14 @@ export async function fetchGatewayWithFailover(
           "Content-Type": "application/json",
           "Lovable-API-Key": apiKey,
           "X-Lovable-AIG-SDK": "fetch",
+          ...(url.endsWith("/messages")
+            ? {
+                "anthropic-version": protocolHeaders.version || "2023-06-01",
+                ...(protocolHeaders.beta ? { "anthropic-beta": protocolHeaders.beta } : {}),
+              }
+            : {}),
         },
+        redirect: "manual",
         body: JSON.stringify(payload),
       });
       lastUpstream = res;

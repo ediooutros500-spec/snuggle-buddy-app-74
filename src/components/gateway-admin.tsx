@@ -1719,12 +1719,12 @@ function Integration({ system }: PageProps) {
         </Panel>
         <Panel
           title="Anthropic Messages"
-          description="Compatibilidade de formato; modelos Claude são aliases para destinos do catálogo Lovable."
+          description="Modelos Claude usam Anthropic Messages nativo pelo provedor Lovable."
         >
           <code>{base}/messages</code>
           <p className="ag-note">
-            Autenticação por Bearer ou x-api-key. O nome do alias não representa acesso à API
-            oficial da Anthropic.
+            Autenticação por Bearer ou x-api-key. Aliases Claude apontam para modelos Anthropic;
+            mensagens, ferramentas e eventos SSE nativos são preservados em /messages.
           </p>
         </Panel>
       </div>
