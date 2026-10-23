@@ -50,6 +50,37 @@ function success() {
   return new Response(JSON.stringify({ registered: true, worker_id: workerId }), { status: 200 });
 }
 
+test("project diagnostic exposes no credentials and reports only confirmed registration", async (t) => {
+  const child = setup(t, async () => success());
+  const before = child.getChildRegistrationStatus(origin);
+  assert.equal(before.role, "child");
+  assert.equal(before.ready, true);
+  assert.equal(before.registered, false);
+  assert.equal(JSON.stringify(before).includes(key), false);
+  assert.equal(JSON.stringify(before).includes(secret), false);
+  await child.triggerChildHandshake(origin);
+  assert.equal(child.getChildRegistrationStatus(origin).registered, true);
+  process.env.GATEWAY_ROLE = "central";
+  assert.deepEqual(child.getChildRegistrationStatus(origin), {
+    role: "central",
+    protocolVersion: 1,
+  });
+});
+
+test("unprovisioned remix is diagnosed without probing or returning a provider key", async (t) => {
+  const child = setup(t, async () => assert.fail("No upstream call allowed"));
+  delete process.env.LOVABLE_API_KEY;
+  const status = child.getChildRegistrationStatus(origin);
+  assert.equal(status.reason, "missing_key");
+  assert.equal(status.keyAvailable, false);
+  assert.equal(status.ready, false);
+  assert.equal((await child.triggerChildHandshake(origin)).attempted, false);
+  assert.equal(
+    child.getChildRegistrationStatus("http://localhost:3000").reason,
+    "unsupported_origin",
+  );
+});
+
 test("child HMAC is accepted by the actual Gator receiver without transmitting the shared secret", async (t) => {
   const { createRegistration } = await import("../gator/src/registration.mjs");
   const seen = new Set();

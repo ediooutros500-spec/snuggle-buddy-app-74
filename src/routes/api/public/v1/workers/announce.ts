@@ -1,16 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { triggerChildHandshake } from "@/lib/child-handshake.server";
+import { triggerChildHandshake, getChildRegistrationStatus } from "@/lib/child-handshake.server";
 import { CORS_HEADERS } from "@/lib/claude-compat.server";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json", ...CORS_HEADERS },
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store", ...CORS_HEADERS },
   });
 
 export const Route = createFileRoute("/api/public/v1/workers/announce")({
   server: {
     handlers: {
+      GET: async ({ request }) => json(getChildRegistrationStatus(request.url)),
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS_HEADERS }),
       POST: async ({ request }) => {
         const isLocalDispatch = request.headers.get("x-child-auto-dispatch") === "1";

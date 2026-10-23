@@ -131,3 +131,18 @@ Auditoria atual: [revisão funcional de todas as telas em 22/10/2026](docs/AUDIT
 - [ ] Publicar commits no GitHub: autenticação local continua inválida e conector não disponível.
 
 Detalhes: [PAINEL-PROVEDOR-UNICO.md](docs/PAINEL-PROVEDOR-UNICO.md). Os itens agrupados de A08–A13 acima continuam abertos porque ainda incluem conciliação, roteamento avançado, MFA, backups e demais requisitos não cobertos nesta entrega.
+
+## Origem remixável no Lovable — preparação local em 22/10/2026
+
+- [x] Raiz identifica o papel informado pelo servidor: central preserva administração; projeto Lovable/remix mostra painel de conexão.
+- [x] Diagnóstico de credencial disponível, origem, destino e cadastro confirmado; chave permanece no backend.
+- [x] Reutilizar gatilho automático existente e botão de nova tentativa, sem exigir segredo ou GitHub em cada remix.
+- [x] Diagnóstico diferencia credencial ausente e domínio de prévia/local; não apresenta publicação/remix isoladamente como cadastro concluído.
+- [x] 62 testes, tipos, build Lovable e build Node aprovados; lint sem erros e seis avisos anteriores.
+- [x] Conferir tela local no navegador e URL de destino; sem envio de chave real ou chamada paga.
+- [x] Especificar os 16 modelos desejados com nossos endereços públicos, aliases e diferenças da implementação atual.
+- [ ] Sincronizar os commits no GitHub e publicar a origem no Lovable; autenticação GitHub local inválida.
+- [ ] Publicar/abrir remix com chave própria e verificar cadastro e inferência reais.
+- [ ] Ativar catálogo novo e aliases somente após implementar Anthropic nativo, novos IDs, Responses público e ciclo de jobs de vídeo com os testes necessários.
+
+Contrato e checklist detalhado: [ORIGEM-LOVABLE-E-CATALOGO-16.md](docs/ORIGEM-LOVABLE-E-CATALOGO-16.md). Esta preparação não alterou a versão da central rodando na VPS nem o remix antigo publicado.

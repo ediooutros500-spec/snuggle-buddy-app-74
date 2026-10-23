@@ -791,6 +791,19 @@
   padding: 0;
   margin-bottom: 25px;
 }
+.ag-project-details {
+  display: grid;
+  gap: 5px;
+  margin: 20px 0;
+  font-size: 12px;
+}
+.ag-project-details dt {
+  font-weight: 650;
+}
+.ag-project-details dd {
+  margin: 0 0 12px;
+  overflow-wrap: anywhere;
+}
 .ag-login h1 {
   font-size: 31px;
   line-height: 1.2;

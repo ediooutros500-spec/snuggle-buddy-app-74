@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GatewayAdmin } from "@/components/gateway-admin";
+import { GatewayHome } from "@/components/gateway-home";
 export const Route = createFileRoute("/")({
-  head: () => ({ meta: [{ title: "Lovable Gateway · Administração" }] }),
-  component: () => <GatewayAdmin section="overview" />,
+  head: () => ({ meta: [{ title: "Lovable Gateway" }] }),
+  component: GatewayHome,
 });

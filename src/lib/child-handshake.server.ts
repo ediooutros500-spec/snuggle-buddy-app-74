@@ -9,6 +9,43 @@ const recent = new Map<string, number>();
 const inFlight = new Map<string, Promise<Result>>();
 const HANDSHAKE_TTL_MS = 10 * 60 * 1000;
 
+/** Public diagnostic only: credentials and account labels never leave the server here. */
+export function getChildRegistrationStatus(requestUrl: string) {
+  const central = process.env["GATEWAY_ROLE"] === "central";
+  if (central) return { role: "central" as const, protocolVersion: 1 };
+  const cfg = getChildConfig();
+  let origin = "";
+  try {
+    origin = new URL(requestUrl).origin;
+  } catch {
+    /* Invalid origin remains unsupported. */
+  }
+  const originAllowed = isAllowedChildOrigin(origin);
+  const destinationConfigured = validDestination(cfg.gatorPublicUrl);
+  const keyAvailable = Boolean(cfg.lovableApiKey);
+  const signingConfigured = cfg.registrationMode !== "signed" || Boolean(cfg.remixSyncSecret);
+  const confirmedAt = recent.get(origin);
+  return {
+    role: "child" as const,
+    protocolVersion: 1,
+    centralOrigin: destinationConfigured ? cfg.gatorPublicUrl : null,
+    projectOrigin: origin,
+    keyAvailable,
+    originAllowed,
+    registered: Boolean(confirmedAt && Date.now() - confirmedAt < HANDSHAKE_TTL_MS),
+    ready: originAllowed && destinationConfigured && keyAvailable && signingConfigured,
+    reason: !originAllowed
+      ? "unsupported_origin"
+      : !destinationConfigured
+        ? "missing_central"
+        : !keyAvailable
+          ? "missing_key"
+          : !signingConfigured
+            ? "missing_signature"
+            : "ready",
+  };
+}
+
 function validDestination(value: string): boolean {
   try {
     const url = new URL(value);
