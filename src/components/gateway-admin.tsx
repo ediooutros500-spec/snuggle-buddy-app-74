@@ -1,4 +1,3 @@
-import { McpCatalog } from "./mcp-catalog";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   Activity,
@@ -43,7 +42,6 @@ const ICONS: Record<string, typeof Activity> = {
   usage: BarChart3,
   playground: FlaskConical,
   integration: Code2,
-  mcp: Boxes,
   settings: Settings2,
 };
 const integer = (value: unknown) => Number(value || 0).toLocaleString("pt-BR");
@@ -455,8 +453,6 @@ function Page(props: PageProps) {
       return <Usage {...props} />;
     case "playground":
       return <Playground {...props} />;
-    case "mcp":
-      return <McpCatalog />;
     case "integration":
       return <Integration {...props} />;
     case "settings":

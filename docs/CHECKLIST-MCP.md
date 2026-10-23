@@ -39,3 +39,13 @@ A API observa as requisições ao modelo. Não identifica com certeza se uma fer
 - [x] 92 testes, TypeScript, lint do componente e compilação Node aprovados; 26 outros contêineres preservados, StarChef HTTP 200.
 
 A página final OAuth em localhost é gerada pelo Claude Desktop e não é controlada pela nossa API.
+
+## Ampliação e retirada do painel — 23/10/2026
+
+- [x] 56 serviços registrados no backend, com deduplicação.
+- [x] 32 endpoints sondados: 4 listam ferramentas, 26 pedem autenticação, 2 recusam acesso.
+- [x] Remover aba, componente e guia público MCP; redirecionar link antigo.
+- [x] Aplicadas 30 definições remotas no perfil ativo: 28 novas, Context7 e Notion preservados.
+- [ ] Publicar retirada do painel na VPS.
+- [ ] Validar visibilidade, logins e execução de ferramentas dos novos conectores.
+- [ ] Completar dados/instalações dos 26 pendentes; ver MCP-BACKEND.md.

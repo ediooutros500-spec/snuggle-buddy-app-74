@@ -1,15 +1,17 @@
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { createRequire } from "node:module";
+const registry = createRequire(import.meta.url)("../backend/mcp/registry.json").connectors;
 
 // Changes only the active third-party profile, with a private backup and an atomic rename.
 export function configureDesktopMcp(root, apply = false, connector = "context7") {
-  const definitions = {
-    context7: { name: "Context7", transport: "http", url: "https://mcp.context7.com/mcp" },
-    notion: { name: "Notion", transport: "http", url: "https://mcp.notion.com/mcp", oauth: true },
-  };
-  const entry = definitions[connector];
-  if (!entry) throw Error("Conector fora do piloto aprovado.");
+  const choices =
+    connector === "all"
+      ? registry.filter((x) => x.entry)
+      : registry.filter((x) => x.id === connector && x.entry);
+  if (!choices.length) throw Error("Conector fora do piloto aprovado ou com requisitos pendentes.");
+  const entry = choices[0].entry;
   const library = path.join(root, "configLibrary");
   const meta = JSON.parse(fs.readFileSync(path.join(library, "_meta.json"), "utf8"));
   if (!/^[a-f0-9-]{36}$/i.test(meta.appliedId || "")) throw Error("Perfil ativo inválido.");
@@ -24,10 +26,20 @@ export function configureDesktopMcp(root, apply = false, connector = "context7")
   if (profile.managedMcpServers !== undefined && !Array.isArray(profile.managedMcpServers))
     throw Error("Lista MCP existente inválida. Nenhum arquivo foi alterado.");
   const servers = profile.managedMcpServers || [];
-  const existing = servers.find(
-    (x) => x.name?.toLowerCase() === entry.name.toLowerCase() || x.url === entry.url,
-  );
-  if (existing) return { applied: false, alreadyPresent: true, connector: entry.name };
+  const additions = choices
+    .map((x) => x.entry)
+    .filter(
+      (entry) =>
+        !servers.some(
+          (x) => x.name?.toLowerCase() === entry.name.toLowerCase() || x.url === entry.url,
+        ),
+    );
+  if (!additions.length)
+    return {
+      applied: false,
+      alreadyPresent: true,
+      connector: connector === "all" ? "all" : entry.name,
+    };
   if (apply) {
     const backupDir = path.join(root, "gateway-mcp-backups");
     fs.mkdirSync(backupDir, { recursive: true, mode: 0o700 });
@@ -35,7 +47,7 @@ export function configureDesktopMcp(root, apply = false, connector = "context7")
       mode: 0o600,
       flag: "wx",
     });
-    profile.managedMcpServers = [...servers, entry];
+    profile.managedMcpServers = [...servers, ...additions];
     const temporary = filename + ".gateway-mcp.tmp";
     fs.writeFileSync(temporary, JSON.stringify(profile, null, 2) + "\n", {
       mode: 0o600,
@@ -47,6 +59,13 @@ export function configureDesktopMcp(root, apply = false, connector = "context7")
     applied: apply,
     connector: entry.name,
     previousServers: servers.length,
+    added: additions.map((x) => x.name),
+    pending:
+      connector === "all"
+        ? registry
+            .filter((x) => !x.entry)
+            .map((x) => ({ name: x.name, requirement: x.requirement }))
+        : [],
     restartRequired: apply,
   };
 }

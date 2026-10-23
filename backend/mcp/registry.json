@@ -1,0 +1,748 @@
+{
+  "version": 1,
+  "updatedAt": "2026-10-23",
+  "note": "Definições não são conexões testadas. OAuth individual. Somente entradas remotas com endereço oficial estão prontas para configuração; sem credenciais embutidas.",
+  "connectors": [
+    {
+      "id": "github",
+      "name": "GitHub",
+      "source": "https://github.com/github/github-mcp-server",
+      "requirement": "GitHub OAuth App com device flow habilitado e Client ID próprio; ou credencial individual. Não reutilizar ID de outro aplicativo.",
+      "entry": null
+    },
+    {
+      "id": "context7",
+      "name": "Context7",
+      "source": "https://github.com/upstash/context7",
+      "requirement": "Sem credencial no primeiro contato; limites e requisitos seguem o fornecedor.",
+      "entry": {
+        "name": "Context7",
+        "transport": "http",
+        "url": "https://mcp.context7.com/mcp"
+      },
+      "validation": {
+        "http": 200,
+        "initialize": true,
+        "tools": 2,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "playwright",
+      "name": "Playwright",
+      "source": "https://github.com/microsoft/playwright-mcp",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "devtools",
+      "name": "Chrome DevTools",
+      "source": "https://github.com/ChromeDevTools/chrome-devtools-mcp",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "serena",
+      "name": "Serena",
+      "source": "https://github.com/oraios/serena",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "figma",
+      "name": "Figma",
+      "source": "https://developers.figma.com/docs/figma-mcp-server/",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Figma",
+        "transport": "http",
+        "url": "https://mcp.figma.com/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "supabase",
+      "name": "Supabase",
+      "source": "https://supabase.com/docs/guides/ai-tools/mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Supabase",
+        "transport": "http",
+        "url": "https://mcp.supabase.com/mcp?read_only=true",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "vercel",
+      "name": "Vercel",
+      "source": "https://vercel.com/docs/mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Vercel",
+        "transport": "http",
+        "url": "https://mcp.vercel.com",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "cloudflare",
+      "name": "Cloudflare Docs",
+      "source": "https://developers.cloudflare.com/agents/model-context-protocol/cloudflare/servers-for-cloudflare/",
+      "requirement": "Sem credencial no primeiro contato; limites e requisitos seguem o fornecedor.",
+      "entry": {
+        "name": "Cloudflare Docs",
+        "transport": "http",
+        "url": "https://docs.mcp.cloudflare.com/mcp"
+      },
+      "validation": {
+        "http": 200,
+        "initialize": true,
+        "tools": 2,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "sentry",
+      "name": "Sentry",
+      "source": "https://mcp.sentry.dev/",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Sentry",
+        "transport": "http",
+        "url": "https://mcp.sentry.dev/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "notion",
+      "name": "Notion",
+      "source": "https://developers.notion.com/guides/mcp/overview",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Notion",
+        "transport": "http",
+        "url": "https://mcp.notion.com/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "linear",
+      "name": "Linear",
+      "source": "https://linear.app/docs/mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Linear",
+        "transport": "http",
+        "url": "https://mcp.linear.app/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "atlassian",
+      "name": "Atlassian",
+      "source": "https://support.atlassian.com/atlassian-ai-gateway/docs/get-started-with-the-atlassian-remote-mcp-server/",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "slack",
+      "name": "Slack",
+      "source": "https://docs.slack.dev/ai/slack-mcp-server/",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Slack",
+        "transport": "http",
+        "url": "https://mcp.slack.com/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "aws",
+      "name": "AWS Knowledge",
+      "source": "https://github.com/awslabs/mcp",
+      "requirement": "Sem credencial no primeiro contato; limites e requisitos seguem o fornecedor.",
+      "entry": {
+        "name": "AWS Knowledge",
+        "transport": "http",
+        "url": "https://knowledge-mcp.global.api.aws"
+      },
+      "validation": {
+        "http": 200,
+        "initialize": true,
+        "tools": 5,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "azure",
+      "name": "Azure",
+      "source": "https://github.com/microsoft/mcp",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "brave",
+      "name": "Brave Search",
+      "source": "https://github.com/brave/brave-search-mcp-server",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "firecrawl",
+      "name": "Firecrawl",
+      "source": "https://github.com/firecrawl/firecrawl-mcp-server",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Firecrawl",
+        "transport": "http",
+        "url": "https://mcp.firecrawl.dev/v2/mcp-oauth",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "tavily",
+      "name": "Tavily",
+      "source": "https://github.com/tavily-ai/tavily-mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Tavily",
+        "transport": "http",
+        "url": "https://mcp.tavily.com/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "exa",
+      "name": "Exa",
+      "source": "https://github.com/exa-labs/exa-mcp-server",
+      "requirement": "Sem credencial no primeiro contato; limites e requisitos seguem o fornecedor.",
+      "entry": {
+        "name": "Exa",
+        "transport": "http",
+        "url": "https://mcp.exa.ai/mcp"
+      },
+      "validation": {
+        "http": 200,
+        "initialize": true,
+        "tools": 2,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "browserbase",
+      "name": "Browserbase",
+      "source": "https://github.com/browserbase/mcp-server-browserbase",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "neon",
+      "name": "Neon",
+      "source": "https://neon.com/docs/ai/neon-mcp-server",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Neon",
+        "transport": "http",
+        "url": "https://mcp.neon.tech/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "mongodb",
+      "name": "MongoDB",
+      "source": "https://github.com/mongodb-js/mongodb-mcp-server",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "redis",
+      "name": "Redis",
+      "source": "https://github.com/redis/mcp-redis",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "elasticsearch",
+      "name": "Elasticsearch",
+      "source": "https://github.com/elastic/mcp-server-elasticsearch",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "stripe",
+      "name": "Stripe",
+      "source": "https://docs.stripe.com/mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Stripe",
+        "transport": "http",
+        "url": "https://mcp.stripe.com",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "filesystem",
+      "name": "Filesystem",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/filesystem",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "git",
+      "name": "Git",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/git",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "memory",
+      "name": "Memory",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/memory",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "fetch",
+      "name": "Fetch",
+      "source": "https://github.com/modelcontextprotocol/servers/tree/main/src/fetch",
+      "requirement": "Configuração específica do serviço: credencial, recurso ou instalação local.",
+      "entry": null
+    },
+    {
+      "id": "miro",
+      "name": "Miro",
+      "source": "https://claude.com/marketplace/connectors/miro",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Miro",
+        "transport": "http",
+        "url": "https://mcp.miro.com/",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "canva",
+      "name": "Canva",
+      "source": "https://claude.com/marketplace/connectors/canva",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Canva",
+        "transport": "http",
+        "url": "https://mcp.canva.com/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "clickup",
+      "name": "ClickUp",
+      "source": "https://claude.com/marketplace/connectors/clickup",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "ClickUp",
+        "transport": "http",
+        "url": "https://mcp.clickup.com/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "lovable",
+      "name": "Lovable",
+      "source": "https://github.com/lovablelabs/mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Lovable",
+        "transport": "http",
+        "url": "https://mcp.lovable.dev",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "postman",
+      "name": "Postman",
+      "source": "https://claude.com/marketplace/connectors/postman",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Postman",
+        "transport": "http",
+        "url": "https://mcp.postman.com/minimal",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "granola",
+      "name": "Granola",
+      "source": "https://help.granola.ai/article/granola-mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Granola",
+        "transport": "http",
+        "url": "https://mcp.granola.ai/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "elevenlabs",
+      "name": "ElevenLabs",
+      "source": "https://elevenlabs.io/docs/eleven-agents/operate/hosted-mcp",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "ElevenLabs",
+        "transport": "http",
+        "url": "https://api.elevenlabs.io/v1/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "datadog",
+      "name": "Datadog",
+      "source": "https://github.com/datadog-labs/mcp-server",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Datadog",
+        "transport": "http",
+        "url": "https://mcp.datadoghq.com/v1/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "spotify",
+      "name": "Spotify",
+      "source": "https://claude.com/marketplace/connectors/spotify",
+      "requirement": "Sem credencial no primeiro contato; limites e requisitos seguem o fornecedor.",
+      "entry": {
+        "name": "Spotify",
+        "transport": "http",
+        "url": "https://mcp-gateway-external-pilot.spotify.net/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "wispr-flow",
+      "name": "Wispr Flow",
+      "source": "https://claude.com/marketplace/connectors/wispr-flow",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Wispr Flow",
+        "transport": "http",
+        "url": "https://api.wisprflow.ai/connect/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "indeed",
+      "name": "Indeed",
+      "source": "https://claude.com/marketplace/connectors/indeed",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Indeed",
+        "transport": "http",
+        "url": "https://mcp.indeed.com/claude/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "vidiq",
+      "name": "vidIQ",
+      "source": "https://claude.com/marketplace/connectors/vidiq",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "vidIQ",
+        "transport": "http",
+        "url": "https://mcp.vidiq.com/mcp",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "windsor-ai",
+      "name": "Windsor.ai",
+      "source": "https://claude.com/marketplace/connectors/windsor-ai",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Windsor.ai",
+        "transport": "http",
+        "url": "https://mcp.windsor.ai/",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "quickbooks",
+      "name": "Intuit QuickBooks",
+      "source": "https://claude.com/connectors/intuit-quickbooks",
+      "requirement": "Fornecedor respondeu HTTP 403 ao cliente de teste. Verificar acesso e restrições do fornecedor antes de instalar.",
+      "entry": null,
+      "validation": {
+        "http": 403,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      },
+      "candidate": {
+        "name": "Intuit QuickBooks",
+        "transport": "http",
+        "url": "https://ai-inc.quickbooks.intuit.com/v1/mcp"
+      }
+    },
+    {
+      "id": "zoom",
+      "name": "Zoom for Claude",
+      "source": "https://claude.com/connectors/zoom-for-claude",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Zoom for Claude",
+        "transport": "http",
+        "url": "https://mcp.zoom.us/mcp/zoom/streamable",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "adobe",
+      "name": "Adobe for creativity",
+      "source": "https://claude.com/connectors/adobe-creativity",
+      "requirement": "Fornecedor respondeu HTTP 403 ao cliente de teste. Verificar acesso e restrições do fornecedor antes de instalar.",
+      "entry": null,
+      "validation": {
+        "http": 403,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      },
+      "candidate": {
+        "name": "Adobe for creativity",
+        "transport": "http",
+        "url": "https://adobe-creativity.adobe.io/mcp",
+        "oauth": true
+      }
+    },
+    {
+      "id": "zapier",
+      "name": "Zapier",
+      "source": "https://claude.com/marketplace/connectors/zapier",
+      "requirement": "Login individual no fornecedor; compatibilidade OAuth ainda em teste.",
+      "entry": {
+        "name": "Zapier",
+        "transport": "http",
+        "url": "https://mcp.zapier.com/api/v1/connect",
+        "oauth": true
+      },
+      "validation": {
+        "http": 401,
+        "initialize": false,
+        "tools": 0,
+        "checkedAt": "2026-10-23T13:38:10.008Z"
+      }
+    },
+    {
+      "id": "google-drive",
+      "name": "Google Drive",
+      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "entry": null,
+      "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
+    },
+    {
+      "id": "gmail",
+      "name": "Gmail",
+      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "entry": null,
+      "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
+    },
+    {
+      "id": "google-calendar",
+      "name": "Google Calendar",
+      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "entry": null,
+      "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
+    },
+    {
+      "id": "google-docs",
+      "name": "Google Docs",
+      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "entry": null,
+      "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
+    },
+    {
+      "id": "google-sheets",
+      "name": "Google Sheets",
+      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "entry": null,
+      "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
+    },
+    {
+      "id": "google-slides",
+      "name": "Google Slides",
+      "requirement": "OAuth Client ID e secret próprios do Google Cloud; habilitar APIs.",
+      "entry": null,
+      "source": "https://developers.google.com/workspace/guides/configure-mcp-servers"
+    },
+    {
+      "id": "microsoft365",
+      "name": "Microsoft 365",
+      "requirement": "Tenant ID e Client ID do aplicativo Microsoft Entra da organização.",
+      "entry": null,
+      "source": "https://claude.com/docs/third-party/claude-desktop/configuration#managedmcpservers"
+    },
+    {
+      "id": "asana",
+      "name": "Asana",
+      "requirement": "OAuth App própria com client ID: v2 não suporta registro dinâmico.",
+      "entry": null,
+      "source": "https://developers.asana.com/docs/integrating-with-asanas-mcp-server"
+    },
+    {
+      "id": "salesforce",
+      "name": "Salesforce",
+      "requirement": "URL do servidor e OAuth do ambiente Salesforce do cliente.",
+      "entry": null,
+      "source": "https://developer.salesforce.com/docs/platform/hosted-mcp-servers/guide/client-connection-overview.html"
+    }
+  ]
+}

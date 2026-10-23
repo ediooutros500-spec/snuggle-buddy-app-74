@@ -44,6 +44,14 @@ test("Desktop pilot preserves credentials, backups, other connectors and is idem
     assert.equal(notion.inferenceGatewayApiKey, original.inferenceGatewayApiKey);
     assert.equal(configureDesktopMcp(root, true, "notion").alreadyPresent, true);
     assert.throws(() => configureDesktopMcp(root, true, "unknown"), /fora do piloto/);
+    const allResult = configureDesktopMcp(root, true, "all");
+    assert.equal(allResult.applied, true);
+    const allProfile = JSON.parse(fs.readFileSync(file));
+    assert.equal(allProfile.managedMcpServers.length, 31);
+    assert.equal(new Set(allProfile.managedMcpServers.map((x) => x.name)).size, 31);
+    assert.equal(allProfile.inferenceGatewayApiKey, original.inferenceGatewayApiKey);
+    assert.ok(allResult.pending.some((x) => x.name === "Gmail"));
+    assert.equal(configureDesktopMcp(root, true, "all").alreadyPresent, true);
     changed.inferenceGatewayBaseUrl = "https://different.test";
     fs.writeFileSync(file, JSON.stringify(changed));
     assert.throws(() => configureDesktopMcp(root, true), /não usa o nosso gateway/);

@@ -1,11 +1,5 @@
 export const ADMIN_SECTIONS = [
   {
-    id: "mcp",
-    label: "Conectores MCP",
-    description: "Acompanhamento do piloto de conexões no Claude Desktop.",
-    group: "Ferramentas",
-  },
-  {
     id: "overview",
     label: "Dashboard",
     description: "Disponibilidade das conexões e atividade do gateway.",

@@ -1,0 +1,330 @@
+{
+  "checkedAt": "2026-10-23T13:38:10.008Z",
+  "note": "Sem credenciais. initialize/tools-list não comprova execução de ferramentas nem visibilidade no aplicativo.",
+  "rows": [
+    {
+      "name": "Context7",
+      "url": "https://mcp.context7.com/mcp",
+      "http": 200,
+      "initialize": true,
+      "oauthChallenge": false,
+      "tools": 2,
+      "authenticated": false,
+      "visibleInDesktop": false,
+      "toolsListed": true
+    },
+    {
+      "name": "Figma",
+      "url": "https://mcp.figma.com/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Supabase",
+      "url": "https://mcp.supabase.com/mcp?read_only=true",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Vercel",
+      "url": "https://mcp.vercel.com",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Cloudflare Docs",
+      "url": "https://docs.mcp.cloudflare.com/mcp",
+      "http": 200,
+      "initialize": true,
+      "oauthChallenge": false,
+      "tools": 2,
+      "authenticated": false,
+      "visibleInDesktop": false,
+      "toolsListed": true
+    },
+    {
+      "name": "Sentry",
+      "url": "https://mcp.sentry.dev/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Notion",
+      "url": "https://mcp.notion.com/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Linear",
+      "url": "https://mcp.linear.app/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Slack",
+      "url": "https://mcp.slack.com/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "AWS Knowledge",
+      "url": "https://knowledge-mcp.global.api.aws",
+      "http": 200,
+      "initialize": true,
+      "oauthChallenge": false,
+      "tools": 5,
+      "authenticated": false,
+      "visibleInDesktop": false,
+      "toolsListed": true
+    },
+    {
+      "name": "Firecrawl",
+      "url": "https://mcp.firecrawl.dev/v2/mcp-oauth",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Tavily",
+      "url": "https://mcp.tavily.com/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Exa",
+      "url": "https://mcp.exa.ai/mcp",
+      "http": 200,
+      "initialize": true,
+      "oauthChallenge": false,
+      "tools": 2,
+      "authenticated": false,
+      "visibleInDesktop": false,
+      "toolsListed": true
+    },
+    {
+      "name": "Neon",
+      "url": "https://mcp.neon.tech/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Stripe",
+      "url": "https://mcp.stripe.com",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Miro",
+      "url": "https://mcp.miro.com/",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Canva",
+      "url": "https://mcp.canva.com/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "ClickUp",
+      "url": "https://mcp.clickup.com/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Lovable",
+      "url": "https://mcp.lovable.dev",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Postman",
+      "url": "https://mcp.postman.com/minimal",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Granola",
+      "url": "https://mcp.granola.ai/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "ElevenLabs",
+      "url": "https://api.elevenlabs.io/v1/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Datadog",
+      "url": "https://mcp.datadoghq.com/v1/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": false,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Spotify",
+      "url": "https://mcp-gateway-external-pilot.spotify.net/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Wispr Flow",
+      "url": "https://api.wisprflow.ai/connect/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Indeed",
+      "url": "https://mcp.indeed.com/claude/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "vidIQ",
+      "url": "https://mcp.vidiq.com/mcp",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Windsor.ai",
+      "url": "https://mcp.windsor.ai/",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Intuit QuickBooks",
+      "url": "https://ai-inc.quickbooks.intuit.com/v1/mcp",
+      "http": 403,
+      "initialize": false,
+      "oauthChallenge": false,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Zoom for Claude",
+      "url": "https://mcp.zoom.us/mcp/zoom/streamable",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Adobe for creativity",
+      "url": "https://adobe-creativity.adobe.io/mcp",
+      "http": 403,
+      "initialize": false,
+      "oauthChallenge": false,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    },
+    {
+      "name": "Zapier",
+      "url": "https://mcp.zapier.com/api/v1/connect",
+      "http": 401,
+      "initialize": false,
+      "oauthChallenge": true,
+      "tools": 0,
+      "authenticated": false,
+      "visibleInDesktop": false
+    }
+  ]
+}
