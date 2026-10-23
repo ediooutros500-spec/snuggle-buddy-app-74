@@ -46,6 +46,12 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [x] 32 endpoints sondados: 4 listam ferramentas, 26 pedem autenticação, 2 recusam acesso.
 - [x] Remover aba, componente e guia público MCP; redirecionar link antigo.
 - [x] Aplicadas 30 definições remotas no perfil ativo: 28 novas, Context7 e Notion preservados.
-- [ ] Publicar retirada do painel na VPS.
+- [x] Retirada publicada na VPS: /admin/mcp → /admin/overview (307), guia público 404, dashboard 200. Três serviços saudáveis e 26 contêineres preservados.
 - [ ] Validar visibilidade, logins e execução de ferramentas dos novos conectores.
 - [ ] Completar dados/instalações dos 26 pendentes; ver MCP-BACKEND.md.
+
+## Aceite do usuário — 23/10/2026
+
+- [x] Usuário confirmou que os novos nomes apareceram e relatou teste funcional.
+- [x] Usuário deu OK geral para prosseguir com o lote.
+- [ ] Execução individual dos 30: não foram informados quais conectores tiveram ferramentas executadas; o aceite geral não substitui evidência técnica por conector.
