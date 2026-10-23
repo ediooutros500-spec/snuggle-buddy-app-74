@@ -111,3 +111,10 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [ ] Shopify: aparecer no Claude, autorizar loja própria e executar consulta somente leitura.
 - [ ] Próximos serviços com credenciais externas: Microsoft 365, Asana e Salesforce; Adobe/QuickBooks continuam com recusa no teste anterior.
 
+## GitHub aplicado — 23/10/2026
+
+- [x] Usuário forneceu Client ID público do aplicativo GitHub; não foi solicitado segredo ou token.
+- [x] Configurador aplicado ao perfil ativo: 38 → 39 definições; backup privado criado e repetição confirmou ausência de duplicação.
+- [ ] Reabrir o Claude e confirmar GitHub na seção Conectores.
+- [ ] Concluir autorização por Device Flow e executar o prompt somente leitura em GITHUB-MCP-ATIVACAO.md. Receber o Client ID não comprova que o Device Flow foi habilitado no GitHub.
+
