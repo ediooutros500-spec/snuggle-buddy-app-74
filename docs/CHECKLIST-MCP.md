@@ -86,6 +86,7 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 
 - [x] Usuário informou publicação do aplicativo OAuth e funcionamento da conexão; aceite informado pelo usuário, sem comprovação individual dos seis serviços.
 - [x] Acrescentar aviso de aplicativo ainda não verificado na página pública de informações e acessos (`/app.html`), com links para privacidade, termos e revogação.
+- [x] Aviso publicado na VPS: conteúdo confirmado por HTTP 200; páginas públicas e CSS 200. Parent `7f8d7c1fc1b7` saudável, API/Gator saudáveis, 26 outros contêineres preservados e StarChef 200.
 - [ ] Aprovação OAuth pelo Google: permanece pendente; aviso próprio não remove a tela do Google.
 - [ ] Próxima etapa: validar uma consulta somente leitura por serviço (Drive, Docs, Agenda, Gmail, Sheets e Slides), seguida do ciclo ferramenta → modelo nas famílias Claude, OpenAI e Gemini. Não marcar aprovação individual sem resposta observada.
 - [ ] Distribuição para outros clientes: preparar configuração por cliente sem credenciais pessoais do administrador; instalação neste computador não equivale a distribuição pela VPS.
