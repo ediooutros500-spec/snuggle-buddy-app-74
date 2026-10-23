@@ -73,3 +73,12 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [ ] Login individual e execução de ferramenta por serviço; APIs e acesso ao preview ainda dependem da validação no Google.
 - [x] Credenciais mantidas apenas nos arquivos privados locais; não incluídas no repositório.
 
+
+## Páginas públicas OAuth — 23/10/2026
+
+- [x] Publicadas app.html, privacy.html e terms.html em secretsof.delvertokens.store, sem login.
+- [x] Conteúdo explica o fluxo atual e informa contato, tratamento de dados, revogação e condições de uso.
+- [x] HTTP 200, links entre páginas e CSS conferidos; navegação visual aprovada.
+- [x] Imagem parent 65b96fc6e837 saudável. API, Gator e 26 outros contêineres preservados; StarChef 200.
+- [ ] Preencher Branding no Google e comprovar domínio no Search Console; publicação das páginas não confirma aprovação OAuth ou dos escopos Google.
+
