@@ -4,6 +4,7 @@ import { authorizeAdmin } from "@/lib/admin-auth.server";
 import { recordAdminAudit } from "@/lib/admin-store.server";
 import { clientKeyHint, createClientKey, storedClientKey } from "@/lib/client-keys.server";
 import { MODEL_CATALOG, settingsPatch, clientPatch } from "@/lib/gateway-policy.server";
+import { accessPatch, saveClientAccess } from "@/lib/client-access.server";
 
 const headers = {
   "Content-Type": "application/json",
@@ -72,6 +73,7 @@ export const Route = createFileRoute("/api/admin/gateway")({
         let validated: Record<string, unknown>;
         try {
           validated = clientPatch(body, true);
+          accessPatch(body);
         } catch (error) {
           return json({ error: error instanceof Error ? error.message : "Cliente inválido." }, 400);
         }
@@ -93,6 +95,18 @@ export const Route = createFileRoute("/api/admin/gateway")({
             400,
           );
         const { client_key, ...client } = data;
+        try {
+          await saveClientAccess(client.id, accessPatch(body));
+        } catch {
+          await pool.from("gateway_clients").update({ status: "suspended" }).eq("id", client.id);
+          return json(
+            {
+              error:
+                "Não foi possível salvar a política de acesso. Cliente suspenso por segurança.",
+            },
+            503,
+          );
+        }
         await recordAdminAudit(auth.actorId, "client.create", client.id);
         return json(
           { client: { ...client, key_hint: clientKeyHint(client_key) }, api_key: key },
@@ -121,6 +135,21 @@ export const Route = createFileRoute("/api/admin/gateway")({
           return error ? json({ error: "Failed to update settings" }, 400) : json({ ok: true });
         }
         if (typeof body["id"] !== "string") return json({ error: "id is required" }, 400);
+        if (body["action"] === "reset-devices") {
+          const target = await pool
+            .from("gateway_clients")
+            .select("id")
+            .eq("id", body["id"])
+            .maybeSingle();
+          if (target.error || !target.data) return json({ error: "Cliente não encontrado." }, 404);
+          try {
+            await saveClientAccess(String(body["id"]), {}, true);
+          } catch {
+            return json({ error: "Não foi possível liberar dispositivos." }, 503);
+          }
+          await recordAdminAudit(auth.actorId, "client.devices.reset", String(body["id"]));
+          return json({ ok: true });
+        }
         if (body["action"] === "rotate-key") {
           const key = createClientKey();
           const { data, error } = await pool
@@ -136,6 +165,7 @@ export const Route = createFileRoute("/api/admin/gateway")({
         let patch: Record<string, unknown>;
         try {
           patch = clientPatch(body);
+          accessPatch(body);
         } catch (error) {
           return json({ error: error instanceof Error ? error.message : "Cliente inválido." }, 400);
         }
@@ -147,6 +177,13 @@ export const Route = createFileRoute("/api/admin/gateway")({
           .maybeSingle();
         if (error) return json({ error: "Failed to update client" }, 400);
         if (!data) return json({ error: "Cliente não encontrado." }, 404);
+        try {
+          if ("validity_days" in body || "device_limit" in body)
+            await saveClientAccess(String(body["id"]), accessPatch(body));
+        } catch {
+          await pool.from("gateway_clients").update({ status: "suspended" }).eq("id", body["id"]);
+          return json({ error: "Falha ao salvar acesso. Cliente suspenso por segurança." }, 503);
+        }
         await recordAdminAudit(auth.actorId, "client.update", String(body["id"]));
         return json({ ok: true });
       },

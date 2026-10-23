@@ -1,9 +1,10 @@
 import { getPoolAdmin } from "./key-pool.server";
 import { authorizeAdmin, adminJson } from "./admin-auth.server";
-import { recordAdminAudit } from "./admin-store.server";
+import { recordAdminAudit, nameGatewayAccounts } from "./admin-store.server";
 import { isAllowedChildOrigin } from "./child-config.server";
 import { clientKeyHint } from "./client-keys.server";
 import { MODEL_CATALOG } from "./gateway-policy.server";
+import { listClientAccess } from "./client-access.server";
 
 const credentialAttempts = new Map<string, { count: number; expires: number }>();
 
@@ -34,6 +35,10 @@ type UsageGroup = {
   errors: number;
   inputTokens: number;
   outputTokens: number;
+  latencyMs: number;
+  measuredLatency: number;
+  unknownUsage: number;
+  completeTokens: number;
 };
 function filtered(query: AdminQuery, url: URL) {
   const days = number(url.searchParams.get("days"), 7, 90) || 1;
@@ -53,6 +58,7 @@ function filtered(query: AdminQuery, url: URL) {
 export function summarizeUsage(rows: UsageLog[]) {
   const models = new Map<string, UsageGroup>(),
     clients = new Map<string, UsageGroup>(),
+    hours = new Map<string, UsageGroup>(),
     days = new Map<string, UsageGroup>();
   const total = {
     requests: rows.length,
@@ -62,6 +68,7 @@ export function summarizeUsage(rows: UsageLog[]) {
     outputTokens: 0,
     unknownUsage: 0,
     latencyMs: 0,
+    measuredLatency: 0,
   };
   for (const r of rows) {
     const failed = Number(r.status_code) >= 400 || Boolean(r.error_message);
@@ -72,10 +79,32 @@ export function summarizeUsage(rows: UsageLog[]) {
     total.inputTokens += input || 0;
     total.outputTokens += output || 0;
     total.latencyMs += Number(r.latency_ms) || 0;
+    if (r.latency_ms != null) total.measuredLatency++;
+    const local = Object.fromEntries(
+      new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Sao_Paulo",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        hourCycle: "h23",
+      })
+        .formatToParts(new Date(r.created_at))
+        .map((part) => [part.type, part.value]),
+    );
     for (const [map, key] of [
       [models, r.resolved_model || "Não resolvido"],
       [clients, r.client_name || "Manutenção"],
-      [days, String(r.created_at).slice(0, 10)],
+      [hours, `${local["year"]}-${local["month"]}-${local["day"]} ${local["hour"]}:00`],
+      [
+        days,
+        new Intl.DateTimeFormat("en-CA", {
+          timeZone: "America/Sao_Paulo",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date(r.created_at)),
+      ],
     ] as [Map<string, UsageGroup>, string][]) {
       const item = map.get(key) || {
         name: key,
@@ -83,19 +112,32 @@ export function summarizeUsage(rows: UsageLog[]) {
         errors: 0,
         inputTokens: 0,
         outputTokens: 0,
+        latencyMs: 0,
+        measuredLatency: 0,
+        unknownUsage: 0,
+        completeTokens: 0,
       };
       item.requests++;
       if (failed) item.errors++;
       item.inputTokens += input || 0;
       item.outputTokens += output || 0;
+      if (r.latency_ms != null) {
+        item.latencyMs += Number(r.latency_ms);
+        item.measuredLatency++;
+      }
+      if (input === null || output === null) item.unknownUsage++;
+      else item.completeTokens += input + output;
       map.set(key, item);
     }
   }
   return {
     ...total,
-    averageLatencyMs: rows.length ? Math.round(total.latencyMs / rows.length) : null,
+    averageLatencyMs: total.measuredLatency
+      ? Math.round(total.latencyMs / total.measuredLatency)
+      : null,
     byModel: [...models.values()].sort((a, b) => b.requests - a.requests),
     byClient: [...clients.values()].sort((a, b) => b.requests - a.requests),
+    byHour: [...hours.values()].sort((a, b) => a.name.localeCompare(b.name)),
     byDay: [...days.values()].sort((a, b) => a.name.localeCompare(b.name)),
     costUsd: null,
   };
@@ -122,6 +164,7 @@ export async function handleAdminResource(request: Request, resource: string): P
       ]);
       if (settings.error || credentials.error || clients.error) throw new Error("database_error");
       const today = new Date().toISOString().slice(0, 10);
+      const access = await listClientAccess();
       const available = credentials.data.filter(
         (c) =>
           c.status === "active" &&
@@ -149,7 +192,11 @@ export async function handleAdminResource(request: Request, resource: string): P
           credentials: credentials.data.length,
           availableCredentials: available,
           clients: clients.data.length,
-          activeClients: clients.data.filter((c) => c.status === "active").length,
+          activeClients: clients.data.filter(
+            (c) =>
+              c.status === "active" &&
+              (!access[c.id]?.expires_at || Date.parse(access[c.id]!.expires_at!) > Date.now()),
+          ).length,
           admittedAttempts: clients.data.reduce((sum, c) => sum + Number(c.total_requests || 0), 0),
         },
         health: { database: true, checkedAt: new Date().toISOString(), ready: available > 0 },
@@ -175,10 +222,18 @@ export async function handleAdminResource(request: Request, resource: string): P
         .order("created_at", { ascending: false })
         .range((page - 1) * limit, page * limit - 1);
       if (error) throw error;
+      const access = await listClientAccess();
       return adminJson({
         rows: data.map(({ client_key, ...row }) => ({
           ...row,
           key_hint: clientKeyHint(client_key),
+          ...(access[row.id] || {
+            expires_at: null,
+            device_limit: 0,
+            device_count: 0,
+            devices: [],
+            unidentified_requests: 0,
+          }),
         })),
         total: count,
         page,
@@ -274,9 +329,33 @@ export async function handleAdminResource(request: Request, resource: string): P
       const { data, error } = await pool
         .from("gateway_key_pool")
         .select(CREDENTIAL_FIELDS)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
       if (error) throw error;
-      return adminJson({ rows: data });
+      const names = await nameGatewayAccounts(data.map((row) => row.id));
+      return adminJson({
+        rows: data.map((row) => ({
+          ...row,
+          account_label: names[row.id],
+          workspace_label: null,
+        })),
+      });
+    }
+    if (resource === "credentials" && request.method === "DELETE") {
+      const raw = await request.text();
+      if (raw.length > 4096) return adminJson({ error: "Dados muito grandes." }, 413);
+      const body = JSON.parse(raw);
+      if (typeof body?.id !== "string" || body.id.length > 100)
+        return adminJson({ error: "Conta inválida." }, 400);
+      const { data, error } = await pool
+        .from("gateway_key_pool")
+        .delete()
+        .eq("id", body.id)
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return adminJson({ error: "Conta não encontrada." }, 404);
+      await recordAdminAudit(auth.actorId, "credential.delete", body.id);
+      return adminJson({ ok: true });
     }
     if (resource === "credentials" && request.method === "POST") {
       const raw = await request.text();

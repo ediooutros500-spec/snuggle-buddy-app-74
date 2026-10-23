@@ -15,6 +15,7 @@ import { Route as ApiAdminClientsRouteImport } from './routes/api/admin/clients'
 import { Route as ApiAdminCredentialsRouteImport } from './routes/api/admin/credentials'
 import { Route as ApiAdminGatewayRouteImport } from './routes/api/admin/gateway'
 import { Route as ApiAdminPasswordRouteImport } from './routes/api/admin/password'
+import { Route as ApiAdminPlaygroundRouteImport } from './routes/api/admin/playground'
 import { Route as ApiAdminRequestsRouteImport } from './routes/api/admin/requests'
 import { Route as ApiAdminSessionRouteImport } from './routes/api/admin/session'
 import { Route as ApiAdminSystemRouteImport } from './routes/api/admin/system'
@@ -62,6 +63,11 @@ const ApiAdminGatewayRoute = ApiAdminGatewayRouteImport.update({
 const ApiAdminPasswordRoute = ApiAdminPasswordRouteImport.update({
   id: '/api/admin/password',
   path: '/api/admin/password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminPlaygroundRoute = ApiAdminPlaygroundRouteImport.update({
+  id: '/api/admin/playground',
+  path: '/api/admin/playground',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAdminRequestsRoute = ApiAdminRequestsRouteImport.update({
@@ -168,6 +174,7 @@ export interface FileRoutesByFullPath {
   '/api/admin/credentials': typeof ApiAdminCredentialsRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
   '/api/admin/password': typeof ApiAdminPasswordRoute
+  '/api/admin/playground': typeof ApiAdminPlaygroundRoute
   '/api/admin/requests': typeof ApiAdminRequestsRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
   '/api/admin/system': typeof ApiAdminSystemRoute
@@ -194,6 +201,7 @@ export interface FileRoutesByTo {
   '/api/admin/credentials': typeof ApiAdminCredentialsRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
   '/api/admin/password': typeof ApiAdminPasswordRoute
+  '/api/admin/playground': typeof ApiAdminPlaygroundRoute
   '/api/admin/requests': typeof ApiAdminRequestsRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
   '/api/admin/system': typeof ApiAdminSystemRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/api/admin/credentials': typeof ApiAdminCredentialsRoute
   '/api/admin/gateway': typeof ApiAdminGatewayRoute
   '/api/admin/password': typeof ApiAdminPasswordRoute
+  '/api/admin/playground': typeof ApiAdminPlaygroundRoute
   '/api/admin/requests': typeof ApiAdminRequestsRoute
   '/api/admin/session': typeof ApiAdminSessionRoute
   '/api/admin/system': typeof ApiAdminSystemRoute
@@ -249,6 +258,7 @@ export interface FileRouteTypes {
     | '/api/admin/credentials'
     | '/api/admin/gateway'
     | '/api/admin/password'
+    | '/api/admin/playground'
     | '/api/admin/requests'
     | '/api/admin/session'
     | '/api/admin/system'
@@ -275,6 +285,7 @@ export interface FileRouteTypes {
     | '/api/admin/credentials'
     | '/api/admin/gateway'
     | '/api/admin/password'
+    | '/api/admin/playground'
     | '/api/admin/requests'
     | '/api/admin/session'
     | '/api/admin/system'
@@ -301,6 +312,7 @@ export interface FileRouteTypes {
     | '/api/admin/credentials'
     | '/api/admin/gateway'
     | '/api/admin/password'
+    | '/api/admin/playground'
     | '/api/admin/requests'
     | '/api/admin/session'
     | '/api/admin/system'
@@ -328,6 +340,7 @@ export interface RootRouteChildren {
   ApiAdminCredentialsRoute: typeof ApiAdminCredentialsRoute
   ApiAdminGatewayRoute: typeof ApiAdminGatewayRoute
   ApiAdminPasswordRoute: typeof ApiAdminPasswordRoute
+  ApiAdminPlaygroundRoute: typeof ApiAdminPlaygroundRoute
   ApiAdminRequestsRoute: typeof ApiAdminRequestsRoute
   ApiAdminSessionRoute: typeof ApiAdminSessionRoute
   ApiAdminSystemRoute: typeof ApiAdminSystemRoute
@@ -390,6 +403,13 @@ declare module '@tanstack/react-router' {
       path: '/api/admin/password'
       fullPath: '/api/admin/password'
       preLoaderRoute: typeof ApiAdminPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/playground': {
+      id: '/api/admin/playground'
+      path: '/api/admin/playground'
+      fullPath: '/api/admin/playground'
+      preLoaderRoute: typeof ApiAdminPlaygroundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/admin/requests': {
@@ -528,6 +548,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAdminCredentialsRoute: ApiAdminCredentialsRoute,
   ApiAdminGatewayRoute: ApiAdminGatewayRoute,
   ApiAdminPasswordRoute: ApiAdminPasswordRoute,
+  ApiAdminPlaygroundRoute: ApiAdminPlaygroundRoute,
   ApiAdminRequestsRoute: ApiAdminRequestsRoute,
   ApiAdminSessionRoute: ApiAdminSessionRoute,
   ApiAdminSystemRoute: ApiAdminSystemRoute,

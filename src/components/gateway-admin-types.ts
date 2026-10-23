@@ -24,6 +24,11 @@ export type ClientRow = {
   key_hint: string;
   total_requests: number;
   created_at: string;
+  expires_at?: string | null;
+  device_limit?: number;
+  device_count?: number;
+  unidentified_requests?: number;
+  devices?: { name: string; first_seen: string; last_seen: string; requests: number }[];
 };
 export type RequestRow = {
   id: string;
@@ -41,6 +46,10 @@ export type RequestRow = {
   error_message: string | null;
 };
 export type UsageGroup = {
+  latencyMs: number;
+  measuredLatency: number;
+  completeTokens: number;
+  unknownUsage: number;
   name: string;
   requests: number;
   errors: number;
@@ -48,6 +57,7 @@ export type UsageGroup = {
   outputTokens: number;
 };
 export type UsageData = {
+  averageLatencyMs: number | null;
   requests: number;
   success: number;
   errors: number;
@@ -57,6 +67,7 @@ export type UsageData = {
   sampled: boolean;
   totalMatching: number;
   byDay: UsageGroup[];
+  byHour: UsageGroup[];
   byModel: UsageGroup[];
   byClient: UsageGroup[];
 };

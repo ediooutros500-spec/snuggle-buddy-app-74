@@ -13,7 +13,12 @@ export type AdminUser = {
   createdAt: string;
 };
 type Audit = { id: string; at: string; actorId: string; action: string; resourceId: string };
-type Store = { users: AdminUser[]; audit: Audit[] };
+type Store = {
+  users: AdminUser[];
+  audit: Audit[];
+  accountNames?: Record<string, string>;
+  nextAccountNumber?: number;
+};
 let queue: Promise<unknown> = Promise.resolve();
 
 const directory = () => {
@@ -105,6 +110,14 @@ export const listAdminUsers = () => transaction((s) => s.users.map(publicAdminUs
 export const listAdminAudit = () => transaction((s) => s.audit.slice(-100).reverse());
 export const recordAdminAudit = (actorId: string, action: string, resourceId: string) =>
   transaction((s) => audit(s, actorId, action, resourceId), true);
+export const nameGatewayAccounts = (ids: string[]) =>
+  transaction((store) => {
+    store.accountNames ??= {};
+    store.nextAccountNumber ??= 1;
+    for (const id of ids)
+      if (!store.accountNames[id]) store.accountNames[id] = `Conta ${store.nextAccountNumber++}`;
+    return Object.fromEntries(ids.map((id) => [id, store.accountNames![id]!]));
+  }, true);
 export async function createAdminUser(
   actorId: string,
   username: string,

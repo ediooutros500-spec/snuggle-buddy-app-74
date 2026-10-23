@@ -6,6 +6,7 @@
  */
 import { getPoolAdmin } from "./key-pool.server";
 import { storedClientKey } from "./client-keys.server";
+import { checkClientAccess } from "./client-access.server";
 
 export const EXPERIMENTAL_NOTICE =
   "Gateway experimental compatível com Claude Code. Não é a API oficial da Anthropic; " +
@@ -113,7 +114,10 @@ export function extractToken(request: Request): string {
  * 1. Confere se é o CLAUDE_CODE_GATEWAY_TOKEN (Admin).
  * 2. OU confere se é uma client_key emitida na tabela `gateway_clients`.
  */
-export async function authenticateGatewayRequest(request: Request): Promise<{
+export async function authenticateGatewayRequest(
+  request: Request,
+  observeAccess = true,
+): Promise<{
   authorized: boolean;
   isAdmin: boolean;
   client?: {
@@ -154,6 +158,8 @@ export async function authenticateGatewayRequest(request: Request): Promise<{
       }
 
       if (!error && data && data.status === "active") {
+        if (!(await checkClientAccess(request, data.id, observeAccess)))
+          return { authorized: false, isAdmin: false };
         return {
           authorized: true,
           isAdmin: false,
@@ -209,7 +215,7 @@ export const CORS_HEADERS: Record<string, string> = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers":
-    "authorization, x-api-key, content-type, anthropic-version, anthropic-beta, x-stainless-arch, x-stainless-lang, x-stainless-os, x-stainless-package-version, x-stainless-runtime, x-stainless-runtime-version",
+    "authorization, x-api-key, x-device-id, content-type, anthropic-version, anthropic-beta, x-stainless-arch, x-stainless-lang, x-stainless-os, x-stainless-package-version, x-stainless-runtime, x-stainless-runtime-version",
 };
 
 export function anthropicError(

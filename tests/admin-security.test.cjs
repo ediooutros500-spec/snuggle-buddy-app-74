@@ -31,6 +31,14 @@ test("administrative sessions enforce roles, origin, logout and persistent accou
     GATOR_ADMIN_BOOTSTRAP_PASSWORD_HASH: await store.hashAdminPassword(password),
     GATOR_ALLOW_LEGACY_ADMIN_TOKEN: "false",
   });
+  assert.deepEqual(await store.nameGatewayAccounts(["account-a", "account-b"]), {
+    "account-a": "Conta 1",
+    "account-b": "Conta 2",
+  });
+  assert.deepEqual(await store.nameGatewayAccounts(["account-b", "account-c"]), {
+    "account-b": "Conta 2",
+    "account-c": "Conta 3",
+  });
   const auth = load("src/lib/admin-auth.server.ts", { "./admin-store.server": store });
   const request = (method = "GET", cookie, body, origin = "https://panel.example.test") =>
     new Request("https://panel.example.test/api/admin/session", {
@@ -177,6 +185,10 @@ test("client management returns key once, masks listings and audits rotation", a
     "@/lib/key-pool.server": { getPoolAdmin: () => pool },
     "@/lib/admin-auth.server": {
       authorizeAdmin: async () => ({ ok: true, actorId: "admin-test" }),
+    },
+    "@/lib/client-access.server": {
+      accessPatch: load("src/lib/client-access.server.ts").accessPatch,
+      saveClientAccess: async () => {},
     },
     "@/lib/admin-store.server": { recordAdminAudit: async (...args) => events.push(args) },
   });

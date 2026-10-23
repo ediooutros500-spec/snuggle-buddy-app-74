@@ -40,6 +40,10 @@ function resources({ authorized = true, role = "admin", tables = {}, missing = f
         },
         single: async () => ({ data: data[0] || null, error: null }),
         maybeSingle: async () => ({ data: missing ? null : { id: "credential-1" }, error: null }),
+        delete() {
+          entry.deleted = true;
+          return q;
+        },
         update(p) {
           entry.patch = p;
           return q;
@@ -70,7 +74,12 @@ function resources({ authorized = true, role = "admin", tables = {}, missing = f
         return pool;
       },
     },
-    "./admin-store.server": { recordAdminAudit: async (...args) => events.push(args) },
+    "./client-access.server": { listClientAccess: async () => ({}) },
+    "./admin-store.server": {
+      nameGatewayAccounts: async (ids) =>
+        Object.fromEntries(ids.map((id, i) => [id, "Conta " + (i + 1)])),
+      recordAdminAudit: async (...args) => events.push(args),
+    },
   });
   return {
     ...module,
@@ -95,6 +104,40 @@ test("read-only account cannot change provider credentials", async () => {
   const f = resources({ role: "viewer" });
   assert.equal((await f.send("credentials", "PATCH", { id: "x", status: "disabled" })).status, 403);
   assert.equal(f.calls.length, 0);
+  assert.equal((await f.send("credentials", "DELETE", { id: "x" })).status, 403);
+  assert.equal(f.calls.length, 0);
+});
+
+test("account deletion is scoped, audited and reports missing accounts", async () => {
+  const f = resources();
+  assert.equal((await f.send("credentials", "DELETE", { id: "credential-1" })).status, 200);
+  assert.equal(f.calls[0].deleted, true);
+  assert.deepEqual(f.calls[0].filters, [["eq", "id", "credential-1"]]);
+  assert.equal(f.events[0][1], "credential.delete");
+  assert.equal(
+    (await resources({ missing: true }).send("credentials", "DELETE", { id: "missing" })).status,
+    404,
+  );
+});
+
+test("usage groups preserve unknown values and use Sao Paulo calendar hours", () => {
+  const f = resources();
+  const common = {
+    status_code: 200,
+    error_message: null,
+    resolved_model: "openai/gpt-6.1-sol",
+    client_name: "Test",
+    created_at: "2026-10-23T01:00:00Z",
+  };
+  const usage = f.summarizeUsage([
+    { ...common, input_tokens: 10, output_tokens: 20, latency_ms: 100 },
+    { ...common, input_tokens: 5, output_tokens: null, latency_ms: null },
+  ]);
+  assert.equal(usage.averageLatencyMs, 100);
+  assert.equal(usage.byDay[0].name, "2026-10-22");
+  assert.equal(usage.byHour[0].name, "2026-10-22 22:00");
+  assert.equal(usage.byModel[0].completeTokens, 30);
+  assert.equal(usage.byModel[0].unknownUsage, 1);
 });
 test("client list is paginated and never returns stored key records", async () => {
   const f = resources({

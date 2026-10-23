@@ -1,14 +1,14 @@
 export const ADMIN_SECTIONS = [
   {
     id: "overview",
-    label: "Resumo",
+    label: "Dashboard",
     description: "Disponibilidade das conexões e atividade do gateway.",
     group: "Operação",
   },
   {
     id: "connections",
-    label: "Conexões Lovable",
-    description: "Contas, projetos e credenciais do seu único provedor.",
+    label: "Contas",
+    description: "Disponibilidade e limites das suas contas.",
     group: "Operação",
   },
   {
@@ -19,20 +19,14 @@ export const ADMIN_SECTIONS = [
   },
   {
     id: "models",
-    label: "Catálogo de modelos",
-    description: "Permissões globais e modelo de texto padrão.",
+    label: "Modelos",
+    description: "Histórico, respostas e diagnóstico das chamadas por modelo.",
     group: "Operação",
   },
   {
     id: "usage",
     label: "Consumo",
     description: "Requisições e tokens registrados por período, modelo e cliente.",
-    group: "Monitoramento",
-  },
-  {
-    id: "requests",
-    label: "Requisições",
-    description: "Histórico pesquisável para investigar respostas e falhas.",
     group: "Monitoramento",
   },
   {
@@ -49,14 +43,8 @@ export const ADMIN_SECTIONS = [
   },
   {
     id: "settings",
-    label: "Configuração",
-    description: "Limite global, seleção de credenciais e diagnóstico da instalação.",
-    group: "Administração",
-  },
-  {
-    id: "team",
-    label: "Equipe e auditoria",
-    description: "Acesso administrativo e histórico das alterações.",
+    label: "Configurações",
+    description: "Controles globais, permissões de modelos e senha de acesso.",
     group: "Administração",
   },
 ];

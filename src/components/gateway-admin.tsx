@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import {
   Activity,
-  Plug,
   KeyRound,
   Boxes,
   BarChart3,
-  ScrollText,
   FlaskConical,
   Code2,
   Settings2,
-  ShieldCheck,
   RefreshCw,
   LogOut,
   ArrowUpRight,
@@ -21,7 +18,7 @@ import {
   CheckCircle2,
   AlertCircle,
 } from "lucide-react";
-import { AdminTeam } from "./admin-team";
+import { MODEL_DISPLAY_NAMES } from "@/lib/model-names";
 import { ADMIN_SECTIONS } from "./gateway-navigation";
 import "./gateway-admin.css";
 
@@ -37,18 +34,16 @@ import type {
 } from "./gateway-admin-types";
 type User = { username: string; role: "admin" | "operator" | "viewer" };
 type System = SystemData;
-const ICONS = [
-  Activity,
-  Plug,
-  KeyRound,
-  Boxes,
-  BarChart3,
-  ScrollText,
-  FlaskConical,
-  Code2,
-  Settings2,
-  ShieldCheck,
-];
+const ICONS: Record<string, typeof Activity> = {
+  overview: Activity,
+  connections: KeyRound,
+  clients: Boxes,
+  models: Activity,
+  usage: BarChart3,
+  playground: FlaskConical,
+  integration: Code2,
+  settings: Settings2,
+};
 const integer = (value: unknown) => Number(value || 0).toLocaleString("pt-BR");
 const date = (value: unknown) =>
   value ? new Date(String(value)).toLocaleString("pt-BR") : "Nunca";
@@ -283,7 +278,7 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
       <div className="gateway-admin ag-login">
         <div className="ag-login-card">
           <div className="ag-logo">
-            G<span>Lovable Gateway</span>
+            G<span>Gateway</span>
           </div>
           <Badge>Administração</Badge>
           <h1>
@@ -291,7 +286,7 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
             <br />
             sob controle.
           </h1>
-          <p>Entre para administrar conexões, clientes e consumo do provedor Lovable.</p>
+          <p>Entre para administrar suas contas, clientes e consumo.</p>
           <form onSubmit={login}>
             <Field label="Usuário">
               <input name="username" autoComplete="username" required autoFocus />
@@ -309,7 +304,7 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
               {notice}
             </div>
           )}
-          <small>Acesso restrito à equipe autorizada.</small>
+          <small>Acesso administrativo.</small>
         </div>
       </div>
     );
@@ -318,10 +313,7 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
     <div className="gateway-admin">
       <aside className={`ag-sidebar ${mobile ? "open" : ""}`}>
         <a className="ag-logo" href="/admin/overview">
-          G
-          <span>
-            Gateway<small>ADMIN CONSOLE</small>
-          </span>
+          G<span>Gateway</span>
         </a>
         <button
           className="ag-mobile-close"
@@ -330,19 +322,13 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
         >
           <X />
         </button>
-        <div className="ag-provider">
-          <span className="ag-provider-icon">L</span>
-          <div>
-            <strong>Lovable AI Gateway</strong>
-            <small>Provedor único</small>
-          </div>
-        </div>
+
         <nav>
           {["Operação", "Monitoramento", "Ferramentas", "Administração"].map((group) => (
             <div key={group}>
               <p className="ag-nav-group">{group}</p>
-              {ADMIN_SECTIONS.map((item, i) => {
-                const Icon = ICONS[i]!;
+              {ADMIN_SECTIONS.map((item) => {
+                const Icon = ICONS[item.id]!;
                 return item.group === group ? (
                   <a
                     key={item.id}
@@ -390,7 +376,7 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
           </div>
           <div>
             <Badge tone={system?.health["ready"] ? "success" : "warning"}>
-              {system?.health["ready"] ? "Conexões disponíveis" : "Aguardando conexão"}
+              {system?.health["ready"] ? "Contas disponíveis" : "Aguardando conta"}
             </Badge>
             <Button
               secondary
@@ -407,13 +393,12 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
         <div className="ag-content">
           <div className="ag-page-heading">
             <div>
-              <span className="ag-eyebrow">LOVABLE · PROVEDOR ÚNICO</span>
               <h1>{active.label}</h1>
               <p>{active.description}</p>
             </div>
             {section === "overview" && (
               <a className="ag-link-button" href="/admin/connections">
-                Gerenciar conexões
+                Gerenciar contas
                 <ArrowUpRight size={15} />
               </a>
             )}
@@ -442,16 +427,6 @@ export function GatewayAdmin({ section = "overview" }: { section?: string }) {
               notify={setNotice}
             />
           )}
-          <footer className="ag-footer">
-            <span>Lovable Gateway · Administração de um provedor</span>
-            <a
-              href={system?.addresses.apiBaseUrl.replace(/\/v1$/, "") || "#"}
-              target="_blank"
-              rel="noreferrer"
-            >
-              API pública <ArrowUpRight size={12} />
-            </a>
-          </footer>
         </div>
       </main>
     </div>
@@ -473,32 +448,19 @@ function Page(props: PageProps) {
     case "clients":
       return <Clients {...props} />;
     case "models":
-      return <Models {...props} />;
+      return <Requests {...props} />;
     case "usage":
       return <Usage {...props} />;
-    case "requests":
-      return <Requests {...props} />;
     case "playground":
       return <Playground {...props} />;
     case "integration":
       return <Integration {...props} />;
     case "settings":
-      return <Configuration {...props} />;
-    case "team":
       return (
         <div className="ag-stack">
+          <Configuration {...props} />
+          <GlobalModels {...props} />
           <PasswordForm notify={props.notify} />
-          {props.user.role === "admin" ? (
-            <AdminTeam />
-          ) : (
-            <Panel title="Seu acesso">
-              <p>
-                Seu perfil permite{" "}
-                {props.write ? "operar conexões e clientes" : "consultar a operação"}. A gestão da
-                equipe e a auditoria são exclusivas dos administradores.
-              </p>
-            </Panel>
-          )}
         </div>
       );
     default:
@@ -524,444 +486,473 @@ function useResource<T>(path: string, refresh: number) {
   }, [path, refresh]);
   return { data, error };
 }
-function Overview({ system, refresh }: PageProps) {
-  const { data, error } = useResource<UsageData>("/api/admin/usage?days=7", refresh);
+
+const label = (id: string) => MODEL_DISPLAY_NAMES[id] || id;
+const families = [
+  { id: "anthropic", name: "Claude", icon: "anthropic" },
+  { id: "openai", name: "OpenAI", icon: "openai" },
+  { id: "google", name: "Google", icon: "googlegemini" },
+];
+function Brand({ family }: { family: string }) {
+  const f = families.find((x) => x.id === family);
+  return (
+    <span className="ag-brand">
+      <img src={`/brands/${f?.icon || "anthropic"}.svg`} width="20" height="20" alt="" />
+      {f?.name || family}
+    </span>
+  );
+}
+function ModelPicker({
+  catalog,
+  defaults = [],
+  name = "models",
+}: {
+  catalog: ModelRow[];
+  defaults?: string[];
+  name?: string;
+}) {
+  const [selected, setSelected] = useState(defaults),
+    [family, setFamily] = useState("all"),
+    [query, setQuery] = useState("");
+  const shown = catalog.filter(
+    (m) =>
+      (family === "all" || m.id.startsWith(family + "/")) &&
+      label(m.id).toLowerCase().includes(query.toLowerCase()),
+  );
+  const toggle = (id: string) =>
+    setSelected((xs) => (xs.includes(id) ? xs.filter((x) => x !== id) : [...xs, id]));
+  return (
+    <div className="ag-model-picker">
+      <div className="ag-actions">
+        <Button
+          type="button"
+          secondary
+          onClick={() => setSelected([])}
+          aria-pressed={!selected.length}
+        >
+          Todos os liberados
+        </Button>
+        <span>
+          {selected.length
+            ? `${selected.length} selecionados`
+            : "Todos os modelos liberados globalmente"}
+        </span>
+      </div>
+      <div className="ag-tabs">
+        <Button
+          type="button"
+          secondary
+          onClick={() => setFamily("all")}
+          aria-pressed={family === "all"}
+        >
+          Todas as famílias
+        </Button>
+        {families.map((f) => (
+          <Button
+            type="button"
+            secondary
+            key={f.id}
+            onClick={() => setFamily(f.id)}
+            aria-pressed={family === f.id}
+          >
+            <Brand family={f.id} />
+          </Button>
+        ))}
+      </div>
+      <input
+        aria-label="Buscar modelos"
+        placeholder="Buscar modelo…"
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+      />
+      <div className="ag-model-grid">
+        {shown.map((m) => (
+          <label
+            key={m.id}
+            className={`ag-model-choice ${selected.includes(m.id) ? "selected" : ""}`}
+          >
+            <input
+              type="checkbox"
+              checked={selected.includes(m.id)}
+              onChange={() => toggle(m.id)}
+            />
+            <span>
+              <strong>{label(m.id)}</strong>
+              <small>
+                {m.kind === "text"
+                  ? "Texto"
+                  : m.kind === "image"
+                    ? "Imagem"
+                    : m.kind === "video"
+                      ? "Vídeo / multimodal"
+                      : "Embeddings"}
+                {!m.enabled ? " · bloqueado globalmente" : ""}
+              </small>
+            </span>
+          </label>
+        ))}
+      </div>
+      {selected.map((id) => (
+        <input type="hidden" key={id} name={name} value={id} />
+      ))}
+    </div>
+  );
+}
+function ModelSelect({
+  catalog,
+  value,
+  onChange,
+}: {
+  catalog: ModelRow[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [family, setFamily] = useState(value.split("/")[0] || "anthropic");
+  const rows = catalog.filter((m) => m.id.startsWith(family + "/"));
   return (
     <div className="ag-stack">
+      <div className="ag-tabs">
+        {families.map((f) => (
+          <Button
+            type="button"
+            secondary
+            key={f.id}
+            aria-pressed={family === f.id}
+            onClick={() => {
+              setFamily(f.id);
+              onChange(catalog.find((m) => m.id.startsWith(f.id + "/"))?.id || "");
+            }}
+          >
+            <Brand family={f.id} />
+          </Button>
+        ))}
+      </div>
+      <select
+        aria-label="Modelo"
+        value={rows.some((m) => m.id === value) ? value : ""}
+        onChange={(e) => onChange(e.target.value)}
+        required
+      >
+        <option value="" disabled>
+          Selecione um modelo
+        </option>
+        {rows.map((m) => (
+          <option value={m.id} key={m.id}>
+            {label(m.id)}
+          </option>
+        ))}
+      </select>
+      {!rows.length && <small>Nenhum modelo permitido nesta família.</small>}
+    </div>
+  );
+}
+function Period({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="ag-tabs" aria-label="Período">
+      {[1, 7, 15, 30, 90].map((d) => (
+        <Button
+          secondary
+          key={d}
+          aria-pressed={value === String(d)}
+          onClick={() => onChange(String(d))}
+        >
+          {d === 1 ? "24 horas" : `${d} dias`}
+        </Button>
+      ))}
+    </div>
+  );
+}
+function UsageCharts({ data }: { data: UsageData | null }) {
+  const rows = data && data.byDay.length > 1 ? data.byDay : data?.byHour || [],
+    max = Math.max(1, ...rows.map((x) => x.requests));
+  return (
+    <div className="ag-two">
+      <Panel title="Tráfego e respostas">
+        <div
+          className="ag-chart"
+          role="img"
+          aria-label="Requisições e erros registrados por período"
+        >
+          <svg viewBox="0 0 640 180" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="trafficFill" x1="0" y1="0" x2="0" y2="1">
+                <stop stopColor="#7157eb" stopOpacity=".3" />
+                <stop offset="1" stopColor="#7157eb" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {[0, 1, 2, 3].map((i) => (
+              <line key={i} x1="10" x2="630" y1={20 + i * 45} y2={20 + i * 45} stroke="#e7e9f0" />
+            ))}
+            {rows.length > 0 && (
+              <>
+                {rows.length > 1 && (
+                  <polygon
+                    fill="url(#trafficFill)"
+                    points={`10,170 ${rows.map((d, i) => `${rows.length === 1 ? 320 : 10 + (i * 620) / (rows.length - 1)},${165 - (d.requests / max) * 145}`).join(" ")} 630,170`}
+                  />
+                )}
+                {[false, true].map((err) => (
+                  <polyline
+                    key={String(err)}
+                    fill="none"
+                    stroke={err ? "#e65f70" : "#7157eb"}
+                    strokeWidth="3"
+                    points={rows
+                      .map(
+                        (d, i) =>
+                          `${rows.length === 1 ? 320 : 10 + (i * 620) / (rows.length - 1)},${165 - ((err ? d.errors : d.requests) / max) * 145}`,
+                      )
+                      .join(" ")}
+                  />
+                ))}
+                {rows.map((d, i) => (
+                  <circle
+                    key={d.name}
+                    cx={rows.length === 1 ? 320 : 10 + (i * 620) / (rows.length - 1)}
+                    cy={165 - (d.requests / max) * 145}
+                    r="4"
+                    fill="#7157eb"
+                  >
+                    <title>
+                      {d.name}: {d.requests} requisições, {d.errors} erros
+                    </title>
+                  </circle>
+                ))}
+              </>
+            )}
+          </svg>
+          <div className="ag-chart-legend">
+            <span>● Requisições</span>
+            <span>● Erros</span>
+          </div>
+        </div>
+        {!rows.length && <p>Sem requisições no período.</p>}
+        <div className="ag-chart-dates">
+          <span>{rows[0]?.name}</span>
+          <span>{rows.at(-1)?.name}</span>
+        </div>
+      </Panel>
+      <Panel title="Modelos mais utilizados">
+        <div className="ag-ranking">
+          {data?.byModel.slice(0, 6).map((r) => (
+            <div key={r.name}>
+              <span>
+                {label(r.name)}
+                <b>{integer(r.requests)}</b>
+              </span>
+              <progress
+                value={r.requests}
+                max={Math.max(1, ...data.byModel.map((x) => x.requests))}
+              />
+            </div>
+          ))}
+        </div>
+        {!data?.byModel.length && <p>Nenhum consumo registrado.</p>}
+      </Panel>
+    </div>
+  );
+}
+function Overview({ system, refresh }: PageProps) {
+  const [days, setDays] = useState("7");
+  const { data, error } = useResource<UsageData>(`/api/admin/usage?days=${days}`, refresh);
+  return (
+    <div className="ag-stack">
+      <Period value={days} onChange={setDays} />
+      {error && <p className="ag-alert error">{error}</p>}
       <Stats
         items={[
           {
-            label: "Conexões disponíveis",
-            value: integer(system.counts["availableCredentials"]),
-            detail: `${integer(system.counts["credentials"])} credenciais cadastradas`,
+            label: "Contas disponíveis",
+            value: integer(system.counts.availableCredentials),
+            detail: `${system.counts.credentials} contas cadastradas`,
           },
           {
             label: "Clientes ativos",
-            value: integer(system.counts["activeClients"]),
-            detail: `${integer(system.counts["clients"])} clientes no total`,
+            value: integer(system.counts.activeClients),
+            detail: `${system.counts.clients} clientes cadastrados`,
           },
           {
-            label: "Requisições em 7 dias",
-            value: data ? integer(data["requests"]) : "—",
-            detail: data?.["sampled"]
-              ? "Amostra dos 2.000 registros recentes"
-              : "Solicitações registradas no histórico",
+            label: "Requisições",
+            value: data ? integer(data.requests) : "—",
+            detail: `${integer(data?.errors)} com erro`,
           },
           {
-            label: "Tokens registrados",
-            value: data ? integer(data["inputTokens"] + data["outputTokens"]) : "—",
-            detail: data?.["unknownUsage"]
-              ? `${data["unknownUsage"]} registros com uso desconhecido`
-              : "Entrada + saída; sem estimativa de preço",
+            label: "Tokens",
+            value: data ? integer(data.inputTokens + data.outputTokens) : "—",
+            detail: `${integer(data?.unknownUsage)} registros sem uso completo`,
           },
         ]}
       />
+      {data?.sampled && (
+        <div className="ag-alert warning">
+          Amostra de {integer(data.requests)} de {integer(data.totalMatching)} registros; amplie a
+          análise com os filtros.
+        </div>
+      )}
+      <UsageCharts data={data} />
       <div className="ag-two">
-        <Panel
-          title="Estado da operação"
-          description="O que está disponível para atender chamadas agora."
-        >
-          <div className="ag-check-row">
-            <span>Banco central</span>
-            <Badge tone="success">Conectado</Badge>
-          </div>
-          <div className="ag-check-row">
-            <span>Credenciais Lovable</span>
-            <Badge tone={system.health["ready"] ? "success" : "warning"}>
-              {system.health["ready"] ? "Prontas para seleção" : "Nenhuma disponível"}
-            </Badge>
-          </div>
-          <div className="ag-check-row">
-            <span>Distribuição</span>
-            <strong>Rodízio entre credenciais elegíveis</strong>
-          </div>
-          <div className="ag-check-row">
-            <span>Modelo padrão</span>
-            <code>{system.settings["default_model"]}</code>
-          </div>
-          <div className="ag-check-row">
-            <span>Limite global</span>
-            <strong>{integer(system.settings["global_rate_limit_rpm"])} req/min</strong>
-          </div>
-          {!system.health["ready"] && (
-            <div className="ag-alert warning">
-              Cadastre uma credencial ou conecte um projeto Lovable para iniciar o atendimento. A
-              API está publicada, mas precisa de uma chave do provedor.
-            </div>
-          )}
-        </Panel>
-        <Panel
-          title="Conecte seu primeiro aplicativo"
-          description="A chave do cliente é diferente da credencial Lovable."
-        >
-          <ol className="ag-steps">
-            <li>
-              <span>1</span>
-              <div>
-                <strong>Conecte o provedor</strong>
-                <p>Receba a chave de um projeto seu ou cadastre uma conexão.</p>
-              </div>
-            </li>
-            <li>
-              <span>2</span>
-              <div>
-                <strong>Crie um cliente</strong>
-                <p>Defina modelos, RPM e quota; copie a chave emitida uma única vez.</p>
-              </div>
-            </li>
-            <li>
-              <span>3</span>
-              <div>
-                <strong>Use sua API</strong>
-                <p>Configure o endereço e teste uma chamada com a chave do cliente.</p>
-              </div>
-            </li>
-          </ol>
-          <a className="ag-text-link" href="/admin/integration">
-            Ver exemplos de integração <ArrowUpRight size={14} />
-          </a>
-        </Panel>
-      </div>
-      <Panel
-        title="Atividade por dia"
-        description="Somente os registros existentes no período, sem preencher números fictícios."
-      >
-        {error ? (
-          <p className="ag-error">{error}</p>
-        ) : data?.["byDay"]?.length ? (
-          <div className="ag-bars">
-            {data["byDay"].map((d: UsageGroup) => (
-              <div key={d["name"]}>
-                <span>{d["name"].slice(5)}</span>
-                <div>
-                  <i
-                    style={{
-                      width: `${Math.max(3, (d["requests"] / Math.max(...data["byDay"].map((x: UsageGroup) => x["requests"]))) * 100)}%`,
-                    }}
-                  />
-                </div>
-                <strong>{integer(d["requests"])}</strong>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Empty
-            title="Ainda sem atividade registrada"
-            description="As requisições aparecerão aqui depois dos primeiros testes e chamadas dos clientes."
+        <Panel title="Desempenho">
+          <Stats
+            items={[
+              {
+                label: "Sucesso",
+                value: data?.requests
+                  ? `${((data.success / data.requests) * 100).toFixed(1)}%`
+                  : "—",
+                detail: "Respostas sem erro registrado",
+              },
+              {
+                label: "Latência média",
+                value:
+                  data?.averageLatencyMs != null ? `${integer(data.averageLatencyMs)} ms` : "—",
+                detail: "Chamadas com duração registrada",
+              },
+            ]}
           />
-        )}
-      </Panel>
-    </div>
-  );
-}
-
-function Connections({ write, refresh, reload, notify, system }: PageProps) {
-  const { data, error } = useResource<{ rows: ConnectionRow[] }>("/api/admin/credentials", refresh),
-    [adding, setAdding] = useState(false),
-    [editing, setEditing] = useState<ConnectionRow | null>(null),
-    [busy, setBusy] = useState(false);
-  async function save(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setBusy(true);
-    const form = new FormData(event.currentTarget);
-    const value: Record<string, unknown> = {
-      account_label: form.get("account_label"),
-      workspace_label: form.get("workspace_label"),
-    };
-    if (editing) {
-      value["id"] = editing["id"];
-      value["daily_request_limit"] =
-        form.get("daily_request_limit") === "" ? null : Number(form.get("daily_request_limit"));
-    } else {
-      value["api_key"] = form.get("api_key");
-      value["project_origin"] = form.get("project_origin");
-    }
-    try {
-      await api("/api/admin/credentials", {
-        method: editing ? "PATCH" : "POST",
-        body: JSON.stringify(value),
-      });
-      setAdding(false);
-      setEditing(null);
-      reload();
-      notify("Conexão salva.");
-    } catch (e) {
-      notify((e as Error).message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function status(row: ConnectionRow) {
-    try {
-      await api("/api/admin/credentials", {
-        method: "PATCH",
-        body: JSON.stringify({
-          id: row["id"],
-          status: row["status"] === "disabled" ? "active" : "disabled",
-        }),
-      });
-      reload();
-      notify("Estado da conexão atualizado.");
-    } catch (e) {
-      notify((e as Error).message);
-    }
-  }
-  return (
-    <div className="ag-stack">
-      <Stats
-        items={[
-          {
-            label: "Credenciais",
-            value: integer(system.counts["credentials"]),
-            detail: "Todas do provedor Lovable",
-          },
-          {
-            label: "Disponíveis",
-            value: integer(system.counts["availableCredentials"]),
-            detail: "Ativas e dentro da quota diária",
-          },
-          {
-            label: "Cadastro automático",
-            value: "Habilitado",
-            detail: "Projetos com o gatilho atualizado",
-          },
-        ]}
-      />
-      <Panel
-        title="Suas conexões"
-        description="Chaves do provedor são guardadas no servidor. A lista exibe apenas uma identificação parcial."
-        action={
-          <Button
-            disabled={!write}
-            onClick={() => {
-              setAdding(!adding);
-              setEditing(null);
-            }}
-          >
-            <Plus size={15} />
-            Adicionar conexão
-          </Button>
-        }
-      >
-        {(adding || editing) && (
-          <form className="ag-form-box" onSubmit={save}>
-            <h3>{editing ? "Editar conexão" : "Cadastrar chave Lovable"}</h3>
-            <div className="ag-form-grid">
-              <Field label="Identificação da conta">
-                <input
-                  name="account_label"
-                  maxLength={80}
-                  defaultValue={editing?.["account_label"] || ""}
-                  placeholder="Minha conta principal"
-                />
-              </Field>
-              <Field label="Workspace">
-                <input
-                  name="workspace_label"
-                  maxLength={80}
-                  defaultValue={editing?.["workspace_label"] || ""}
-                  placeholder="Meu workspace"
-                />
-              </Field>
-              {editing ? (
-                <Field label="Limite diário (vazio = sem limite)">
-                  <input
-                    name="daily_request_limit"
-                    type="number"
-                    min={0}
-                    defaultValue={editing["daily_request_limit"] ?? ""}
-                  />
-                </Field>
-              ) : (
-                <>
-                  <Field label="URL do projeto Lovable">
-                    <input
-                      name="project_origin"
-                      type="url"
-                      required
-                      placeholder="https://seu-projeto.lovable.app"
-                    />
-                  </Field>
-                  <Field
-                    label="Credencial Lovable"
-                    hint="A validação envia uma requisição mínima ao provedor e pode consumir crédito."
-                  >
-                    <input
-                      name="api_key"
-                      type="password"
-                      autoComplete="off"
-                      minLength={8}
-                      maxLength={8192}
-                      required
-                    />
-                  </Field>
-                </>
-              )}
-            </div>
-            <div className="ag-actions">
-              <Button disabled={busy}>
-                {busy
-                  ? "Validando e salvando…"
-                  : editing
-                    ? "Salvar conexão"
-                    : "Validar e cadastrar"}
-              </Button>
-              <Button
-                type="button"
-                secondary
-                onClick={() => {
-                  setAdding(false);
-                  setEditing(null);
-                }}
-              >
-                Cancelar
-              </Button>
-            </div>
-          </form>
-        )}
-        {error ? (
-          <p className="ag-error">{error}</p>
-        ) : data?.["rows"].length ? (
-          <GridTable
-            heads={["Conta / projeto", "Chave", "Estado", "Uso diário", "Último uso", "Ações"]}
-          >
-            {data["rows"].map((row: ConnectionRow) => (
-              <tr key={row["id"]}>
-                <td>
-                  <strong>{row["account_label"] || "Conta sem identificação"}</strong>
-                  <small>{row["workspace_label"] || "Workspace não informado"}</small>
-                  <a
-                    href={row["project_origin"]}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="ag-origin"
-                  >
-                    {row["project_origin"]}
-                  </a>
-                </td>
-                <td>
-                  <code>{row["key_hint"]}</code>
-                </td>
-                <td>
-                  <Badge
-                    tone={
-                      row["status"] === "active"
-                        ? "success"
-                        : row["status"] === "exhausted"
-                          ? "warning"
-                          : "neutral"
-                    }
-                  >
-                    {row["status"] === "active"
-                      ? "Ativa"
-                      : row["status"] === "exhausted"
-                        ? "Em cooldown"
-                        : "Desativada"}
-                  </Badge>
-                  {row["last_error"] && <small className="ag-error">{row["last_error"]}</small>}
-                </td>
-                <td>
-                  {row["usage_date"] === new Date().toISOString().slice(0, 10)
-                    ? integer(row["requests_today"])
-                    : 0}{" "}
-                  / {row["daily_request_limit"] ?? "∞"}
-                  <small>{integer(row["total_requests"])} seleções no total</small>
-                </td>
-                <td>{date(row["last_used_at"])}</td>
-                <td>
-                  <div className="ag-actions">
-                    <Button
-                      secondary
-                      disabled={!write}
-                      onClick={() => {
-                        setEditing(row);
-                        setAdding(false);
-                      }}
-                    >
-                      Editar
-                    </Button>
-                    <Button secondary disabled={!write} onClick={() => status(row)}>
-                      {row["status"] === "disabled" ? "Retomar" : "Desativar"}
-                    </Button>
-                  </div>
-                </td>
+        </Panel>
+        <Panel title="Clientes com maior atividade">
+          <GridTable heads={["Cliente", "Chamadas", "Tokens"]}>
+            {data?.byClient.slice(0, 5).map((r) => (
+              <tr key={r.name}>
+                <td>{r.name}</td>
+                <td>{integer(r.requests)}</td>
+                <td>{integer(r.inputTokens + r.outputTokens)}</td>
               </tr>
             ))}
           </GridTable>
-        ) : (
-          <Empty
-            title="Nenhuma conexão Lovable cadastrada"
-            description="Adicione uma chave sua ou conecte um projeto com o cadastro automático abaixo."
-          />
-        )}
-      </Panel>
-      <AutomaticRegistration notify={notify} write={write} reload={reload} />
+        </Panel>
+      </div>
     </div>
   );
 }
-function AutomaticRegistration({
-  notify,
-  write,
-  reload,
-}: {
-  notify: (s: string) => void;
-  write: boolean;
-  reload: () => void;
-}) {
-  const [busy, setBusy] = useState(false),
-    [result, setResult] = useState<{
-      result?: { registered?: boolean; message?: string };
-      error?: string;
-    } | null>(null);
-  async function sync(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setBusy(true);
+function Connections({ write, refresh, reload, notify }: PageProps) {
+  const { data, error } = useResource<{ rows: ConnectionRow[] }>("/api/admin/credentials", refresh),
+    [pending, setPending] = useState("");
+  async function change(row: ConnectionRow, method: string, patch: Record<string, unknown> = {}) {
+    if (
+      method === "DELETE" &&
+      !window.confirm(
+        `Excluir ${row.account_label}? Ela deixará de atender novas chamadas. Um projeto ativo poderá cadastrá-la novamente pelo gatilho.`,
+      )
+    )
+      return;
+    setPending(row.id);
     try {
-      const form = new FormData(e.currentTarget);
-      const r = await fetch("/api/public/v1/workers/dispatch", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ project_origin: form.get("origin") }),
+      await api("/api/admin/credentials", {
+        method,
+        body: JSON.stringify({ id: row.id, ...patch }),
       });
-      const d = await r.json();
-      setResult(d);
-      if (d.result?.registered) reload();
-      if (!r.ok) notify(d.error || "O projeto não confirmou o registro.");
+      reload();
+      notify(method === "DELETE" ? "Conta excluída." : "Conta atualizada.");
     } catch (e) {
       notify((e as Error).message);
     } finally {
-      setBusy(false);
+      setPending("");
     }
   }
   return (
     <Panel
-      title="Conectar um projeto automaticamente"
-      description="O projeto precisa conter o gatilho atualizado e ter sua própria chave Lovable disponível no servidor."
+      title="Contas"
+      description="Gerencie a disponibilidade e os limites das contas recebidas automaticamente."
     >
-      <form className="ag-inline-form" onSubmit={sync}>
-        <Field label="Projeto publicado">
-          <input name="origin" type="url" required placeholder="https://seu-projeto.lovable.app" />
-        </Field>
-        <Button disabled={!write || busy}>
-          {busy ? "Consultando projeto…" : "Solicitar cadastro"}
-        </Button>
-      </form>
-      {result && (
-        <div className={`ag-alert ${result["result"]?.registered ? "success" : "warning"}`}>
-          <strong>
-            {result["result"]?.registered ? "Cadastro confirmado" : "Cadastro não confirmado"}
-          </strong>
-          <span>
-            {result["result"]?.message ||
-              result["error"] ||
-              "O sinal foi entregue; o projeto ainda não confirmou o cadastro."}
-          </span>
-        </div>
+      {error ? (
+        <p className="ag-error">{error}</p>
+      ) : data?.rows.length ? (
+        <GridTable
+          heads={["Conta", "Estado", "Requisições hoje", "Último uso", "Limite diário", "Ações"]}
+        >
+          {data.rows.map((row) => (
+            <tr key={row.id}>
+              <td>
+                <strong>{row.account_label}</strong>
+                <small>{row.key_hint}</small>
+              </td>
+              <td>
+                <Badge
+                  tone={
+                    row.status === "active"
+                      ? "success"
+                      : row.status === "exhausted"
+                        ? "warning"
+                        : "neutral"
+                  }
+                >
+                  {row.status === "active"
+                    ? "Ativa"
+                    : row.status === "exhausted"
+                      ? "Em espera"
+                      : "Desativada"}
+                </Badge>
+                {row.last_error && (
+                  <details>
+                    <summary>Ver erro</summary>
+                    <small className="ag-error">{row.last_error}</small>
+                  </details>
+                )}
+              </td>
+              <td>
+                {integer(
+                  row.usage_date === new Date().toISOString().slice(0, 10) ? row.requests_today : 0,
+                )}
+                <small>{integer(row.total_requests)} seleções no total</small>
+              </td>
+              <td>{date(row.last_used_at)}</td>
+              <td>
+                <form
+                  className="ag-inline-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const value = new FormData(e.currentTarget).get("limit");
+                    void change(row, "PATCH", {
+                      daily_request_limit: value === "" ? null : Number(value),
+                    });
+                  }}
+                >
+                  <input
+                    aria-label={`Limite de ${row.account_label}`}
+                    name="limit"
+                    type="number"
+                    min="0"
+                    defaultValue={row.daily_request_limit ?? ""}
+                    placeholder="Sem limite"
+                    disabled={!write || pending === row.id}
+                  />
+                  <Button secondary disabled={!write || pending === row.id}>
+                    Salvar
+                  </Button>
+                </form>
+              </td>
+              <td>
+                <div className="ag-actions">
+                  <Button
+                    secondary
+                    disabled={!write || pending === row.id}
+                    onClick={() =>
+                      change(row, "PATCH", {
+                        status: row.status === "disabled" ? "active" : "disabled",
+                      })
+                    }
+                  >
+                    {row.status === "disabled" ? "Ativar" : "Desativar"}
+                  </Button>
+                  <Button
+                    danger
+                    disabled={!write || pending === row.id}
+                    onClick={() => change(row, "DELETE")}
+                  >
+                    Excluir
+                  </Button>
+                </div>
+              </td>
+            </tr>
+          ))}
+        </GridTable>
+      ) : (
+        <Empty
+          title="Nenhuma conta recebida"
+          description="As contas aparecem aqui quando um projeto executa o cadastro automático."
+        />
       )}
-      <p className="ag-note">
-        O envio acontece na primeira execução do projeto publicado. Um remix antigo precisa receber
-        o gatilho atualizado; apenas duplicar o projeto não executa o cadastro.
-      </p>
     </Panel>
   );
 }
@@ -989,6 +980,10 @@ function Clients({ system, write, refresh, reload, notify }: PageProps) {
       quota_limit_requests: form.get("quota") === "" ? null : Number(form.get("quota")),
       allowed_models: form.getAll("models").length ? form.getAll("models") : null,
       notes: form.get("notes"),
+      device_limit: Number(form.get("device_limit")),
+      ...(form.get("validity_days") === "-1"
+        ? {}
+        : { validity_days: Number(form.get("validity_days")) }),
     };
     try {
       const result = await api("/api/admin/gateway", {
@@ -1096,19 +1091,39 @@ function Clients({ system, write, refresh, reload, notify }: PageProps) {
                 <input name="notes" maxLength={2000} defaultValue={editing?.["notes"] || ""} />
               </Field>
             </div>
-            <Field
-              label="Modelos permitidos"
-              hint="Nenhum selecionado permite todos os modelos liberados globalmente. Use Ctrl/Cmd para selecionar mais de um."
-            >
-              <select name="models" multiple defaultValue={editing?.["allowed_models"] || []}>
-                {system.catalog.map((m) => (
-                  <option key={m["id"]} value={m["id"]}>
-                    {m["id"]}
-                    {m["enabled"] ? "" : " · bloqueado globalmente"}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <div className="ag-form-grid">
+              <Field
+                label="Validade do acesso"
+                hint={
+                  editing?.expires_at
+                    ? "Expira em " + date(editing.expires_at)
+                    : "Prazo contado a partir do salvamento"
+                }
+              >
+                <select name="validity_days" defaultValue={editing ? "-1" : "30"}>
+                  {editing && <option value="-1">Manter validade atual</option>}
+                  {[1, 7, 15, 30].map((d) => (
+                    <option value={d} key={d}>
+                      {d} {d === 1 ? "dia" : "dias"}
+                    </option>
+                  ))}
+                  <option value="0">Sem expiração</option>
+                </select>
+              </Field>
+              <Field
+                label="Limite de dispositivos"
+                hint="Zero = sem trava. Ao ativar, o aplicativo deve enviar X-Device-ID estável por instalação."
+              >
+                <input
+                  name="device_limit"
+                  type="number"
+                  min="0"
+                  max="100"
+                  defaultValue={editing?.device_limit || 0}
+                />
+              </Field>
+            </div>
+            <ModelPicker catalog={system.catalog} defaults={editing?.allowed_models || []} />
             <p className="ag-note">
               A quota conta tentativas admitidas, inclusive falhas posteriores ou ausência de chave
               disponível. Não representa cobrança do provedor.
@@ -1149,13 +1164,26 @@ function Clients({ system, write, refresh, reload, notify }: PageProps) {
         ) : data?.["rows"].length ? (
           <>
             <GridTable
-              heads={["Cliente", "Chave", "Modelos", "Consumo / quota", "RPM", "Acesso", "Ações"]}
+              heads={[
+                "Cliente",
+                "Chave",
+                "Modelos",
+                "Consumo / quota",
+                "RPM",
+                "Dispositivos",
+                "Acesso",
+                "Ações",
+              ]}
             >
               {data["rows"].map((row: ClientRow) => (
                 <tr key={row["id"]}>
                   <td>
                     <strong>{row["name"]}</strong>
-                    <small>{row["notes"] || date(row["created_at"])}</small>
+                    <small>
+                      {row["notes"] || date(row["created_at"])}
+                      <br />
+                      {row.expires_at ? "Expira: " + date(row.expires_at) : "Sem expiração"}
+                    </small>
                   </td>
                   <td>
                     <code>{row["key_hint"]}</code>
@@ -1170,8 +1198,49 @@ function Clients({ system, write, refresh, reload, notify }: PageProps) {
                   </td>
                   <td>{integer(row["rate_limit_rpm"])}</td>
                   <td>
+                    <details>
+                      <summary>
+                        {row.device_count || 0} identificados / {row.device_limit || "∞"}
+                      </summary>
+                      <small>{integer(row.unidentified_requests)} acessos sem ID</small>
+                      {row.devices?.map((d) => (
+                        <small key={d.name}>
+                          {d.name} · {date(d.last_seen)} · {integer(d.requests)} acessos
+                        </small>
+                      ))}
+                      <Button
+                        secondary
+                        disabled={!write}
+                        onClick={async () => {
+                          if (
+                            !window.confirm(
+                              "Liberar os dispositivos cadastrados? Novos dispositivos poderão ocupar as vagas.",
+                            )
+                          )
+                            return;
+                          try {
+                            await api("/api/admin/gateway", {
+                              method: "PATCH",
+                              body: JSON.stringify({ id: row.id, action: "reset-devices" }),
+                            });
+                            reload();
+                            notify("Dispositivos liberados.");
+                          } catch (e) {
+                            notify((e as Error).message);
+                          }
+                        }}
+                      >
+                        Liberar dispositivos
+                      </Button>
+                    </details>
+                  </td>
+                  <td>
                     <Badge tone={row["status"] === "active" ? "success" : "neutral"}>
-                      {row["status"] === "active" ? "Ativo" : "Suspenso"}
+                      {row.expires_at && Date.parse(row.expires_at) <= Date.now()
+                        ? "Expirado"
+                        : row["status"] === "active"
+                          ? "Ativo"
+                          : "Suspenso"}
                     </Badge>
                   </td>
                   <td>
@@ -1210,7 +1279,7 @@ function Clients({ system, write, refresh, reload, notify }: PageProps) {
   );
 }
 
-function Models({ system, write, reload, notify }: PageProps) {
+function GlobalModels({ system, write, reload, notify }: PageProps) {
   const [search, setSearch] = useState(""),
     [kind, setKind] = useState("all");
   async function toggle(model: ModelRow) {
@@ -1253,7 +1322,7 @@ function Models({ system, write, reload, notify }: PageProps) {
         confirmada por uma chamada real; não há saldo ou preço presumido aqui.
       </div>
       <Panel
-        title="Catálogo do provedor"
+        title="Permissões globais de modelos"
         description={`${system.catalog.length} modelos configurados · ${system.catalog.filter((m) => m["enabled"]).length} permitidos globalmente`}
       >
         <div className="ag-filters">
@@ -1278,7 +1347,7 @@ function Models({ system, write, reload, notify }: PageProps) {
           {rows.map((m) => (
             <tr key={m["id"]}>
               <td>
-                <code>{m["id"]}</code>
+                <strong>{label(m.id)}</strong>
                 {system.settings["default_model"] === m["id"] && (
                   <small className="ag-purple">Padrão de texto</small>
                 )}
@@ -1322,89 +1391,119 @@ function Models({ system, write, reload, notify }: PageProps) {
   );
 }
 
-function Usage({ refresh }: PageProps) {
-  const [days, setDays] = useState("7");
-  const { data, error } = useResource<UsageData>(`/api/admin/usage?days=${days}`, refresh);
+function Usage({ refresh, system }: PageProps) {
+  const [days, setDays] = useState("7"),
+    [model, setModel] = useState(""),
+    [client, setClient] = useState("");
+  const clients = useResource<{ clients: ClientRow[] }>("/api/admin/gateway", refresh);
+  const { data, error } = useResource<UsageData>(
+    `/api/admin/usage?days=${days}&resolved_model=${encodeURIComponent(model)}&client_id=${encodeURIComponent(client)}`,
+    refresh,
+  );
   return (
     <div className="ag-stack">
+      <Period value={days} onChange={setDays} />
       <div className="ag-filters">
-        <Field label="Período">
-          <select value={days} onChange={(e) => setDays(e.target.value)}>
-            <option value="1">Últimas 24 horas</option>
-            <option value="7">Últimos 7 dias</option>
-            <option value="30">Últimos 30 dias</option>
-            <option value="90">Últimos 90 dias</option>
+        <Field label="Modelo">
+          <select value={model} onChange={(e) => setModel(e.target.value)}>
+            <option value="">Todos</option>
+            {system.catalog.map((m) => (
+              <option key={m.id} value={m.id}>
+                {label(m.id)}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <Field label="Cliente">
+          <select value={client} onChange={(e) => setClient(e.target.value)}>
+            <option value="">Todos</option>
+            {clients.data?.clients.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
           </select>
         </Field>
       </div>
-      {error && <div className="ag-alert error">{error}</div>}
+      {(error || clients.error) && <p className="ag-alert error">{error || clients.error}</p>}
       <Stats
         items={[
           {
-            label: "Solicitações registradas",
-            value: data ? integer(data["requests"]) : "—",
-            detail: data?.["sampled"]
-              ? `Amostra: 2.000 de ${integer(data["totalMatching"])}`
-              : "Inclui rejeições e erros registrados",
+            label: "Requisições",
+            value: data ? integer(data.requests) : "—",
+            detail: data?.sampled
+              ? `Amostra de ${integer(data.totalMatching)} registros`
+              : "Registros no período",
           },
           {
-            label: "Respostas sem erro",
-            value: data ? integer(data["success"]) : "—",
-            detail: `${integer(data?.["errors"])} solicitações com erro`,
+            label: "Taxa de sucesso",
+            value: data?.requests ? `${((data.success / data.requests) * 100).toFixed(1)}%` : "—",
+            detail: `${integer(data?.errors)} erros`,
           },
+          { label: "Entrada", value: integer(data?.inputTokens), detail: "Tokens informados" },
           {
-            label: "Tokens de entrada",
-            value: data ? integer(data["inputTokens"]) : "—",
-            detail: "Somente uso informado nas respostas",
-          },
-          {
-            label: "Tokens de saída",
-            value: data ? integer(data["outputTokens"]) : "—",
-            detail: `${integer(data?.["unknownUsage"])} registros com uso desconhecido`,
+            label: "Saída",
+            value: integer(data?.outputTokens),
+            detail: `${integer(data?.unknownUsage)} registros com uso incompleto`,
           },
         ]}
       />
-      <div className="ag-alert warning">
-        Custo financeiro indisponível: o provedor não forneceu uma cobrança conciliada. Tokens
-        desconhecidos não são convertidos em custo estimado.
-      </div>
-      <div className="ag-two">
-        {(
-          [
-            ["Por modelo", "byModel"],
-            ["Por cliente", "byClient"],
-          ] as [string, "byModel" | "byClient"][]
-        ).map(([title, key]) => (
-          <Panel
-            key={key}
-            title={title!}
-            description="Agrupamento dos registros disponíveis no período."
+      <UsageCharts data={data} />
+      {(
+        [
+          ["Consumo por modelo", "byModel"],
+          ["Consumo por cliente", "byClient"],
+        ] as const
+      ).map(([title, key]) => (
+        <Panel title={title} key={key}>
+          <GridTable
+            heads={[
+              key === "byModel" ? "Modelo" : "Cliente",
+              "Chamadas",
+              "Sucesso",
+              "Erros",
+              "Entrada",
+              "Saída",
+              "Média de tokens / chamada",
+              "Latência média",
+              "Uso incompleto",
+            ]}
           >
-            {data?.[key!]?.length ? (
-              <GridTable heads={["Nome", "Requisições", "Erros", "Tokens"]}>
-                {data[key!].map((r: UsageGroup) => (
-                  <tr key={r["name"]}>
-                    <td>
-                      <strong>{r["name"]}</strong>
-                    </td>
-                    <td>{integer(r["requests"])}</td>
-                    <td>{integer(r["errors"])}</td>
-                    <td>{integer(r["inputTokens"] + r["outputTokens"])}</td>
-                  </tr>
-                ))}
-              </GridTable>
-            ) : (
-              <Empty
-                title="Sem registros neste período"
-                description="Amplie o período ou faça uma chamada de teste com uma chave de cliente."
-              />
-            )}
-          </Panel>
-        ))}
-      </div>
+            {data?.[key].map((r) => (
+              <tr key={r.name}>
+                <td>
+                  <strong>{key === "byModel" ? label(r.name) : r.name}</strong>
+                </td>
+                <td>{integer(r.requests)}</td>
+                <td>{(((r.requests - r.errors) / r.requests) * 100).toFixed(1)}%</td>
+                <td>{integer(r.errors)}</td>
+                <td>{integer(r.inputTokens)}</td>
+                <td>{integer(r.outputTokens)}</td>
+                <td>
+                  {r.unknownUsage === r.requests
+                    ? "—"
+                    : integer(Math.round(r.completeTokens / (r.requests - r.unknownUsage)))}
+                </td>
+                <td>
+                  {r.measuredLatency
+                    ? integer(Math.round(r.latencyMs / r.measuredLatency)) + " ms"
+                    : "—"}
+                </td>
+                <td>{integer(r.unknownUsage)}</td>
+              </tr>
+            ))}
+          </GridTable>
+          {!data?.[key].length && <p>Sem registros para estes filtros.</p>}
+        </Panel>
+      ))}
+      <p className="ag-note">
+        Valores financeiros só estarão disponíveis com faturamento conciliado do provedor. Tokens
+        desconhecidos não são tratados como zero de consumo.
+      </p>
     </div>
   );
 }
+
 function Requests({ system, refresh, notify }: PageProps) {
   const [page, setPage] = useState(1),
     [days, setDays] = useState("7"),
@@ -1474,7 +1573,9 @@ function Requests({ system, refresh, notify }: PageProps) {
             <select value={model} onChange={(e) => change(setModel, e.target.value)}>
               <option value="">Todos</option>
               {system.catalog.map((m) => (
-                <option key={m["id"]}>{m["id"]}</option>
+                <option key={m["id"]} value={m.id}>
+                  {label(m.id)}
+                </option>
               ))}
             </select>
           </Field>
@@ -1515,7 +1616,7 @@ function Requests({ system, refresh, notify }: PageProps) {
                   <td>{date(r["created_at"])}</td>
                   <td>{r["client_name"] || "Manutenção"}</td>
                   <td>
-                    <strong>{r["resolved_model"] || "Não resolvido"}</strong>
+                    <strong>{r.resolved_model ? label(r.resolved_model) : "Não resolvido"}</strong>
                     <small>{r["endpoint"]}</small>
                   </td>
                   <td>
@@ -1579,34 +1680,40 @@ function Requests({ system, refresh, notify }: PageProps) {
   );
 }
 
-function Playground({ system, notify }: PageProps) {
-  const [credential, setCredential] = useState(""),
-    [model, setModel] = useState(system.settings["default_model"]),
+function Playground({ system, notify, refresh, write }: PageProps) {
+  const clients = useResource<{ clients: ClientRow[] }>("/api/admin/gateway", refresh),
+    [client, setClient] = useState(""),
+    [credential, setCredential] = useState(""),
+    [device, setDevice] = useState(""),
+    [model, setModel] = useState(""),
     [prompt, setPrompt] = useState(""),
+    [busy, setBusy] = useState(false),
     [result, setResult] = useState<{ status: number; duration: number; body: unknown } | null>(
       null,
-    ),
-    [busy, setBusy] = useState(false);
+    );
+  const selected = clients.data?.clients.find((c) => c.id === client);
+  const catalog = system.catalog.filter(
+    (m) =>
+      m.kind === "text" &&
+      m.enabled &&
+      (!selected?.allowed_models?.length || selected.allowed_models.includes(m.id)),
+  );
   async function send(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setResult(null);
-    const start = performance.now();
     try {
-      const response = await fetch(`${system.addresses.apiBaseUrl}/chat/completions`, {
+      const data = await api("/api/admin/playground", {
         method: "POST",
-        headers: { authorization: `Bearer ${credential}`, "content-type": "application/json" },
         body: JSON.stringify({
+          client_id: client,
+          api_key: credential,
+          device_id: device,
           model,
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 256,
-          stream: false,
+          prompt,
         }),
-        signal: AbortSignal.timeout(60000),
       });
-      const body = await response.json();
-      setResult({ status: response.status, duration: Math.round(performance.now() - start), body });
-      if (!response.ok) notify(body.error?.message || "A API recusou o teste.");
+      setResult(data);
     } catch (e) {
       notify((e as Error).message);
     } finally {
@@ -1616,63 +1723,82 @@ function Playground({ system, notify }: PageProps) {
   return (
     <div className="ag-two">
       <Panel
-        title="Enviar uma mensagem"
-        description="Esta é uma chamada real: usa a quota do cliente e pode consumir créditos Lovable."
+        title="Teste de acesso"
+        description="Usa a chave, as permissões e a quota do cliente selecionado."
       >
         <form onSubmit={send} className="ag-stack">
-          <Field
-            label="Chave de API do cliente"
-            hint="A chave permanece somente nesta tela e não é salva no navegador."
-          >
-            <input
-              type="password"
-              autoComplete="off"
+          <Field label="Cliente">
+            <select
               required
-              value={credential}
-              onChange={(e) => setCredential(e.target.value)}
-              placeholder="gw_…"
-            />
-          </Field>
-          <Field label="Modelo">
-            <select value={model} onChange={(e) => setModel(e.target.value)}>
-              {system.catalog
-                .filter((m) => m["kind"] === "text" && m["enabled"])
-                .map((m) => (
-                  <option key={m["id"]}>{m["id"]}</option>
+              value={client}
+              onChange={(e) => {
+                setClient(e.target.value);
+                setCredential("");
+                setModel("");
+              }}
+            >
+              <option value="">Selecione um cliente</option>
+              {clients.data?.clients
+                .filter((c) => c.status === "active")
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
                 ))}
             </select>
           </Field>
-          <Field label="Mensagem">
-            <textarea
+          {clients.error && <p className="ag-error">{clients.error}</p>}
+          <Field
+            label="Chave do cliente"
+            hint="Cole a chave emitida para esse cliente. Ela não pode ser recuperada pelo painel."
+          >
+            <input
               required
-              maxLength={8000}
-              rows={6}
-              value={prompt}
-              onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Escreva uma mensagem para testar sua integração."
+              type="password"
+              autoComplete="off"
+              value={credential}
+              onChange={(e) => setCredential(e.target.value)}
             />
           </Field>
-          <Button disabled={busy}>
+          <Field
+            label="ID do dispositivo"
+            hint="Obrigatório para clientes com trava ativa. Use o mesmo identificador estável do aplicativo."
+          >
+            <input
+              value={device}
+              onChange={(e) => setDevice(e.target.value)}
+              minLength={8}
+              maxLength={128}
+              placeholder="meu-computador-01"
+            />
+          </Field>
+          <ModelSelect key={client} catalog={catalog} value={model} onChange={setModel} />
+          <Field label="Mensagem">
+            <textarea
+              rows={5}
+              required
+              maxLength={8000}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+            />
+          </Field>
+          <Button disabled={!write || busy || !client || !model}>
             {busy ? "Aguardando resposta…" : "Enviar teste"}
-            <ArrowUpRight size={15} />
           </Button>
         </form>
       </Panel>
-      <Panel title="Resposta" description="O resultado e o uso retornados pela própria API.">
+      <Panel title="Resposta">
         {result ? (
           <>
-            <div className="ag-actions">
-              <Badge tone={result["status"] < 400 ? "success" : "error"}>
-                HTTP {result["status"]}
-              </Badge>
-              <span className="ag-muted">{result["duration"]} ms</span>
-            </div>
-            <pre className="ag-code ag-response">{JSON.stringify(result["body"], null, 2)}</pre>
+            <Badge tone={result.status < 400 ? "success" : "error"}>
+              HTTP {result.status} · {result.duration} ms
+            </Badge>
+            <pre className="ag-code ag-response">{JSON.stringify(result.body, null, 2)}</pre>
           </>
         ) : (
           <Empty
             title="Pronto para testar"
-            description="Preencha os campos e envie a mensagem. Nenhuma chamada é feita automaticamente."
+            description="Selecione um cliente, a família e o modelo. O teste só é enviado ao clicar no botão."
           />
         )}
       </Panel>
@@ -1680,85 +1806,144 @@ function Playground({ system, notify }: PageProps) {
   );
 }
 function Integration({ system }: PageProps) {
-  const base = system.addresses.apiBaseUrl;
-  const snippet = `curl '${base}/chat/completions' \\\n  -H 'Authorization: Bearer SUA_CHAVE_DE_CLIENTE' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"model":"${system.settings["default_model"]}","messages":[{"role":"user","content":"Olá"}]}'`;
+  const [family, setFamily] = useState("anthropic"),
+    [tool, setTool] = useState("claude");
+  const base = system.addresses.apiBaseUrl,
+    model =
+      system.catalog.find((m) => m.kind === "text" && m.enabled && m.id.startsWith(family + "/"))
+        ?.id || "";
+  const tools =
+    family === "anthropic"
+      ? [
+          ["claude", "Claude Code"],
+          ["cline", "Cline"],
+          ["continue", "Continue"],
+          ["cursor", "Cursor"],
+          ["curl", "Terminal / cURL"],
+        ]
+      : [
+          ["cline", "Cline"],
+          ["continue", "Continue"],
+          ["cursor", "Cursor"],
+          ["curl", "Terminal / cURL"],
+        ];
+  const chosen = tools.some((t) => t[0] === tool) ? tool : "cline";
+  const snippet =
+    chosen === "claude"
+      ? `$env:ANTHROPIC_BASE_URL="${base.replace(/\/v1$/, "")}"
+$env:ANTHROPIC_AUTH_TOKEN="SUA_CHAVE_DE_CLIENTE"
+claude --model ${model}`
+      : chosen === "continue"
+        ? `name: Meu Gateway
+version: 1.0.0
+schema: v1
+models:
+  - name: ${label(model)}
+    provider: openai
+    model: ${model}
+    apiBase: ${base}
+    apiKey: SUA_CHAVE_DE_CLIENTE`
+        : chosen === "curl"
+          ? `curl "${base}/chat/completions" -H "Authorization: Bearer SUA_CHAVE_DE_CLIENTE" -H "Content-Type: application/json" -d '{"model":"${model}","messages":[{"role":"user","content":"Olá"}]}'`
+          : `Base URL: ${base}
+API Key: SUA_CHAVE_DE_CLIENTE
+Model ID: ${model}`;
+  const guides: Record<string, { steps: string[]; url: string }> = {
+    claude: {
+      steps: [
+        "Abra o PowerShell e configure as variáveis abaixo com sua chave.",
+        "Inicie o Claude Code com o modelo indicado. O endpoint usado é Messages.",
+      ],
+      url: "https://code.claude.com/docs/en/llm-gateway",
+    },
+    cline: {
+      steps: [
+        "Abra as configurações do Cline e escolha o provedor OpenAI Compatible.",
+        "Informe Base URL, API Key e Model ID abaixo.",
+        "Salve e envie uma mensagem para confirmar o acesso.",
+      ],
+      url: "https://docs.cline.bot/provider-config/openai-compatible",
+    },
+    continue: {
+      steps: [
+        "Abra a configuração YAML do Continue no VS Code.",
+        "Adicione o modelo do exemplo abaixo, substituindo a chave.",
+        "Salve e selecione o modelo no chat.",
+      ],
+      url: "https://docs.continue.dev/customize/model-providers/top-level/openai",
+    },
+    cursor: {
+      steps: [
+        "Abra Settings → Models e configure a chave OpenAI personalizada.",
+        "Ative a URL base personalizada e informe o endereço abaixo.",
+        "Adicione o ID do modelo. Recursos do Cursor que exigem Responses público ainda não são atendidos por esta API.",
+      ],
+      url: "https://cursor.com/help/models-and-usage/api-keys",
+    },
+    curl: {
+      steps: [
+        "Substitua SUA_CHAVE_DE_CLIENTE pela chave emitida no painel.",
+        "Execute em um terminal compatível com a sintaxe cURL. No Windows PowerShell, use curl.exe.",
+      ],
+      url: "",
+    },
+  };
   return (
     <div className="ag-stack">
+      <div className="ag-tabs">
+        {families.map((f) => (
+          <Button
+            key={f.id}
+            secondary
+            aria-pressed={family === f.id}
+            onClick={() => setFamily(f.id)}
+          >
+            <Brand family={f.id} />
+          </Button>
+        ))}
+      </div>
+      <div className="ag-tabs">
+        {tools.map(([id, name]) => (
+          <Button key={id} secondary onClick={() => setTool(id!)} aria-pressed={chosen === id}>
+            {name}
+          </Button>
+        ))}
+      </div>
       <Panel
-        title="Endereço da API"
-        description="Use uma chave criada em Clientes e chaves. Credenciais Lovable nunca são usadas diretamente no aplicativo cliente."
+        title={tools.find((x) => x[0] === chosen)?.[1] || "Integração"}
+        description={`Família ${families.find((f) => f.id === family)?.name} · ${label(model)}`}
       >
-        <div className="ag-secret">
-          <code>{base}</code>
-          <CopyButton value={base} />
+        <ol className="ag-tutorial">
+          {guides[chosen]!.steps.map((step) => (
+            <li key={step}>{step}</li>
+          ))}
+        </ol>
+        <pre className="ag-code">{snippet}</pre>
+        <div className="ag-actions">
+          <CopyButton value={snippet} />
+          {guides[chosen]!.url && (
+            <a href={guides[chosen]!.url} target="_blank" rel="noreferrer" className="ag-text-link">
+              Documentação oficial <ArrowUpRight size={14} />
+            </a>
+          )}
         </div>
       </Panel>
-      <div className="ag-two">
-        <Panel
-          title="OpenAI Chat Completions"
-          description="Para aplicativos que permitem configurar uma URL base compatível."
-        >
-          <dl className="ag-details">
-            <div>
-              <dt>Base URL</dt>
-              <dd>
-                <code>{base}</code>
-              </dd>
-            </div>
-            <div>
-              <dt>API key</dt>
-              <dd>Chave do cliente emitida neste painel</dd>
-            </div>
-            <div>
-              <dt>Modelo</dt>
-              <dd>
-                <code>{system.settings["default_model"]}</code>
-              </dd>
-            </div>
-          </dl>
-        </Panel>
-        <Panel
-          title="Anthropic Messages"
-          description="Modelos Claude usam Anthropic Messages nativo pelo provedor Lovable."
-        >
-          <code>{base}/messages</code>
-          <p className="ag-note">
-            Autenticação por Bearer ou x-api-key. Aliases Claude apontam para modelos Anthropic;
-            mensagens, ferramentas e eventos SSE nativos são preservados em /messages.
-          </p>
-        </Panel>
-      </div>
-      <Panel title="Exemplo de requisição" action={<CopyButton value={snippet} />}>
-        <pre className="ag-code">{snippet}</pre>
-      </Panel>
-      <Panel
-        title="Endpoints disponíveis"
-        description="A existência da rota não garante a disponibilidade de cada modelo/modalidade no provedor."
-      >
-        <GridTable heads={["Método", "Caminho", "Uso"]}>
-          {[
-            ["GET", "/models", "Catálogo permitido para a chave"],
-            ["POST", "/chat/completions", "Chat no formato OpenAI"],
-            ["POST", "/messages", "Mensagens no formato Anthropic"],
-            ["POST", "/images/generations", "Geração de imagem"],
-            ["POST", "/embeddings", "Vetores de texto"],
-            ["POST", "/videos/generations", "Geração de vídeo"],
-          ].map(([method, path, label]) => (
-            <tr key={path}>
-              <td>
-                <Badge>{method}</Badge>
-              </td>
-              <td>
-                <code>{path}</code>
-              </td>
-              <td>{label}</td>
-            </tr>
-          ))}
-        </GridTable>
+      <Panel title="Dispositivos e acesso">
+        <p>
+          Se o cliente tiver trava ativa, configure no aplicativo um cabeçalho{" "}
+          <code>X-Device-ID</code> com um valor único por instalação, por exemplo{" "}
+          <code>meu-notebook-01</code>. Ele deve permanecer estável entre as chamadas. Aplicativos
+          que não permitem cabeçalhos personalizados precisam usar um cliente sem trava.
+        </p>
+        <p className="ag-note">
+          O identificador é declarado pelo aplicativo; não comprova a identidade física do aparelho.
+          Compartilhar o mesmo ID também compartilha a vaga.
+        </p>
       </Panel>
     </div>
   );
 }
+
 function Configuration({ system, write, reload, notify }: PageProps) {
   async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -1811,7 +1996,7 @@ function Configuration({ system, write, reload, notify }: PageProps) {
                   .filter((m) => m["kind"] === "text")
                   .map((m) => (
                     <option key={m["id"]} value={m["id"]}>
-                      {m["id"]}
+                      {label(m.id)}
                       {m["enabled"] ? "" : " · bloqueado"}
                     </option>
                   ))}

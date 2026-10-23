@@ -6,6 +6,7 @@ export const Route = createFileRoute("/api/admin/credentials")({
       GET: ({ request }) => handleAdminResource(request, "credentials"),
       POST: ({ request }) => handleAdminResource(request, "credentials"),
       PATCH: ({ request }) => handleAdminResource(request, "credentials"),
+      DELETE: ({ request }) => handleAdminResource(request, "credentials"),
     },
   },
 });

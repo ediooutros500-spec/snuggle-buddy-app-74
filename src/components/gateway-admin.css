@@ -962,3 +962,151 @@
     flex-wrap: wrap;
   }
 }
+
+/* Central operations dashboard */
+.ag-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+.ag-brand img {
+  object-fit: contain;
+}
+.ag-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.ag-tabs [aria-pressed="true"],
+.ag-model-picker [aria-pressed="true"] {
+  background: #ede8ff;
+  border-color: #7157eb;
+  color: #5134c4;
+}
+.ag-model-picker {
+  display: grid;
+  gap: 16px;
+}
+.ag-model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 10px;
+  max-height: 360px;
+  overflow: auto;
+  padding: 2px;
+}
+.ag-model-choice {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 13px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  cursor: pointer;
+  background: white;
+}
+.ag-model-choice.selected {
+  background: #f5f2ff;
+  border-color: #7157eb;
+}
+.gateway-admin .ag-model-choice input {
+  width: 18px;
+  min-height: 18px;
+  height: 18px;
+  accent-color: #7157eb;
+}
+.ag-model-choice small {
+  display: block;
+  color: #667287;
+}
+.ag-chart {
+  height: 225px;
+  padding-top: 16px;
+}
+.ag-chart svg {
+  width: 100%;
+  height: 180px;
+  overflow: visible;
+}
+.ag-chart-legend {
+  display: flex;
+  gap: 20px;
+  padding-top: 12px;
+  color: #7157eb;
+}
+.ag-chart-legend span + span {
+  color: #e65f70;
+}
+.ag-chart-dates {
+  display: flex;
+  justify-content: space-between;
+  color: #667287;
+  font-size: 11px;
+}
+.ag-ranking {
+  display: grid;
+  gap: 20px;
+  padding-top: 12px;
+}
+.ag-ranking span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+.ag-ranking progress {
+  width: 100%;
+  height: 8px;
+  border: 0;
+  border-radius: 10px;
+  accent-color: #7157eb;
+}
+.ag-ranking progress::-webkit-progress-bar {
+  background: #eeeaf8;
+  border-radius: 10px;
+}
+.ag-ranking progress::-webkit-progress-value {
+  background: #7157eb;
+  border-radius: 10px;
+}
+.ag-tutorial {
+  padding-left: 24px;
+  display: grid;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.ag-table details small {
+  display: block;
+  max-width: 320px;
+}
+.ag-table .ag-inline-form input {
+  max-width: 115px;
+}
+.ag-stack > .ag-two .ag-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.ag-logo span {
+  font-size: 19px;
+}
+.ag-content {
+  max-width: 1680px;
+  margin: 0 auto;
+}
+.ag-nav-group:has(+ :empty) {
+  display: none;
+}
+@media (max-width: 700px) {
+  .ag-model-grid {
+    grid-template-columns: 1fr;
+  }
+  .ag-tabs .ag-button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .ag-chart {
+    height: 205px;
+  }
+  .ag-chart svg {
+    height: 160px;
+  }
+}
