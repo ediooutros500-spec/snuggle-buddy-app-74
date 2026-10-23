@@ -212,3 +212,12 @@ Detalhes e fontes: [CORRECAO-SYSTEM-MESSAGES.md](docs/CORRECAO-SYSTEM-MESSAGES.m
 - [ ] Confirmar a conversa completa no aplicativo; o teste HTTP não substitui a tentativa real do usuário e outros recursos beta podem ter restrições próprias.
 
 Detalhes e evidências: [CORRECAO-CLAUDE-CODE-BETA.md](docs/CORRECAO-CLAUDE-CODE-BETA.md).
+
+## Catálogo único e nomes amigáveis — 22/10/2026
+
+- [x] Publicar somente modelos canônicos em `/v1/models`, com `name` e `display_name` amigáveis para Claude, OpenAI e Google; manter IDs de roteamento e aliases nas requisições.
+- [x] Preservar autenticação, modelos desabilitados e restrições por cliente. 86 testes, tipos, lint sem erros, builds Lovable/Node, smoke e GitHub Actions aprovados.
+- [x] Implantar `62c60132e028` na VPS; lista HTTPS confirmou 27 entradas únicas. Aliases Claude e OpenAI continuam respondendo HTTP 200 e OK. Remover cliente temporário e manter histórico real, com os dois IDs conferidos. Nenhuma inferência de imagem, vídeo ou embeddings executada.
+- [ ] Confirmar o seletor do aplicativo do usuário depois de atualizar a descoberta; a API fornece nomes amigáveis, mas a apresentação final depende do cliente.
+
+Detalhes: [CATALOGO-NOMES-AMIGAVEIS.md](docs/CATALOGO-NOMES-AMIGAVEIS.md).
