@@ -35,6 +35,7 @@ A API observa as requisições ao modelo. Não identifica com certeza se uma fer
 - [ ] Confirmar descoberta de ferramentas e execução de consulta Notion pelo modelo.
 - [ ] Validar demais conectores no aplicativo e suas autorizações.
 - [ ] Distribuir configuração para outros clientes via perfil/bootstrap.
-- [ ] Publicar painel sem o guia de prompts, com acompanhamento manual do piloto.
+- [x] Publicado painel sem o guia de prompts, com acompanhamento manual do piloto. Imagem parent add3611d4d99 saudável; API e Gator preservados.
+- [x] 92 testes, TypeScript, lint do componente e compilação Node aprovados; 26 outros contêineres preservados, StarChef HTTP 200.
 
 A página final OAuth em localhost é gerada pelo Claude Desktop e não é controlada pela nossa API.
