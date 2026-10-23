@@ -1,0 +1,42 @@
+{
+  "checkedAt": "2026-10-23T00:33:04.828Z",
+  "central": {
+    "credentials": 2,
+    "availableCredentials": 2,
+    "projects": [
+      {
+        "origin": "https://id-preview--7da2131e-22b0-45b7-8ef7-255e69ae1d54.lovable.app",
+        "status": "active"
+      },
+      {
+        "origin": "https://snuggle-buddy-app-74.lovable.app",
+        "status": "active"
+      }
+    ]
+  },
+  "catalogStatus": 200,
+  "inference": {
+    "status": 200,
+    "durationMs": 3264,
+    "requestId": "2aadce63-1782-4251-9f52-4533977814b9",
+    "requestedModel": "google/gemini-3.6-flash",
+    "resolvedModel": "google/gemini-3.6-flash",
+    "reply": "OK",
+    "usage": {
+      "prompt_tokens": 6,
+      "completion_tokens": 115,
+      "total_tokens": 121
+    },
+    "errorType": null,
+    "finishReason": "stop"
+  },
+  "telemetry": {
+    "matchingRequests": 1,
+    "requestIdMatched": true,
+    "statuses": [
+      200
+    ]
+  },
+  "temporaryClientRemoved": true,
+  "realRequestLogRetained": true
+}

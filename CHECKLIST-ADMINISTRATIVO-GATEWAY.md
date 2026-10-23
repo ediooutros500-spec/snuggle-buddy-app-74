@@ -155,3 +155,13 @@ Contrato e checklist detalhado: [ORIGEM-LOVABLE-E-CATALOGO-16.md](docs/ORIGEM-LO
 - [x] Ajustar orçamentos de espera e apresentar erros conhecidos do receptor sem expor resposta arbitrária ou segredos.
 - [x] 64 testes, tipos e builds Lovable/Node aprovados; lint sem erros e seis avisos anteriores.
 - [ ] Confirmar republicação do remix existente com a correção, registered:true e credencial no pool da central. Não exige criar outro remix.
+
+## Teste real da central — 22/10/2026
+
+- [x] Origem atualizada confirmou registered:true; pool central com duas conexões ativas, uma de origem e outra de prévia hospedada.
+- [x] Corrigir orientação: prévia hospedada pode executar o gatilho antes de publicar. Publicação é uma possibilidade de execução, não um requisito obrigatório; localhost continua excluído.
+- [x] API pública `/v1/models` HTTP 200 e chat real HTTP 200, modelo Gemini 3.6 Flash, resposta OK em 3264 ms, com 121 tokens informados pelo provedor.
+- [x] Conferir request ID no histórico; remover cliente/chave temporários e preservar logs dos testes reais.
+- [x] Registrar que orçamento inicial de 8 tokens retornou texto vazio; repetir com 128 retornou OK. Não considerar somente HTTP 200 como resposta útil.
+- [ ] Identificar endereço da nova prévia/remix e relacioná-lo ao cadastro; usuário excluiu o remix anterior, agora 404. Cadastro da origem e da prévia não comprovam sozinho a identidade do novo remix nem duas chaves distintas.
+- [ ] Validar todos os modelos, streaming/tools e conciliação financeira; esta execução comprova apenas o fluxo de inferência testado.

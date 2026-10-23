@@ -119,14 +119,14 @@ function ProjectConnector({ initial }: { initial: ProjectStatus }) {
         )}
         {initial.reason === "unsupported_origin" && (
           <p>
-            O cadastro automático aceita projetos publicados em domínio Lovable. Uma prévia local
-            não é registrada.
+            O cadastro automático aceita a prévia hospedada e o projeto publicado em domínio
+            Lovable. Uma prévia local no computador não é registrada.
           </p>
         )}
         <p>
-          Depois de remixar, publique e abra o novo projeto. O gatilho envia a credencial
-          diretamente do servidor à sua central por HTTPS. Duplicar o projeto, sozinho, não executa
-          o gatilho.
+          Depois de remixar, abra a prévia hospedada ou o projeto publicado. O gatilho envia a
+          credencial diretamente do servidor à sua central por HTTPS. Duplicar o projeto, sozinho,
+          não executa o gatilho.
         </p>
         <p>
           O envio inclui apenas a credencial deste projeto, sua origem e os rótulos configurados de
