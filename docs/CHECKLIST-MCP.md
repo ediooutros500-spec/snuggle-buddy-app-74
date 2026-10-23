@@ -133,4 +133,6 @@ A página final OAuth em localhost é gerada pelo Claude Desktop e não é contr
 - [x] Investigar repositório e documentação oficial; detalhamento em PLANO-CREDITOS-LOVABLE.md.
 - [x] Uma credencial real de projeto: AI Gateway 402, MCP initialize 401 e API administrativa /v1/workspaces 401. Nenhum saldo ou renovação retornado; chave não exposta.
 - [ ] Integração ainda não entregue: depende de autorização apropriada e prova de leitura real de saldo; API REST documenta ausência de endpoints de créditos.
+- [x] Conta nova cadastrada em 23/10 às 15h29 (São Paulo); teste da credencial correspondente retornou HTTP 200 e 10 tokens. Saldo/renovação ausentes na resposta.
+- [ ] Login do usuário na Lovable no navegador disponível para conferir qual categoria foi debitada. Navegador estava sem autenticação; pedido de login enviado ao usuário.
 

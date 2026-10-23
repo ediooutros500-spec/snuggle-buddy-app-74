@@ -30,6 +30,17 @@ O próximo desbloqueio é uma autorização OAuth de usuário para executar list
 
 Evidência resumida, sem credenciais: docs/audits/lovable-credit-access-2026-10-23.json.
 
+## Conta nova informada pelo usuário — 23/10/2026
+
+- [x] Novo cadastro observado às 18:29:08 UTC (15:29:08 America/Sao_Paulo), inicialmente active e sem requisições contabilizadas no pool.
+- [x] Selecionar credencial pelo mecanismo existente e conferir que seu hash corresponde exatamente ao novo cadastro antes de enviar teste.
+- [x] Chamada direta ao AI Gateway com google/gemini-3.6-flash, max_tokens=8: HTTP 200; prompt_tokens=6, completion_tokens=4, total_tokens=10. Todos os quatro tokens de saída foram reportados como reasoning; conteúdo textual vazio. O teste prova aceitação e contabilização de tokens, não uma resposta textual final nem saldo monetário.
+- [x] Resposta sem cabeçalhos de saldo, créditos, custo ou renovação. Campo de saldo e tipo de crédito debitado continuam desconhecidos.
+- [x] Conferir navegador disponível: Lovable sem sessão autenticada. Solicitado ao usuário login na conta nova para conferir o consumo no painel oficial.
+- [ ] Comparar consumo nas categorias construção e AI gateway. Não inferir a categoria a partir dos tokens ou do status active.
+
+Evidência: docs/audits/new-account-credit-test-2026-10-23.json. Nenhuma chave incluída. O seletor do pool incrementa seus contadores operacionais ao reservar a credencial; esses contadores não são o relatório de faturamento Lovable.
+
 ## O que foi confirmado
 
 - O remix atual registra LOVABLE_API_KEY, origem e rótulos na central. Não consulta saldo nem ciclo de faturamento.
