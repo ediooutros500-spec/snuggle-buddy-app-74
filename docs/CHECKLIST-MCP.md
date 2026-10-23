@@ -24,3 +24,17 @@ Registrar aplicativo e versão, modelo, data, conexão estabelecida, ferramentas
 ## Limites de observabilidade
 
 A API observa as requisições ao modelo. Não identifica com certeza se uma ferramenta veio de MCP nem acompanha diretamente a sessão entre IDE e servidor MCP. Remover um guia do catálogo não revoga conexões já configuradas nos aplicativos.
+
+## Piloto Claude Desktop com gateway — 23/10/2026
+
+- [x] Identificar perfil ativo e mecanismo managedMcpServers.
+- [x] Testar os dez endpoints sem credenciais: três listam ferramentas, sete exigem autenticação.
+- [x] Context7 visível no aplicativo e duas ferramentas carregadas, confirmado por imagem do usuário.
+- [x] Acrescentar Notion com OAuth individual preservando Context7 e a chave do gateway.
+- [x] Usuário confirmou por imagem a conclusão do login Notion.
+- [ ] Confirmar descoberta de ferramentas e execução de consulta Notion pelo modelo.
+- [ ] Validar demais conectores no aplicativo e suas autorizações.
+- [ ] Distribuir configuração para outros clientes via perfil/bootstrap.
+- [ ] Publicar painel sem o guia de prompts, com acompanhamento manual do piloto.
+
+A página final OAuth em localhost é gerada pelo Claude Desktop e não é controlada pela nossa API.
