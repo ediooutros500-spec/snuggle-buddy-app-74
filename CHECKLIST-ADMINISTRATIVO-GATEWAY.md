@@ -173,4 +173,20 @@ Contrato e checklist detalhado: [ORIGEM-LOVABLE-E-CATALOGO-16.md](docs/ORIGEM-LO
 - [x] Não chamar geração de imagem/vídeo nem embeddings; lista de exclusão explícita.
 - [x] Conferir 19 request IDs no histórico, preservar logs e remover cliente/chave temporários. As 11 respostas úteis informaram 632 tokens no total.
 - [x] Registrar matriz individual: [TESTES-MODELOS-TEXTO-2026-10-22.md](docs/TESTES-MODELOS-TEXTO-2026-10-22.md).
-- [ ] Configurar os oito modelos adicionais, conforme solicitação seguinte do usuário; Anthropic nativo precisa de adaptação real, não somente inclusão de IDs no catálogo.
+- [x] Configurar os oito modelos adicionais com Anthropic nativo e adaptação para Chat Completions; código b83583a69548 implantado e validado por HTTPS.
+
+## Modelos adicionais configurados e implantados — 22/10/2026
+
+- [x] Habilitar cinco modelos Anthropic, GPT-6 Astra, GPT-6.1 Sol e Gemini 4 Argon; manter os 11 textos anteriores. Total: 19 textos e 27 modelos canônicos incluindo as modalidades existentes.
+- [x] Claude usa Messages nativo no Lovable; GPT usa Responses interno e Google usa Chat Completions interno. Responses público não foi implementado nesta etapa.
+- [x] Preservar corpo/eventos Anthropic em `/v1/messages`; converter Claude para clientes `/v1/chat/completions` quando necessário.
+- [x] Aliases solicitados selecionam Claude real. Nomes Claude desconhecidos são recusados, sem fallback silencioso para Google/OpenAI.
+- [x] Confirmar os oito IDs e quatro aliases em `/v1/models` e no catálogo administrativo; cliente restrito não descobre modelos de mídia.
+- [x] 76 testes locais, tipos, builds Lovable/Node, smoke e GitHub Actions aprovados; lint sem erros e seis avisos anteriores.
+- [x] HTTPS real: os 19 modelos responderam HTTP 200 e OK/OK.; nove testes adicionais de JSON, SSE, aliases e tools passaram. Cliente sem permissão recebeu HTTP 403.
+- [x] Histórico: 19/19 IDs conferidos na matriz e nove respostas aprovadas na trilha de protocolos, além da rejeição de permissão. Clientes/chaves temporários removidos; logs reais preservados.
+- [x] Não executar geração de imagem/vídeo nem embeddings. Apenas texto e metadados de descoberta foram chamados.
+- [x] Imagem ativa zilong-gateway-parent:b83583a69548; Gator/proxy e 26 containers anteriores preservados; StarChef readiness HTTP 200.
+- [ ] Prosseguir separadamente com Responses público, jobs de vídeo e os demais requisitos ainda abertos; não declarar todo o plano concluído por essa entrega.
+
+Relatório e evidências: [CONFIGURACAO-MODELOS-TEXTO.md](docs/CONFIGURACAO-MODELOS-TEXTO.md).

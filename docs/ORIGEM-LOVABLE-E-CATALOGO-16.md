@@ -14,7 +14,7 @@ O cadastro confirma a inclusão da credencial na central; não confirma saldo, t
 
 ## Catálogo de destino: os 16 modelos solicitados
 
-Esta tabela é o contrato desejado, não uma declaração de que os 16 já funcionam na versão publicada. Os IDs exatos, endpoints upstream e formatos devem ser testados com uma credencial real antes da ativação. A documentação confirma as famílias de modelos, mas isso não prova o acesso de uma conta ou a integração deste gateway.
+Esta tabela registra o contrato desejado. Os oito modelos de texto foram configurados e testados em 22/10/2026; vídeo, imagem e embeddings não foram chamados nesta validação. O estado atual dos textos está em [CONFIGURACAO-MODELOS-TEXTO.md](CONFIGURACAO-MODELOS-TEXTO.md). A ativação de modelos de texto não comprova o ciclo de jobs de vídeo nem os demais contratos de mídia.
 
 Todos os caminhos abaixo são relativos à base pública **https://api.delvertokens.store**. Os endereços reais do provedor continuam apenas no backend. Trocar o hostname do provedor pelo nosso não cria automaticamente um adaptador.
 
@@ -39,7 +39,7 @@ Todos os caminhos abaixo são relativos à base pública **https://api.delvertok
 
 A [documentação Lovable de chat](https://docs.lovable.dev/features/ai-chat) lista Claude para projetos TanStack Start recentes, além de GPT-6 Astra, GPT-6.1 Sol e Gemini 4 Argon. Este projeto é TanStack Start. A [documentação de vídeo](https://docs.lovable.dev/features/ai-video) classifica Gemini Omni 1.1 Flash junto dos modelos de vídeo e descreve geração assíncrona. [Imagens](https://docs.lovable.dev/features/ai-images) e [embeddings](https://docs.lovable.dev/features/ai-search) têm seus catálogos próprios.
 
-O catálogo atual da central continua com 19 IDs configurados, identificados como disponibilidade não verificada. Não foi substituído pela tabela desejada nesta etapa: faltam adaptadores e teste real. A rota `/v1/responses` pública e a consulta de jobs de vídeo ainda precisam ser implementadas, inclusive no proxy; não são rotas prontas. A API pública `/v1/models` e o painel devem consumir a mesma configuração e respeitar bloqueios/permissões quando o novo catálogo for ativado.
+Após a entrega b83583a69548, o catálogo da central contém 27 IDs canônicos: 19 textos (11 anteriores e oito novos) e oito de outras modalidades. Painel e `/v1/models` compartilham configuração e respeitam bloqueios/permissões; os oito novos IDs foram conferidos nos dois. O indicador genérico de disponibilidade continua conservador, pois não há monitoramento contínuo por modelo/credencial. A rota `/v1/responses` pública e a consulta de jobs de vídeo ainda precisam ser implementadas, inclusive no proxy; Responses interno para modelos OpenAI não equivale à existência da rota pública.
 
 ## Aliases desejados
 
@@ -47,7 +47,7 @@ O catálogo atual da central continua com 19 IDs configurados, identificados com
 - `claude-3-5-haiku` → `anthropic/claude-haiku-4-5`.
 - `claude-opus-4` → `anthropic/claude-opus-5-5`.
 
-Esses são alvos da próxima implementação, ainda não ativados. A versão atual usa compatibilidade com conversão para Google/OpenAI. Não apresentar essa conversão como Claude nativo. Um fallback de Claude para GPT deve ser uma opção explícita e rastreável no painel, com modelo solicitado e resolvido; não uma troca silenciosa.
+Esses aliases foram ativados na entrega b83583a69548 e testados por HTTPS. Eles agora selecionam modelos Anthropic reais. O encaminhamento Messages → Messages é nativo; Chat Completions → Anthropic exige conversão. Nomes Claude desconhecidos são recusados. Não há fallback silencioso de Claude para GPT/Google.
 
 "Sem conversão" só se aplica ao encaminhamento Messages → Messages de um modelo Anthropic. Clientes OpenAI Chat Completions que pedirem Claude precisam de adaptador; clientes Messages que pedirem GPT também. Preservar tools, tool results, raciocínio, erros, cancelamento e formato SSE exige testes específicos.
 
@@ -65,7 +65,7 @@ Esses são alvos da próxima implementação, ainda não ativados. A versão atu
 - [ ] Corrigir/confirmar cadastro de origem e remix real: `POST` no backend publicado `/api/public/v1/workers/announce`, com header de auto-dispatch, respondeu HTTP 200, `attempted=true`, `registered=false`, mensagem `Falha ao contatar o Gator.`. O mesmo host central respondeu HTTP 400 a POST vazio de diagnóstico em `/api/public/v1/workers/register` a partir do PC, indicando rota alcançável da rede local, mas não conectividade originada na execução Lovable. Não houve acesso ao segredo; investigar rede/DNS/TLS/egress no ambiente Lovable sem logar `LOVABLE_API_KEY`. Não marcar gatilho como funcional antes de remix real aparecer na central.
 - [x] Validar cópia isolada do commit `c186100` em worktree destacado: `npm test` 62/62; `npm run typecheck`, `npm run build` (Lovable/Vite) e `npm run build:parent` (Node) com exit 0. Na pasta original não limpa, `npm test` resultou 59/62, indicando interferência das alterações não commitadas; preservadas sem `git add .`.
 - [ ] Validar um remix real com chave própria, confirmação na central e teste de geração.
-- [ ] Implementar e testar Anthropic nativo e os modelos novos; depois ativar catálogo/aliases no painel e `/v1/models`.
+- [x] Implementar Anthropic nativo e os oito modelos novos; ativar e testar catálogo/aliases no painel e `/v1/models`. Os 19 textos responderam em testes reais; JSON, SSE e tools conferidos em chamadas específicas.
 - [ ] Implementar `/v1/responses` público e ciclo completo de jobs de vídeo, com propriedade do job, consulta e expiração.
 - [ ] Validar tools, SSE, cancelamento, erros, uso e dimensões de embeddings com provedor real.
 

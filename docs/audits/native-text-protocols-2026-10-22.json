@@ -1,0 +1,205 @@
+{
+  "startedAt": "2026-10-23T00:51:47.786Z",
+  "results": [
+    {
+      "name": "native-json",
+      "model": "anthropic/claude-haiku-4-5",
+      "path": "/v1/messages",
+      "status": 200,
+      "durationMs": 2519,
+      "requestId": "79a1630a-93d8-435f-918e-fa31542266c1",
+      "resolvedModel": "claude-haiku-4-5-20251001",
+      "usage": {
+        "input_tokens": 14,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "output_tokens": 5,
+        "service_tier": "standard",
+        "inference_geo": "not_available",
+        "speed": "standard"
+      },
+      "reply": "OK.",
+      "passed": true
+    },
+    {
+      "name": "native-sse",
+      "model": "anthropic/claude-sonnet-5",
+      "path": "/v1/messages",
+      "status": 200,
+      "durationMs": 2764,
+      "requestId": "9f494b68-cf13-4caa-b0b0-2eccd534087f",
+      "events": 8,
+      "reply": "OK",
+      "nativeEventsPreserved": true,
+      "passed": true
+    },
+    {
+      "name": "openai-sse",
+      "model": "anthropic/claude-haiku-4-5",
+      "path": "/v1/chat/completions",
+      "status": 200,
+      "durationMs": 1618,
+      "requestId": "068d96cb-c0d5-4845-9ebc-77d7e2a0b58b",
+      "events": 4,
+      "reply": "OK.",
+      "passed": true
+    },
+    {
+      "name": "alias:claude-3-5-sonnet",
+      "model": "claude-3-5-sonnet",
+      "path": "/v1/messages",
+      "status": 200,
+      "durationMs": 2004,
+      "requestId": "4f6a44fa-22a7-4835-89b2-afea4f461024",
+      "resolvedModel": "claude-sonnet-5",
+      "usage": {
+        "input_tokens": 14,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "output_tokens": 4,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "service_tier": "standard",
+        "inference_geo": "global",
+        "speed": "standard"
+      },
+      "reply": "OK",
+      "passed": true
+    },
+    {
+      "name": "alias:claude-sonnet-4",
+      "model": "claude-sonnet-4",
+      "path": "/v1/messages",
+      "status": 200,
+      "durationMs": 2114,
+      "requestId": "fe3bc8af-7337-487a-ae99-88ccc728d5fc",
+      "resolvedModel": "claude-sonnet-5",
+      "usage": {
+        "input_tokens": 14,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "output_tokens": 4,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "service_tier": "standard",
+        "inference_geo": "global",
+        "speed": "standard"
+      },
+      "reply": "OK",
+      "passed": true
+    },
+    {
+      "name": "alias:claude-3-5-haiku",
+      "model": "claude-3-5-haiku",
+      "path": "/v1/messages",
+      "status": 200,
+      "durationMs": 2145,
+      "requestId": "eb154d2a-aab6-40b1-93dc-8bcc74505020",
+      "resolvedModel": "claude-haiku-4-5-20251001",
+      "usage": {
+        "input_tokens": 14,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "output_tokens": 5,
+        "service_tier": "standard",
+        "inference_geo": "not_available",
+        "speed": "standard"
+      },
+      "reply": "OK.",
+      "passed": true
+    },
+    {
+      "name": "alias:claude-opus-4",
+      "model": "claude-opus-4",
+      "path": "/v1/messages",
+      "status": 200,
+      "durationMs": 2855,
+      "requestId": "b08188cb-1924-48d4-a1d4-2a2bff4f35f6",
+      "resolvedModel": "claude-opus-5-5",
+      "usage": {
+        "input_tokens": 16,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "output_tokens": 4,
+        "output_tokens_details": {
+          "thinking_tokens": 0
+        },
+        "service_tier": "standard",
+        "inference_geo": "global",
+        "speed": "standard"
+      },
+      "reply": "OK",
+      "passed": true
+    },
+    {
+      "name": "native-tools",
+      "model": "anthropic/claude-haiku-4-5",
+      "path": "/v1/messages",
+      "status": 200,
+      "durationMs": 1687,
+      "requestId": "a7aecb56-4cb4-4b21-a044-1dc6cfb89e5e",
+      "resolvedModel": "claude-haiku-4-5-20251001",
+      "usage": {
+        "input_tokens": 657,
+        "cache_creation_input_tokens": 0,
+        "cache_read_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "output_tokens": 33,
+        "service_tier": "standard",
+        "inference_geo": "not_available",
+        "speed": "standard"
+      },
+      "toolCallCorrect": true,
+      "passed": true
+    },
+    {
+      "name": "openai-tools",
+      "model": "anthropic/claude-haiku-4-5",
+      "path": "/v1/chat/completions",
+      "status": 200,
+      "durationMs": 2018,
+      "requestId": "593a6f95-a014-4a01-befd-4d4616e3244e",
+      "resolvedModel": "anthropic/claude-haiku-4-5",
+      "usage": {
+        "prompt_tokens": 657,
+        "completion_tokens": 33,
+        "total_tokens": 690
+      },
+      "toolCallCorrect": true,
+      "passed": true
+    }
+  ],
+  "clientPermissionStatus": 403,
+  "telemetry": {
+    "total": 10,
+    "matchedIds": 9
+  },
+  "temporaryClientRemoved": true,
+  "realLogsRetained": true,
+  "finishedAt": "2026-10-23T00:52:11.433Z"
+}
