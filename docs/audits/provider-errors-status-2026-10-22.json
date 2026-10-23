@@ -1,0 +1,36 @@
+{
+  "checkedAt": "2026-10-23T01:17:32.169Z",
+  "results": [
+    {
+      "name": "valid",
+      "status": 200,
+      "requestId": "650de691-8b42-4726-b87f-ae7e2831d355",
+      "reply": "OK",
+      "error": null
+    },
+    {
+      "name": "invalid-thinking",
+      "status": 400,
+      "requestId": "ed273812-a0f6-4d76-b3ed-b1a8deb580af",
+      "reply": null,
+      "error": {
+        "type": "invalid_request_error",
+        "message": "\"thinking.type.enabled\" is not supported for this model. Use \"thinking.type.adaptive\" and \"output_config.effort\" to control thinking behavior."
+      }
+    }
+  ],
+  "telemetry": [
+    {
+      "request_id": "ed273812-a0f6-4d76-b3ed-b1a8deb580af",
+      "status_code": 400,
+      "error_message": "upstream HTTP 400; type=invalid_request_error; reason=unsupported_parameter; fields=model,thinking,output_config,effort"
+    },
+    {
+      "request_id": "650de691-8b42-4726-b87f-ae7e2831d355",
+      "status_code": 200,
+      "error_message": null
+    }
+  ],
+  "temporaryClientRemoved": true,
+  "logsRetained": true
+}

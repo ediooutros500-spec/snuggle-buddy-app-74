@@ -1,0 +1,21 @@
+{
+  "checkedAt": "2026-10-23T01:18:20.794Z",
+  "results": [
+    {
+      "name": "adaptive",
+      "status": 200,
+      "requestId": "9e328b26-9eed-4b75-ad5c-7414d60d12cb",
+      "reply": "OK",
+      "error": null
+    }
+  ],
+  "telemetry": [
+    {
+      "request_id": "9e328b26-9eed-4b75-ad5c-7414d60d12cb",
+      "status_code": 200,
+      "error_message": null
+    }
+  ],
+  "temporaryClientRemoved": true,
+  "logsRetained": true
+}

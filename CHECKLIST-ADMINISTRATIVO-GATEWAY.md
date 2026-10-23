@@ -202,3 +202,13 @@ Relatório e evidências: [CONFIGURACAO-MODELOS-TEXTO.md](docs/CONFIGURACAO-MODE
 - [ ] Confirmar o botão Tentar novamente na conversa real do Claude/Cowork; teste HTTP reproduzido não equivale a clique no aplicativo.
 
 Detalhes e fontes: [CORRECAO-SYSTEM-MESSAGES.md](docs/CORRECAO-SYSTEM-MESSAGES.md).
+
+## Claude/Cowork: repetição de falhas e beta recusado — 22/10/2026
+
+- [x] Implantar `f6e6cf85c871`: preservar erros de solicitação upstream, em vez de transformá-los em 502; guardar somente diagnóstico classificado no histórico.
+- [x] Usuário confirmou HTTP 400 por `anthropic-beta: claude-code-20250219`; reproduzido pela API pública.
+- [x] Implantar `700086863187`: remover somente esse marcador no Lovable, preservando os demais betas e todo o corpo nativo. Sem troca de modelo nem descarte de ferramentas/instruções.
+- [x] 84 testes, tipos, lint sem erros, builds Lovable/Node, smoke e GitHub Actions aprovados. VPS: mesmo cabeçalho agora HTTP 200 e OK, em JSON e SSE; IDs conferidos e clientes temporários removidos. Containers anteriores e StarChef preservados.
+- [ ] Confirmar a conversa completa no aplicativo; o teste HTTP não substitui a tentativa real do usuário e outros recursos beta podem ter restrições próprias.
+
+Detalhes e evidências: [CORRECAO-CLAUDE-CODE-BETA.md](docs/CORRECAO-CLAUDE-CODE-BETA.md).
