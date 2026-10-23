@@ -333,6 +333,108 @@ test("invalid native token budget is rejected instead of becoming an expensive d
   assert.equal(f.calls.length, 0);
 });
 
+test("Opus accepts inline system messages without moving instructions or changing native fields", async () => {
+  const messages = [
+    { role: "user", content: "oi" },
+    {
+      role: "system",
+      content: [{ type: "text", text: "new instruction", cache_control: { type: "ephemeral" } }],
+      output_config: { effort: "medium" },
+    },
+  ];
+  const response = {
+    type: "message",
+    model: "claude-opus-5-5",
+    content: [{ type: "text", text: "OK" }],
+    usage: { input_tokens: 15, output_tokens: 4 },
+  };
+  const f = fixture("messages", {
+    model: "anthropic/claude-opus-5-5",
+    upstream: () => Response.json(response),
+  });
+  const r = await f.send({
+    model: "anthropic/claude-opus-5-5",
+    max_tokens: 128,
+    system: "initial instruction",
+    messages,
+  });
+  assert.equal(r.status, 200);
+  assert.deepEqual(await r.json(), response);
+  assert.deepEqual(f.calls[0][1].messages, messages);
+  assert.equal(f.calls[0][1].system, "initial instruction");
+});
+
+test("inline system messages after tool results preserve native tools and history order", async () => {
+  const messages = [
+    { role: "user", content: "test" },
+    {
+      role: "assistant",
+      content: [
+        { type: "tool_use", id: "toolu_example", name: "echo_check", input: { status: "OK" } },
+      ],
+    },
+    {
+      role: "user",
+      content: [{ type: "tool_result", tool_use_id: "toolu_example", content: "OK" }],
+    },
+    {
+      role: "system",
+      content: [{ type: "tool_removal", tool: { type: "tool_reference", name: "echo_check" } }],
+    },
+  ];
+  const f = fixture("messages", {
+    model: "anthropic/claude-opus-5-5",
+    upstream: () => Response.json({ content: [], usage: { input_tokens: 15, output_tokens: 0 } }),
+  });
+  const r = await f.send({ model: "anthropic/claude-opus-5-5", messages, max_tokens: 128 });
+  assert.equal(r.status, 200);
+  assert.deepEqual(f.calls[0][1].messages, messages);
+});
+
+test("inline system requests can stream native Anthropic without response conversion", async () => {
+  const f = fixture("messages", { model: "anthropic/claude-opus-5-5" });
+  const r = await f.send({
+    model: "anthropic/claude-opus-5-5",
+    messages: [
+      { role: "user", content: "oi" },
+      { role: "system", content: "instruction" },
+    ],
+    stream: true,
+    max_tokens: 128,
+  });
+  assert.equal(r.status, 200);
+  assert.equal(await r.text(), sse());
+  assert.equal(f.calls[0][1].messages[1].role, "system");
+});
+
+test("invalid roles remain rejected and inline system never becomes a user message for other providers", async () => {
+  const invalid = fixture("messages", { model: "anthropic/claude-opus-5-5" });
+  const bad = await invalid.send({
+    model: "anthropic/claude-opus-5-5",
+    messages: [{ role: "developer", content: "x" }],
+  });
+  assert.equal(bad.status, 400);
+  assert.equal(invalid.calls.length, 0);
+  const messages = [
+    { role: "user", content: "hi" },
+    { role: "system", content: "private operator instruction" },
+  ];
+  const nonNative = fixture("messages", { model: "google/gemini-3.6-flash" });
+  const denied = await nonNative.send({ model: "google/gemini-3.6-flash", messages });
+  assert.equal(denied.status, 400);
+  assert.equal(nonNative.calls.length, 0);
+  const compat = load("src/lib/claude-compat.server.ts", noPool);
+  assert.throws(
+    () => compat.toChatCompletions({ messages }, "google/gemini-3.6-flash"),
+    /Anthropic Messages nativo/,
+  );
+  assert.throws(
+    () => compat.toResponsesRequest({ messages }, "openai/gpt-6.1-sol"),
+    /Anthropic Messages nativo/,
+  );
+  assert.equal(messages[1].role, "system");
+});
+
 test("pool forwarding attaches provider credentials and native protocol headers only at the fixed upstream", async (t) => {
   const names = ["GATOR_SUPABASE_URL", "GATOR_SUPABASE_SERVICE_ROLE_KEY"];
   const before = Object.fromEntries(names.map((n) => [n, process.env[n]])),

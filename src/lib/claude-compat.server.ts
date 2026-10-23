@@ -234,7 +234,7 @@ export type AnthropicContentBlock =
   | { type: string; [k: string]: unknown };
 
 export interface AnthropicMessage {
-  role: "user" | "assistant";
+  role: "user" | "assistant" | "system";
   content: string | AnthropicContentBlock[];
 }
 
@@ -297,6 +297,8 @@ function sanitizeJsonSchema(schema?: Record<string, unknown>): Record<string, un
 }
 
 export function toChatCompletions(req: MessagesRequest, model: string) {
+  if (req.messages.some((message) => message.role === "system"))
+    throw new Error("Instruções de sistema intermediárias exigem Anthropic Messages nativo.");
   const msgs: Record<string, unknown>[] = [];
   const system = systemToText(req.system);
   if (system) msgs.push({ role: "system", content: system });
@@ -376,6 +378,8 @@ export function toChatCompletions(req: MessagesRequest, model: string) {
 }
 
 export function toResponsesRequest(req: MessagesRequest, model: string) {
+  if (req.messages.some((message) => message.role === "system"))
+    throw new Error("Instruções de sistema intermediárias exigem Anthropic Messages nativo.");
   const input: Record<string, unknown>[] = [];
 
   for (const m of req.messages) {

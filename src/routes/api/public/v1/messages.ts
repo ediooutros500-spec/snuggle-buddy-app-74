@@ -89,11 +89,11 @@ export const Route = createFileRoute("/api/public/v1/messages")({
             );
           }
           for (const m of body.messages) {
-            if (!m || (m.role !== "user" && m.role !== "assistant")) {
+            if (!m || !["user", "assistant", "system"].includes(m.role)) {
               return anthropicError(
                 400,
                 "invalid_request_error",
-                "Cada mensagem precisa de role 'user' ou 'assistant'.",
+                "Cada mensagem precisa de role 'user', 'assistant' ou 'system' (Anthropic nativo).",
               );
             }
             if (typeof m.content !== "string" && !Array.isArray(m.content)) {
@@ -118,6 +118,17 @@ export const Route = createFileRoute("/api/public/v1/messages")({
             const settings = await readGatewaySettings();
             model = resolvePolicyModel(body.model, auth, settings);
             trace.model = model;
+            // Inline system instructions must keep their position and authority.
+            // Never turn them into ordinary user text in cross-provider converters.
+            if (
+              !model.startsWith("anthropic/") &&
+              body.messages.some((message) => message.role === "system")
+            )
+              return anthropicError(
+                400,
+                "invalid_request_error",
+                "Instruções de sistema intermediárias exigem um modelo Anthropic nativo compatível.",
+              );
             await admitModelAttempt(model, auth, settings);
           } catch (error) {
             return policyErrorResponse(error);
