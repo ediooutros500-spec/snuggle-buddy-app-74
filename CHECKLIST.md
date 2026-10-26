@@ -11,3 +11,10 @@
 - [ ] Publicar a base atualizada na Lovable e confirmar um remix real na central existente.
 
 O commit da base nÃƒÂ£o altera a VPS nem atualiza automaticamente todos os remixes jÃƒÂ¡ criados. O saldo numÃƒÂ©rico e a renovaÃƒÂ§ÃƒÂ£o dos crÃƒÂ©ditos nÃƒÂ£o fazem parte desta conexÃƒÂ£o.
+
+## Página devocional
+- [x] Pausa de Fé: versículo por hora local e saudação por período, sem chamadas de IA.
+- [x] Gatilho e aviso visível sobre envio da credencial preservados.
+- [x] Conexão, TypeScript e build aprovados.
+- [ ] Conferir aparência na Lovable após publicar.
+
