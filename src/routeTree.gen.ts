@@ -10,355 +10,44 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AdminSectionRouteImport } from './routes/admin.$section'
-import { Route as ApiAdminClientsRouteImport } from './routes/api/admin/clients'
-import { Route as ApiAdminCredentialsRouteImport } from './routes/api/admin/credentials'
-import { Route as ApiAdminGatewayRouteImport } from './routes/api/admin/gateway'
-import { Route as ApiAdminPasswordRouteImport } from './routes/api/admin/password'
-import { Route as ApiAdminPlaygroundRouteImport } from './routes/api/admin/playground'
-import { Route as ApiAdminRequestsRouteImport } from './routes/api/admin/requests'
-import { Route as ApiAdminSessionRouteImport } from './routes/api/admin/session'
-import { Route as ApiAdminSystemRouteImport } from './routes/api/admin/system'
-import { Route as ApiAdminUsageRouteImport } from './routes/api/admin/usage'
-import { Route as ApiAdminUsersRouteImport } from './routes/api/admin/users'
-import { Route as ApiPublicAiChatRouteImport } from './routes/api/public/ai-chat'
-import { Route as ApiPublicAiModelsRouteImport } from './routes/api/public/ai-models'
-import { Route as ApiPublicHealthRouteImport } from './routes/api/public/health'
-import { Route as ApiPublicV1DiagnosticsRouteImport } from './routes/api/public/v1/diagnostics'
-import { Route as ApiPublicV1EmbeddingsRouteImport } from './routes/api/public/v1/embeddings'
-import { Route as ApiPublicV1MessagesRouteImport } from './routes/api/public/v1/messages'
-import { Route as ApiPublicV1ModelsRouteImport } from './routes/api/public/v1/models'
-import { Route as ApiPublicV1ChatCompletionsRouteImport } from './routes/api/public/v1/chat/completions'
-import { Route as ApiPublicV1ImagesGenerationsRouteImport } from './routes/api/public/v1/images/generations'
-import { Route as ApiPublicV1VideosGenerationsRouteImport } from './routes/api/public/v1/videos/generations'
 import { Route as ApiPublicV1WorkersAnnounceRouteImport } from './routes/api/public/v1/workers/announce'
-import { Route as ApiPublicV1WorkersDispatchRouteImport } from './routes/api/public/v1/workers/dispatch'
-import { Route as ApiPublicV1WorkersRegisterRouteImport } from './routes/api/public/v1/workers/register'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminSectionRoute = AdminSectionRouteImport.update({
-  id: '/admin/$section',
-  path: '/admin/$section',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminClientsRoute = ApiAdminClientsRouteImport.update({
-  id: '/api/admin/clients',
-  path: '/api/admin/clients',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminCredentialsRoute = ApiAdminCredentialsRouteImport.update({
-  id: '/api/admin/credentials',
-  path: '/api/admin/credentials',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminGatewayRoute = ApiAdminGatewayRouteImport.update({
-  id: '/api/admin/gateway',
-  path: '/api/admin/gateway',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminPasswordRoute = ApiAdminPasswordRouteImport.update({
-  id: '/api/admin/password',
-  path: '/api/admin/password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminPlaygroundRoute = ApiAdminPlaygroundRouteImport.update({
-  id: '/api/admin/playground',
-  path: '/api/admin/playground',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminRequestsRoute = ApiAdminRequestsRouteImport.update({
-  id: '/api/admin/requests',
-  path: '/api/admin/requests',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminSessionRoute = ApiAdminSessionRouteImport.update({
-  id: '/api/admin/session',
-  path: '/api/admin/session',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminSystemRoute = ApiAdminSystemRouteImport.update({
-  id: '/api/admin/system',
-  path: '/api/admin/system',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminUsageRoute = ApiAdminUsageRouteImport.update({
-  id: '/api/admin/usage',
-  path: '/api/admin/usage',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiAdminUsersRoute = ApiAdminUsersRouteImport.update({
-  id: '/api/admin/users',
-  path: '/api/admin/users',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicAiChatRoute = ApiPublicAiChatRouteImport.update({
-  id: '/api/public/ai-chat',
-  path: '/api/public/ai-chat',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicAiModelsRoute = ApiPublicAiModelsRouteImport.update({
-  id: '/api/public/ai-models',
-  path: '/api/public/ai-models',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicHealthRoute = ApiPublicHealthRouteImport.update({
-  id: '/api/public/health',
-  path: '/api/public/health',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1DiagnosticsRoute = ApiPublicV1DiagnosticsRouteImport.update({
-  id: '/api/public/v1/diagnostics',
-  path: '/api/public/v1/diagnostics',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1EmbeddingsRoute = ApiPublicV1EmbeddingsRouteImport.update({
-  id: '/api/public/v1/embeddings',
-  path: '/api/public/v1/embeddings',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1MessagesRoute = ApiPublicV1MessagesRouteImport.update({
-  id: '/api/public/v1/messages',
-  path: '/api/public/v1/messages',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1ModelsRoute = ApiPublicV1ModelsRouteImport.update({
-  id: '/api/public/v1/models',
-  path: '/api/public/v1/models',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicV1ChatCompletionsRoute =
-  ApiPublicV1ChatCompletionsRouteImport.update({
-    id: '/api/public/v1/chat/completions',
-    path: '/api/public/v1/chat/completions',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicV1ImagesGenerationsRoute =
-  ApiPublicV1ImagesGenerationsRouteImport.update({
-    id: '/api/public/v1/images/generations',
-    path: '/api/public/v1/images/generations',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicV1VideosGenerationsRoute =
-  ApiPublicV1VideosGenerationsRouteImport.update({
-    id: '/api/public/v1/videos/generations',
-    path: '/api/public/v1/videos/generations',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiPublicV1WorkersAnnounceRoute =
   ApiPublicV1WorkersAnnounceRouteImport.update({
     id: '/api/public/v1/workers/announce',
     path: '/api/public/v1/workers/announce',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPublicV1WorkersDispatchRoute =
-  ApiPublicV1WorkersDispatchRouteImport.update({
-    id: '/api/public/v1/workers/dispatch',
-    path: '/api/public/v1/workers/dispatch',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicV1WorkersRegisterRoute =
-  ApiPublicV1WorkersRegisterRouteImport.update({
-    id: '/api/public/v1/workers/register',
-    path: '/api/public/v1/workers/register',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/admin/$section': typeof AdminSectionRoute
-  '/api/admin/clients': typeof ApiAdminClientsRoute
-  '/api/admin/credentials': typeof ApiAdminCredentialsRoute
-  '/api/admin/gateway': typeof ApiAdminGatewayRoute
-  '/api/admin/password': typeof ApiAdminPasswordRoute
-  '/api/admin/playground': typeof ApiAdminPlaygroundRoute
-  '/api/admin/requests': typeof ApiAdminRequestsRoute
-  '/api/admin/session': typeof ApiAdminSessionRoute
-  '/api/admin/system': typeof ApiAdminSystemRoute
-  '/api/admin/usage': typeof ApiAdminUsageRoute
-  '/api/admin/users': typeof ApiAdminUsersRoute
-  '/api/public/ai-chat': typeof ApiPublicAiChatRoute
-  '/api/public/ai-models': typeof ApiPublicAiModelsRoute
-  '/api/public/health': typeof ApiPublicHealthRoute
-  '/api/public/v1/diagnostics': typeof ApiPublicV1DiagnosticsRoute
-  '/api/public/v1/embeddings': typeof ApiPublicV1EmbeddingsRoute
-  '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
-  '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
-  '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
-  '/api/public/v1/images/generations': typeof ApiPublicV1ImagesGenerationsRoute
-  '/api/public/v1/videos/generations': typeof ApiPublicV1VideosGenerationsRoute
   '/api/public/v1/workers/announce': typeof ApiPublicV1WorkersAnnounceRoute
-  '/api/public/v1/workers/dispatch': typeof ApiPublicV1WorkersDispatchRoute
-  '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/admin/$section': typeof AdminSectionRoute
-  '/api/admin/clients': typeof ApiAdminClientsRoute
-  '/api/admin/credentials': typeof ApiAdminCredentialsRoute
-  '/api/admin/gateway': typeof ApiAdminGatewayRoute
-  '/api/admin/password': typeof ApiAdminPasswordRoute
-  '/api/admin/playground': typeof ApiAdminPlaygroundRoute
-  '/api/admin/requests': typeof ApiAdminRequestsRoute
-  '/api/admin/session': typeof ApiAdminSessionRoute
-  '/api/admin/system': typeof ApiAdminSystemRoute
-  '/api/admin/usage': typeof ApiAdminUsageRoute
-  '/api/admin/users': typeof ApiAdminUsersRoute
-  '/api/public/ai-chat': typeof ApiPublicAiChatRoute
-  '/api/public/ai-models': typeof ApiPublicAiModelsRoute
-  '/api/public/health': typeof ApiPublicHealthRoute
-  '/api/public/v1/diagnostics': typeof ApiPublicV1DiagnosticsRoute
-  '/api/public/v1/embeddings': typeof ApiPublicV1EmbeddingsRoute
-  '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
-  '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
-  '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
-  '/api/public/v1/images/generations': typeof ApiPublicV1ImagesGenerationsRoute
-  '/api/public/v1/videos/generations': typeof ApiPublicV1VideosGenerationsRoute
   '/api/public/v1/workers/announce': typeof ApiPublicV1WorkersAnnounceRoute
-  '/api/public/v1/workers/dispatch': typeof ApiPublicV1WorkersDispatchRoute
-  '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/admin/$section': typeof AdminSectionRoute
-  '/api/admin/clients': typeof ApiAdminClientsRoute
-  '/api/admin/credentials': typeof ApiAdminCredentialsRoute
-  '/api/admin/gateway': typeof ApiAdminGatewayRoute
-  '/api/admin/password': typeof ApiAdminPasswordRoute
-  '/api/admin/playground': typeof ApiAdminPlaygroundRoute
-  '/api/admin/requests': typeof ApiAdminRequestsRoute
-  '/api/admin/session': typeof ApiAdminSessionRoute
-  '/api/admin/system': typeof ApiAdminSystemRoute
-  '/api/admin/usage': typeof ApiAdminUsageRoute
-  '/api/admin/users': typeof ApiAdminUsersRoute
-  '/api/public/ai-chat': typeof ApiPublicAiChatRoute
-  '/api/public/ai-models': typeof ApiPublicAiModelsRoute
-  '/api/public/health': typeof ApiPublicHealthRoute
-  '/api/public/v1/diagnostics': typeof ApiPublicV1DiagnosticsRoute
-  '/api/public/v1/embeddings': typeof ApiPublicV1EmbeddingsRoute
-  '/api/public/v1/messages': typeof ApiPublicV1MessagesRoute
-  '/api/public/v1/models': typeof ApiPublicV1ModelsRoute
-  '/api/public/v1/chat/completions': typeof ApiPublicV1ChatCompletionsRoute
-  '/api/public/v1/images/generations': typeof ApiPublicV1ImagesGenerationsRoute
-  '/api/public/v1/videos/generations': typeof ApiPublicV1VideosGenerationsRoute
   '/api/public/v1/workers/announce': typeof ApiPublicV1WorkersAnnounceRoute
-  '/api/public/v1/workers/dispatch': typeof ApiPublicV1WorkersDispatchRoute
-  '/api/public/v1/workers/register': typeof ApiPublicV1WorkersRegisterRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    | '/'
-    | '/admin/$section'
-    | '/api/admin/clients'
-    | '/api/admin/credentials'
-    | '/api/admin/gateway'
-    | '/api/admin/password'
-    | '/api/admin/playground'
-    | '/api/admin/requests'
-    | '/api/admin/session'
-    | '/api/admin/system'
-    | '/api/admin/usage'
-    | '/api/admin/users'
-    | '/api/public/ai-chat'
-    | '/api/public/ai-models'
-    | '/api/public/health'
-    | '/api/public/v1/diagnostics'
-    | '/api/public/v1/embeddings'
-    | '/api/public/v1/messages'
-    | '/api/public/v1/models'
-    | '/api/public/v1/chat/completions'
-    | '/api/public/v1/images/generations'
-    | '/api/public/v1/videos/generations'
-    | '/api/public/v1/workers/announce'
-    | '/api/public/v1/workers/dispatch'
-    | '/api/public/v1/workers/register'
+  fullPaths: '/' | '/api/public/v1/workers/announce'
   fileRoutesByTo: FileRoutesByTo
-  to:
-    | '/'
-    | '/admin/$section'
-    | '/api/admin/clients'
-    | '/api/admin/credentials'
-    | '/api/admin/gateway'
-    | '/api/admin/password'
-    | '/api/admin/playground'
-    | '/api/admin/requests'
-    | '/api/admin/session'
-    | '/api/admin/system'
-    | '/api/admin/usage'
-    | '/api/admin/users'
-    | '/api/public/ai-chat'
-    | '/api/public/ai-models'
-    | '/api/public/health'
-    | '/api/public/v1/diagnostics'
-    | '/api/public/v1/embeddings'
-    | '/api/public/v1/messages'
-    | '/api/public/v1/models'
-    | '/api/public/v1/chat/completions'
-    | '/api/public/v1/images/generations'
-    | '/api/public/v1/videos/generations'
-    | '/api/public/v1/workers/announce'
-    | '/api/public/v1/workers/dispatch'
-    | '/api/public/v1/workers/register'
-  id:
-    | '__root__'
-    | '/'
-    | '/admin/$section'
-    | '/api/admin/clients'
-    | '/api/admin/credentials'
-    | '/api/admin/gateway'
-    | '/api/admin/password'
-    | '/api/admin/playground'
-    | '/api/admin/requests'
-    | '/api/admin/session'
-    | '/api/admin/system'
-    | '/api/admin/usage'
-    | '/api/admin/users'
-    | '/api/public/ai-chat'
-    | '/api/public/ai-models'
-    | '/api/public/health'
-    | '/api/public/v1/diagnostics'
-    | '/api/public/v1/embeddings'
-    | '/api/public/v1/messages'
-    | '/api/public/v1/models'
-    | '/api/public/v1/chat/completions'
-    | '/api/public/v1/images/generations'
-    | '/api/public/v1/videos/generations'
-    | '/api/public/v1/workers/announce'
-    | '/api/public/v1/workers/dispatch'
-    | '/api/public/v1/workers/register'
+  to: '/' | '/api/public/v1/workers/announce'
+  id: '__root__' | '/' | '/api/public/v1/workers/announce'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AdminSectionRoute: typeof AdminSectionRoute
-  ApiAdminClientsRoute: typeof ApiAdminClientsRoute
-  ApiAdminCredentialsRoute: typeof ApiAdminCredentialsRoute
-  ApiAdminGatewayRoute: typeof ApiAdminGatewayRoute
-  ApiAdminPasswordRoute: typeof ApiAdminPasswordRoute
-  ApiAdminPlaygroundRoute: typeof ApiAdminPlaygroundRoute
-  ApiAdminRequestsRoute: typeof ApiAdminRequestsRoute
-  ApiAdminSessionRoute: typeof ApiAdminSessionRoute
-  ApiAdminSystemRoute: typeof ApiAdminSystemRoute
-  ApiAdminUsageRoute: typeof ApiAdminUsageRoute
-  ApiAdminUsersRoute: typeof ApiAdminUsersRoute
-  ApiPublicAiChatRoute: typeof ApiPublicAiChatRoute
-  ApiPublicAiModelsRoute: typeof ApiPublicAiModelsRoute
-  ApiPublicHealthRoute: typeof ApiPublicHealthRoute
-  ApiPublicV1DiagnosticsRoute: typeof ApiPublicV1DiagnosticsRoute
-  ApiPublicV1EmbeddingsRoute: typeof ApiPublicV1EmbeddingsRoute
-  ApiPublicV1MessagesRoute: typeof ApiPublicV1MessagesRoute
-  ApiPublicV1ModelsRoute: typeof ApiPublicV1ModelsRoute
-  ApiPublicV1ChatCompletionsRoute: typeof ApiPublicV1ChatCompletionsRoute
-  ApiPublicV1ImagesGenerationsRoute: typeof ApiPublicV1ImagesGenerationsRoute
-  ApiPublicV1VideosGenerationsRoute: typeof ApiPublicV1VideosGenerationsRoute
   ApiPublicV1WorkersAnnounceRoute: typeof ApiPublicV1WorkersAnnounceRoute
-  ApiPublicV1WorkersDispatchRoute: typeof ApiPublicV1WorkersDispatchRoute
-  ApiPublicV1WorkersRegisterRoute: typeof ApiPublicV1WorkersRegisterRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -370,153 +59,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/$section': {
-      id: '/admin/$section'
-      path: '/admin/$section'
-      fullPath: '/admin/$section'
-      preLoaderRoute: typeof AdminSectionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/clients': {
-      id: '/api/admin/clients'
-      path: '/api/admin/clients'
-      fullPath: '/api/admin/clients'
-      preLoaderRoute: typeof ApiAdminClientsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/credentials': {
-      id: '/api/admin/credentials'
-      path: '/api/admin/credentials'
-      fullPath: '/api/admin/credentials'
-      preLoaderRoute: typeof ApiAdminCredentialsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/gateway': {
-      id: '/api/admin/gateway'
-      path: '/api/admin/gateway'
-      fullPath: '/api/admin/gateway'
-      preLoaderRoute: typeof ApiAdminGatewayRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/password': {
-      id: '/api/admin/password'
-      path: '/api/admin/password'
-      fullPath: '/api/admin/password'
-      preLoaderRoute: typeof ApiAdminPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/playground': {
-      id: '/api/admin/playground'
-      path: '/api/admin/playground'
-      fullPath: '/api/admin/playground'
-      preLoaderRoute: typeof ApiAdminPlaygroundRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/requests': {
-      id: '/api/admin/requests'
-      path: '/api/admin/requests'
-      fullPath: '/api/admin/requests'
-      preLoaderRoute: typeof ApiAdminRequestsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/session': {
-      id: '/api/admin/session'
-      path: '/api/admin/session'
-      fullPath: '/api/admin/session'
-      preLoaderRoute: typeof ApiAdminSessionRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/system': {
-      id: '/api/admin/system'
-      path: '/api/admin/system'
-      fullPath: '/api/admin/system'
-      preLoaderRoute: typeof ApiAdminSystemRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/usage': {
-      id: '/api/admin/usage'
-      path: '/api/admin/usage'
-      fullPath: '/api/admin/usage'
-      preLoaderRoute: typeof ApiAdminUsageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/admin/users': {
-      id: '/api/admin/users'
-      path: '/api/admin/users'
-      fullPath: '/api/admin/users'
-      preLoaderRoute: typeof ApiAdminUsersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/ai-chat': {
-      id: '/api/public/ai-chat'
-      path: '/api/public/ai-chat'
-      fullPath: '/api/public/ai-chat'
-      preLoaderRoute: typeof ApiPublicAiChatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/ai-models': {
-      id: '/api/public/ai-models'
-      path: '/api/public/ai-models'
-      fullPath: '/api/public/ai-models'
-      preLoaderRoute: typeof ApiPublicAiModelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/health': {
-      id: '/api/public/health'
-      path: '/api/public/health'
-      fullPath: '/api/public/health'
-      preLoaderRoute: typeof ApiPublicHealthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/diagnostics': {
-      id: '/api/public/v1/diagnostics'
-      path: '/api/public/v1/diagnostics'
-      fullPath: '/api/public/v1/diagnostics'
-      preLoaderRoute: typeof ApiPublicV1DiagnosticsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/embeddings': {
-      id: '/api/public/v1/embeddings'
-      path: '/api/public/v1/embeddings'
-      fullPath: '/api/public/v1/embeddings'
-      preLoaderRoute: typeof ApiPublicV1EmbeddingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/messages': {
-      id: '/api/public/v1/messages'
-      path: '/api/public/v1/messages'
-      fullPath: '/api/public/v1/messages'
-      preLoaderRoute: typeof ApiPublicV1MessagesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/models': {
-      id: '/api/public/v1/models'
-      path: '/api/public/v1/models'
-      fullPath: '/api/public/v1/models'
-      preLoaderRoute: typeof ApiPublicV1ModelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/chat/completions': {
-      id: '/api/public/v1/chat/completions'
-      path: '/api/public/v1/chat/completions'
-      fullPath: '/api/public/v1/chat/completions'
-      preLoaderRoute: typeof ApiPublicV1ChatCompletionsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/images/generations': {
-      id: '/api/public/v1/images/generations'
-      path: '/api/public/v1/images/generations'
-      fullPath: '/api/public/v1/images/generations'
-      preLoaderRoute: typeof ApiPublicV1ImagesGenerationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/videos/generations': {
-      id: '/api/public/v1/videos/generations'
-      path: '/api/public/v1/videos/generations'
-      fullPath: '/api/public/v1/videos/generations'
-      preLoaderRoute: typeof ApiPublicV1VideosGenerationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/public/v1/workers/announce': {
       id: '/api/public/v1/workers/announce'
       path: '/api/public/v1/workers/announce'
@@ -524,49 +66,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicV1WorkersAnnounceRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/v1/workers/dispatch': {
-      id: '/api/public/v1/workers/dispatch'
-      path: '/api/public/v1/workers/dispatch'
-      fullPath: '/api/public/v1/workers/dispatch'
-      preLoaderRoute: typeof ApiPublicV1WorkersDispatchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/v1/workers/register': {
-      id: '/api/public/v1/workers/register'
-      path: '/api/public/v1/workers/register'
-      fullPath: '/api/public/v1/workers/register'
-      preLoaderRoute: typeof ApiPublicV1WorkersRegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AdminSectionRoute: AdminSectionRoute,
-  ApiAdminClientsRoute: ApiAdminClientsRoute,
-  ApiAdminCredentialsRoute: ApiAdminCredentialsRoute,
-  ApiAdminGatewayRoute: ApiAdminGatewayRoute,
-  ApiAdminPasswordRoute: ApiAdminPasswordRoute,
-  ApiAdminPlaygroundRoute: ApiAdminPlaygroundRoute,
-  ApiAdminRequestsRoute: ApiAdminRequestsRoute,
-  ApiAdminSessionRoute: ApiAdminSessionRoute,
-  ApiAdminSystemRoute: ApiAdminSystemRoute,
-  ApiAdminUsageRoute: ApiAdminUsageRoute,
-  ApiAdminUsersRoute: ApiAdminUsersRoute,
-  ApiPublicAiChatRoute: ApiPublicAiChatRoute,
-  ApiPublicAiModelsRoute: ApiPublicAiModelsRoute,
-  ApiPublicHealthRoute: ApiPublicHealthRoute,
-  ApiPublicV1DiagnosticsRoute: ApiPublicV1DiagnosticsRoute,
-  ApiPublicV1EmbeddingsRoute: ApiPublicV1EmbeddingsRoute,
-  ApiPublicV1MessagesRoute: ApiPublicV1MessagesRoute,
-  ApiPublicV1ModelsRoute: ApiPublicV1ModelsRoute,
-  ApiPublicV1ChatCompletionsRoute: ApiPublicV1ChatCompletionsRoute,
-  ApiPublicV1ImagesGenerationsRoute: ApiPublicV1ImagesGenerationsRoute,
-  ApiPublicV1VideosGenerationsRoute: ApiPublicV1VideosGenerationsRoute,
   ApiPublicV1WorkersAnnounceRoute: ApiPublicV1WorkersAnnounceRoute,
-  ApiPublicV1WorkersDispatchRoute: ApiPublicV1WorkersDispatchRoute,
-  ApiPublicV1WorkersRegisterRoute: ApiPublicV1WorkersRegisterRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

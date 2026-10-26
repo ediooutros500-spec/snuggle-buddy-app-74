@@ -1,46 +1,37 @@
-# Gateway independente com painel e Gator na VPS
+# Base remixável: conexão com a central
 
-Próxima evolução: [plano para administração completa](docs/PLANO-ADMINISTRATIVO-GATEWAY.md), com comparação OmniRoute/9Router, prioridades, telas e critérios de aceite.
+Este repositório contém somente o aplicativo-base da Lovable e o mecanismo de cadastro do próprio projeto. O painel, API de modelos, pool, banco, MCP e implantação da VPS ficam em outro projeto.
 
-Andamento: [checklist administrativo](CHECKLIST-ADMINISTRATIVO-GATEWAY.md). Login, equipe e proteção das chaves já foram implantados; veja [acesso e limitações desta etapa](docs/ADMINISTRACAO-ACESSO.md).
+## O que deve permanecer
 
-Revisão mais recente: [auditoria funcional de 22/10/2026](docs/AUDITORIA-FUNCIONAL-GATEWAY-2026-10-22.md), com estado de cada tela, falhas reproduzidas e correções prioritárias.
+- src/server.ts: gatilho server-side e execução SSR.
+- src/lib/child-config.server.ts, child-handshake.server.ts e central-address.ts: configuração e envio HTTPS com cache e confirmação do receptor.
+- /api/public/v1/workers/announce: diagnóstico sem segredo e disparo idempotente.
+- src/routes/__root.tsx: gatilho adicional no carregamento, sem chave no navegador.
+- Configuração TanStack/Lovable, página e estilos mínimos, tratamento de erro e testes de conexão.
 
-Primeira correção da auditoria implantada na VPS: [políticas de modelos, quota de cliente e RPM](docs/CORRECOES-POLITICAS-GATEWAY.md), com edição pelo painel e limitações explicitadas.
+## Como usar
 
-Endereços públicos ativos: [painel](https://secretsof.delvertokens.store) e API em `https://api.delvertokens.store/v1`. Foram reaproveitados os dois hosts do OmniRoute, com HTTPS existente. O template aponta novos remixes para essa API; a versão atualizada ainda precisa ser publicada no Lovable.
+1. Aguarde a sincronização do GitHub com a base Lovable e publique a versão atualizada.
+2. Confirme que o backend fornece LOVABLE_API_KEY, somente no servidor.
+3. Faça o remix da base atualizada e abra a prévia hospedada ou publique e acesse o projeto.
+4. Confirme a origem na aba Contas da central. O GET /api/public/v1/workers/announce informa ready, keyAvailable, registered e reason sem revelar a credencial.
 
-O produto tem dois acessos: [painel administrativo e API de clientes](docs/PAINEL-E-API.md). O painel cria a chave que os aplicativos usam na API `/v1`; as chaves Lovable ficam no servidor.
+Destino padrão: https://api.delvertokens.store. GATOR_PUBLIC_URL e PARENT_GATEWAY_URL substituem o padrão: confira variáveis herdadas. Não definir GATEWAY_ROLE=central nos filhos. Nenhum GitHub individual, secret compartilhado ou banco administrativo é necessário no modo auto.
 
-Qualquer projeto Lovable seu com o [gatilho instalado](docs/REMIX-HOOK.md) pode enviar automaticamente a própria chave ao pool. O modo padrão valida a chave no Lovable, sem segredo compartilhado por remix. O envio ocorre na primeira execução do servidor após a publicação.
+O projeto precisa de runtime servidor e da própria credencial. Uma cópia apenas estática ou o clique em Remix, sem execução do backend, não garantem registro. O cadastro envia a chave de inferência à central para armazenamento cifrado e uso nas chamadas de IA. Autorize somente contas/projetos próprios ou que você pode administrar.
 
-Painel Node.js, entrada de API e Gator já rodam na VPS, com projetos/remixes no Lovable e dois hosts públicos para painel e API.
+Pode substituir a interface por outro aplicativo sem remover o gatilho. Não copie service_role, senha administrativa, chave Vault ou secrets da central. Esta base não consulta saldo ou data de renovação de créditos.
 
-Consulte [implantação e testes da VPS](deploy/README.md), [verificação do banco central](gator/DB-VERIFICACAO.md) e [registro de execução](CHECKLIST-EXECUCAO-GATEWAY-ZILONG.md). O plano completo ainda contém etapas pendentes; a base e o handshake já possuem testes.
+## Verificação
 
-# Remix of "Oi!" Hello World
+npm ci
+npm test
+npm run typecheck
+npm run build
 
-oi
+## Separação local
 
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://snuggle-buddy-app-74.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/8e6c48d8-2e72-4d3f-afa0-0a070e85c2f5).
-
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
-
-## Development
-
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
-npm run dev
-```
+Central: C:/Users/e_dio/Desktop/Gateway (código completo e alterações locais preservados).
+Remix: C:/Users/e_dio/Desktop/Gateway-Remix (este repositório).
+A separação é feita por novo commit; histórico anterior permanece recuperável. Nenhuma implantação na VPS acompanha este commit. Remixes antigos precisam de atualização/publicação própria.

@@ -1,10 +1,5 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# Escopo: somente o projeto remixável
+
+Este repositório sincroniza com Lovable. Não adicionar painel administrativo, API de inferência, pool, SQL, MCP ou deploy da VPS. Esses módulos pertencem à central separada.
+
+Preservar src/server.ts, child-config.server.ts, child-handshake.server.ts, central-address.ts, o gatilho de montagem e a rota announce ao mudar a interface. Nunca expor LOVABLE_API_KEY ao navegador, logs ou repositório. Não reescrever histórico publicado, fazer force push ou copiar secrets administrativos para remixes.

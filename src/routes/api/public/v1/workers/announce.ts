@@ -1,6 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { triggerChildHandshake, getChildRegistrationStatus } from "@/lib/child-handshake.server";
-import { CORS_HEADERS } from "@/lib/claude-compat.server";
+const CORS_HEADERS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "content-type, x-child-auto-dispatch, x-parent-dispatch",
+};
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {

@@ -16,15 +16,15 @@ function NotFoundComponent() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold">Página não encontrada</h2>
+        <h2 className="mt-4 text-xl font-semibold">PÃ¡gina nÃ£o encontrada</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          A página que você procura não existe ou foi movida.
+          A pÃ¡gina que vocÃª procura nÃ£o existe ou foi movida.
         </p>
         <Link
           to="/"
           className="mt-6 inline-flex rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground"
         >
-          Voltar ao início
+          Voltar ao inÃ­cio
         </Link>
       </div>
     </div>
@@ -40,7 +40,7 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold">Não foi possível carregar</h1>
+        <h1 className="text-xl font-semibold">NÃ£o foi possÃ­vel carregar</h1>
         <p className="mt-2 text-sm text-muted-foreground">Ocorreu um erro. Tente novamente.</p>
         <div className="mt-6 flex justify-center gap-2">
           <button
@@ -53,7 +53,7 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
             Tentar novamente
           </button>
           <a href="/" className="rounded-md border px-4 py-2 text-sm">
-            Início
+            InÃ­cio
           </a>
         </div>
       </div>
@@ -66,9 +66,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable Gateway" },
-      { name: "description", content: "Administração do gateway de um único provedor Lovable." },
-      { name: "author", content: "Lovable Gateway" },
+      { title: "Projeto remixável" },
+      { name: "description", content: "AdministraÃ§Ã£o do gateway de um Ãºnico provedor Lovable." },
+      { name: "author", content: "Projeto remixável" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
